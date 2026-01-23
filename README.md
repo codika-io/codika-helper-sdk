@@ -1,11 +1,11 @@
-# @codika/helper-sdk
+# @codika-io/helper-sdk
 
 Codika helper SDK - types and utilities for use case configuration.
 
 ## Installation
 
 ```bash
-npm install @codika/helper-sdk
+npm install @codika-io/helper-sdk
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ import {
   type FormOutputSchema,
   type HttpTrigger,
   type ProcessDeploymentConfigurationInput,
-} from '@codika/helper-sdk';
+} from '@codika-io/helper-sdk';
 
 // Load and encode a workflow JSON file
 const workflowBase64 = loadAndEncodeWorkflow('/path/to/workflow.json');
