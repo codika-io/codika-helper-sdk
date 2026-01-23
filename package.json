@@ -1,6 +1,6 @@
 {
   "name": "@codika-io/helper-sdk",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Codika helper SDK - types and utilities for use case configuration",
   "type": "module",
   "main": "./dist/index.js",

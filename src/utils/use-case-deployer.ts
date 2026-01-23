@@ -5,6 +5,7 @@
 
 import { join } from 'path';
 import { pathToFileURL } from 'url';
+import { existsSync } from 'fs';
 import type { ProcessDeploymentConfigurationInput, VersionStrategy } from '../types/process-types.js';
 import {
   deployProcess,
@@ -87,8 +88,32 @@ export async function deployUseCaseFromFolder(
     explicitVersion,
   } = options;
 
-  // Build the path to config.js (compiled from config.ts)
-  const configPath = join(useCasePath, 'config.js');
+  // Validate use case structure
+  const configPath = join(useCasePath, 'config.ts');
+  const workflowsPath = join(useCasePath, 'workflows');
+
+  const errors: string[] = [];
+
+  if (!existsSync(configPath)) {
+    errors.push(`Missing config.ts at ${configPath}`);
+  }
+
+  if (!existsSync(workflowsPath)) {
+    errors.push(`Missing workflows/ folder at ${workflowsPath}`);
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `Invalid use case structure at ${useCasePath}:\n` +
+        errors.map((e) => `  - ${e}`).join('\n') +
+        '\n\nExpected structure:\n' +
+        '  use-case-folder/\n' +
+        '  ├── config.ts\n' +
+        '  └── workflows/\n' +
+        '      └── *.json'
+    );
+  }
+
   const configUrl = pathToFileURL(configPath).href;
 
   // Dynamically import the config module
