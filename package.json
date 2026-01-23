@@ -1,0 +1,40 @@
+{
+  "name": "@codika-io/helper-sdk",
+  "version": "1.0.0",
+  "description": "Codika helper SDK - types and utilities for use case configuration",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "codika",
+    "n8n",
+    "workflow"
+  ],
+  "author": "Codika",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codika-io/codika-helper-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/codika-io/codika-helper-sdk/issues"
+  },
+  "homepage": "https://github.com/codika-io/codika-helper-sdk#readme",
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "typescript": "^5.0.0"
+  }
+}
