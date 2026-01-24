@@ -29,6 +29,22 @@ import { useCaseScripts } from './use-case-scripts/index.js';
 import { applyFixes } from './fixer.js';
 
 /**
+ * Default rules to exclude from validation.
+ * These are Flowlint rules that produce false positives for Codika workflows.
+ *
+ * R3 - Idempotency guard: False positive for LangChain parser/transform nodes
+ *      that don't perform mutations (e.g., outputParserStructured)
+ *
+ * Add more rules here as needed:
+ * R5 - No outgoing connections: Expected for terminal nodes (Submit/Error)
+ * R8 - Data never reaches consumer: False positive for LangChain sub-nodes
+ * R12 - No error branch: False positive for parser nodes
+ */
+export const DEFAULT_EXCLUDED_RULES: string[] = [
+  'R3', // Idempotency guard - false positive for parser nodes
+];
+
+/**
  * Calculate summary from findings
  */
 function calculateSummary(findings: Finding[]): FindingSummary {
@@ -41,7 +57,7 @@ function calculateSummary(findings: Finding[]): FindingSummary {
 }
 
 /**
- * Filter findings by rule IDs if specified
+ * Filter findings by rule IDs if specified (include list)
  */
 function filterByRules(findings: Finding[], rules?: string[]): Finding[] {
   if (!rules || rules.length === 0) {
@@ -49,6 +65,25 @@ function filterByRules(findings: Finding[], rules?: string[]): Finding[] {
   }
   const ruleSet = new Set(rules.map(r => r.toUpperCase()));
   return findings.filter(f => ruleSet.has(f.rule.toUpperCase()));
+}
+
+/**
+ * Filter out findings by rule IDs (exclude list)
+ * Combines user-provided excludeRules with DEFAULT_EXCLUDED_RULES
+ */
+function excludeByRules(findings: Finding[], excludeRules?: string[]): Finding[] {
+  // Combine default excluded rules with user-provided ones
+  const allExcluded = [
+    ...DEFAULT_EXCLUDED_RULES,
+    ...(excludeRules || []),
+  ];
+
+  if (allExcluded.length === 0) {
+    return findings;
+  }
+
+  const excludeSet = new Set(allExcluded.map(r => r.toUpperCase()));
+  return findings.filter(f => !excludeSet.has(f.rule.toUpperCase()));
 }
 
 /**
@@ -155,8 +190,11 @@ export async function validateWorkflow(
     }
   }
 
-  // Filter by rules if specified
+  // Filter by rules if specified (include list)
   let filteredFindings = filterByRules(findings, options.rules);
+
+  // Exclude rules if specified (exclude list)
+  filteredFindings = excludeByRules(filteredFindings, options.excludeRules);
 
   // Apply strict mode
   if (options.strict) {
@@ -253,6 +291,7 @@ export async function validateUseCase(
           fix: options.fix,
           dryRun: options.dryRun,
           rules: options.rules,
+          excludeRules: options.excludeRules,
         });
 
         // Add workflow findings with context
@@ -266,8 +305,11 @@ export async function validateUseCase(
     }
   }
 
-  // Filter by rules if specified
+  // Filter by rules if specified (include list)
   let filteredFindings = filterByRules(findings, options.rules);
+
+  // Exclude rules if specified (exclude list)
+  filteredFindings = excludeByRules(filteredFindings, options.excludeRules);
 
   // Apply strict mode
   if (options.strict) {

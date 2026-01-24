@@ -10,11 +10,12 @@
  *   codika-helper verify workflow <path> [options]
  *
  * Options:
- *   --json        Output result as JSON
- *   --strict      Treat 'should' as 'must'
- *   --fix         Apply available auto-fixes
- *   --dry-run     Show what --fix would change
- *   --rules       Only run specific rules (comma-separated)
+ *   --json           Output result as JSON
+ *   --strict         Treat 'should' as 'must'
+ *   --fix            Apply available auto-fixes
+ *   --dry-run        Show what --fix would change
+ *   --rules          Only run specific rules (comma-separated)
+ *   --exclude-rules  Exclude specific rules (comma-separated)
  */
 
 import { Command } from 'commander';
@@ -28,6 +29,7 @@ interface WorkflowCommandOptions {
   fix?: boolean;
   dryRun?: boolean;
   rules?: string;
+  excludeRules?: string;
 }
 
 export const workflowCommand = new Command('workflow')
@@ -38,12 +40,18 @@ export const workflowCommand = new Command('workflow')
   .option('--fix', 'Apply available auto-fixes')
   .option('--dry-run', 'Show what --fix would change without applying')
   .option('--rules <list>', 'Only run specific rules (comma-separated)')
+  .option('--exclude-rules <list>', 'Exclude specific rules (comma-separated)')
   .action(async (path: string, options: WorkflowCommandOptions) => {
     const absolutePath = resolve(path);
 
     // Parse rules list if provided
     const rules = options.rules
       ? options.rules.split(',').map(r => r.trim())
+      : undefined;
+
+    // Parse exclude rules list if provided
+    const excludeRules = options.excludeRules
+      ? options.excludeRules.split(',').map(r => r.trim())
       : undefined;
 
     try {
@@ -53,6 +61,7 @@ export const workflowCommand = new Command('workflow')
         fix: options.fix,
         dryRun: options.dryRun,
         rules,
+        excludeRules,
       });
 
       if (options.json) {

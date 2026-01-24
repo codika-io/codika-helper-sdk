@@ -134,6 +134,9 @@ export interface WorkflowValidationOptions {
 
   /** Only run specific rules (by rule ID) */
   rules?: string[];
+
+  /** Exclude specific rules (by rule ID) */
+  excludeRules?: string[];
 }
 
 /**
@@ -157,6 +160,9 @@ export interface UseCaseValidationOptions {
 
   /** Only run specific rules (by rule ID) */
   rules?: string[];
+
+  /** Exclude specific rules (by rule ID) */
+  excludeRules?: string[];
 }
 
 /**
