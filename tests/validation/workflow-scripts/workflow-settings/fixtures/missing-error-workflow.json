@@ -1,0 +1,21 @@
+{
+  "name": "Workflow Missing errorWorkflow Setting",
+  "nodes": [
+    {
+      "id": "webhook-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "test-webhook",
+      "parameters": {
+        "path": "test",
+        "responseMode": "lastNode"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "name": "Valid Parent Workflow",
+  "nodes": [
+    {
+      "id": "webhook-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/execute"
+      },
+      "webhookId": "test-webhook-id"
+    },
+    {
+      "id": "codika-init-001",
+      "name": "Codika Init",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "parameters": {
+        "resource": "initializeExecution",
+        "operation": "initWorkflow"
+      }
+    },
+    {
+      "id": "process-001",
+      "name": "Process Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "parameters": {
+        "jsCode": "return items;"
+      }
+    },
+    {
+      "id": "if-success-001",
+      "name": "IF Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.success}}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "codika-submit-001",
+      "name": "Codika Submit Result",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [880, -100],
+      "parameters": {
+        "resource": "result",
+        "operation": "submitResult"
+      }
+    },
+    {
+      "id": "codika-error-001",
+      "name": "Codika Report Error",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [880, 100],
+      "parameters": {
+        "resource": "result",
+        "operation": "reportError"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]]
+    },
+    "Codika Init": {
+      "main": [[{ "node": "Process Data", "type": "main", "index": 0 }]]
+    },
+    "Process Data": {
+      "main": [[{ "node": "IF Success", "type": "main", "index": 0 }]]
+    },
+    "IF Success": {
+      "main": [
+        [{ "node": "Codika Submit Result", "type": "main", "index": 0 }],
+        [{ "node": "Codika Report Error", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

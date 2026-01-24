@@ -1,0 +1,31 @@
+{
+  "name": "Main Workflow",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 0],
+      "parameters": {}
+    },
+    {
+      "id": "2",
+      "name": "Codika Init",
+      "type": "n8n-nodes-codika.codika",
+      "position": [220, 0],
+      "parameters": { "operation": "initWorkflow" }
+    },
+    {
+      "id": "3",
+      "name": "Codika Submit",
+      "type": "n8n-nodes-codika.codika",
+      "position": [440, 0],
+      "parameters": { "operation": "submitResult" }
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]] },
+    "Codika Init": { "main": [[{ "node": "Codika Submit", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Workflow with Unquoted INSTPARM",
+  "nodes": [
+    {
+      "id": "webhook-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/test"
+      }
+    },
+    {
+      "id": "codika-init-001",
+      "name": "Codika Init",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "parameters": {
+        "resource": "initializeExecution",
+        "operation": "initWorkflow"
+      }
+    },
+    {
+      "id": "code-001",
+      "name": "Process With INSTPARM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "parameters": {
+        "jsCode": "const companyName = {{INSTPARM_COMPANY_NAME_MRAPTSNI}};\nconst maxItems = {{INSTPARM_MAX_ITEMS_MRAPTSNI}};\nreturn items;"
+      }
+    },
+    {
+      "id": "codika-submit-001",
+      "name": "Codika Submit Result",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [660, 0],
+      "parameters": {
+        "resource": "result",
+        "operation": "submitResult"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]]
+    },
+    "Codika Init": {
+      "main": [[{ "node": "Process With INSTPARM", "type": "main", "index": 0 }]]
+    },
+    "Process With INSTPARM": {
+      "main": [[{ "node": "Codika Submit Result", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

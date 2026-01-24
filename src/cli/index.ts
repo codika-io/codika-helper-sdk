@@ -8,15 +8,16 @@
  *   codika-helper <command> [options]
  *
  * Commands:
- *   deploy <path>   Deploy a use case to the Codika platform
- *   verify <path>   Validate a use case structure (coming soon)
+ *   deploy <path>           Deploy a use case to the Codika platform
+ *   verify workflow <path>  Validate a single workflow JSON file
+ *   verify use-case <path>  Validate an entire use-case folder
  */
 
 import { program } from 'commander';
 import { deployCommand } from './commands/deploy.js';
-import { verifyCommand } from './commands/verify.js';
+import { verifyCommand } from './commands/verify/index.js';
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 program
   .name('codika-helper')

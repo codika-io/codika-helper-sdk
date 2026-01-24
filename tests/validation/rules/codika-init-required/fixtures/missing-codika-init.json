@@ -1,0 +1,48 @@
+{
+  "name": "Workflow Missing Codika Init",
+  "nodes": [
+    {
+      "id": "webhook-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/test"
+      }
+    },
+    {
+      "id": "process-001",
+      "name": "Process Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "parameters": {
+        "jsCode": "return items;"
+      }
+    },
+    {
+      "id": "codika-submit-001",
+      "name": "Codika Submit Result",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "parameters": {
+        "resource": "result",
+        "operation": "submitResult"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Process Data", "type": "main", "index": 0 }]]
+    },
+    "Process Data": {
+      "main": [[{ "node": "Codika Submit Result", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

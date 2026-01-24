@@ -1,0 +1,22 @@
+{
+  "id": "workflow-123-abc",
+  "name": "Workflow With Forbidden ID Property",
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "test-webhook",
+      "parameters": {
+        "path": "test",
+        "responseMode": "lastNode"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "workflow-123",
+  "versionId": "abc-version-456",
+  "name": "Workflow With Multiple Forbidden Properties",
+  "meta": {
+    "instanceId": "instance-789"
+  },
+  "active": false,
+  "tags": ["test", "dev"],
+  "pinData": {
+    "Webhook": [{"json": {"test": true}}]
+  },
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "test-webhook",
+      "parameters": {
+        "path": "test",
+        "responseMode": "lastNode"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}
