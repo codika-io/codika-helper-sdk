@@ -1,30 +1,17 @@
 {
-  "name": "Workflow With Forbidden PinData Property",
+  "name": "Workflow with pinData property",
   "pinData": {
-    "Webhook": [
+    "Webhook Trigger": [
       {
         "json": {
-          "test": "data"
+          "body": { "test": "data" }
         }
       }
     ]
   },
-  "nodes": [
-    {
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [0, 0],
-      "webhookId": "test-webhook",
-      "parameters": {
-        "path": "test",
-        "responseMode": "lastNode"
-      }
-    }
-  ],
+  "nodes": [],
   "connections": {},
   "settings": {
-    "executionOrder": "v1",
-    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+    "executionOrder": "v1"
   }
 }

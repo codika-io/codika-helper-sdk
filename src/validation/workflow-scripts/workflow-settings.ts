@@ -1,166 +1,124 @@
 /**
- * WORKFLOW-SETTINGS Validation Script
+ * Script: WORKFLOW-SETTINGS
  *
- * Validates that workflows have required settings:
- * - settings.executionOrder: "v1"
+ * Validates that every workflow has the required settings:
  * - settings.errorWorkflow: "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+ * - settings.executionOrder: "v1"
  *
- * @see .guides/use-case-guide.md - "Final Verification Checklist" (Section 12)
+ * These settings are critical for:
+ * - Error handling: Routes errors to the global error workflow
+ * - Execution order: Ensures consistent node execution (v1 = depth-first)
  */
 
-import type { Finding, RuleMetadata } from '../types.js';
+import type { Finding } from '../types.js';
+import type { RuleMetadata } from '../types.js';
 
-export const RULE_ID = 'WORKFLOW-SETTINGS';
+export const metadata: RuleMetadata = {
+  id: 'WORKFLOW-SETTINGS',
+  name: 'workflow_settings',
+  severity: 'must',
+  description: 'Workflows must have required settings (errorWorkflow, executionOrder)',
+  details: 'Add settings.errorWorkflow and settings.executionOrder to your workflow',
+  fixable: true,
+  category: 'settings',
+};
 
+// Required settings and their values
 const REQUIRED_ERROR_WORKFLOW = '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}';
 const REQUIRED_EXECUTION_ORDER = 'v1';
 
-export const metadata: RuleMetadata & { guideRef: { path: string; section: string } } = {
-  id: RULE_ID,
-  name: 'workflow_settings',
-  severity: 'must',
-  description: 'Workflows must have required settings: executionOrder and errorWorkflow',
-  details: `Add the following to your workflow settings:
-  "settings": {
-    "executionOrder": "${REQUIRED_EXECUTION_ORDER}",
-    "errorWorkflow": "${REQUIRED_ERROR_WORKFLOW}"
-  }`,
-  fixable: true,
-  category: 'settings',
-  guideRef: {
-    path: 'use-case-guide.md',
-    section: 'Final Verification Checklist',
-  },
-};
-
 /**
- * Validates workflow settings
+ * Check that workflow has required settings
  */
 export function checkWorkflowSettings(content: string, path: string): Finding[] {
   const findings: Finding[] = [];
 
-  // Try to parse JSON
-  let workflow: {
-    settings?: {
-      executionOrder?: string;
-      errorWorkflow?: string;
-    };
-  };
-
+  // Parse as JSON
+  let parsed: any;
   try {
-    workflow = JSON.parse(content);
+    parsed = JSON.parse(content);
   } catch {
-    findings.push({
-      rule: RULE_ID,
-      severity: 'must',
-      path,
-      message: 'Cannot parse workflow JSON',
-      raw_details: 'Ensure the workflow file contains valid JSON',
-      guideRef: metadata.guideRef,
-    });
-    return findings;
+    // If not valid JSON, skip this check
+    return [];
   }
 
-  // Check if settings object exists
-  if (!workflow.settings) {
-    findings.push({
-      rule: RULE_ID,
-      severity: 'must',
-      path,
-      message: 'Workflow is missing settings object',
-      raw_details: `Add a settings object with executionOrder and errorWorkflow`,
-      guideRef: metadata.guideRef,
-      fixable: true,
-      fix: {
-        description: 'Add settings object with required properties',
-        apply: (content: string) => {
-          const wf = JSON.parse(content);
-          wf.settings = {
-            executionOrder: REQUIRED_EXECUTION_ORDER,
-            errorWorkflow: REQUIRED_ERROR_WORKFLOW,
-          };
-          return JSON.stringify(wf, null, 2);
-        },
-      },
-    });
-    return findings;
-  }
-
-  // Check executionOrder
-  if (!workflow.settings.executionOrder) {
-    findings.push({
-      rule: RULE_ID,
-      severity: 'must',
-      path,
-      message: 'Missing executionOrder setting',
-      raw_details: `Add settings.executionOrder: "${REQUIRED_EXECUTION_ORDER}"`,
-      guideRef: metadata.guideRef,
-      fixable: true,
-      fix: {
-        description: 'Add executionOrder setting',
-        apply: (content: string) => {
-          const wf = JSON.parse(content);
-          wf.settings = wf.settings || {};
-          wf.settings.executionOrder = REQUIRED_EXECUTION_ORDER;
-          return JSON.stringify(wf, null, 2);
-        },
-      },
-    });
-  } else if (workflow.settings.executionOrder !== REQUIRED_EXECUTION_ORDER) {
-    findings.push({
-      rule: RULE_ID,
-      severity: 'must',
-      path,
-      message: `executionOrder should be "${REQUIRED_EXECUTION_ORDER}", found "${workflow.settings.executionOrder}"`,
-      raw_details: `Change settings.executionOrder to "${REQUIRED_EXECUTION_ORDER}"`,
-      guideRef: metadata.guideRef,
-      fixable: true,
-      fix: {
-        description: 'Fix executionOrder value',
-        apply: (content: string) => {
-          const wf = JSON.parse(content);
-          wf.settings.executionOrder = REQUIRED_EXECUTION_ORDER;
-          return JSON.stringify(wf, null, 2);
-        },
-      },
-    });
-  }
+  const settings = parsed.settings || {};
 
   // Check errorWorkflow
-  if (!workflow.settings.errorWorkflow) {
+  if (!settings.errorWorkflow) {
     findings.push({
-      rule: RULE_ID,
-      severity: 'must',
+      rule: metadata.id,
+      severity: metadata.severity,
       path,
-      message: 'Missing errorWorkflow setting',
-      raw_details: `Add settings.errorWorkflow: "${REQUIRED_ERROR_WORKFLOW}"`,
-      guideRef: metadata.guideRef,
+      message: 'Missing required setting: errorWorkflow',
+      raw_details: `Add "errorWorkflow": "${REQUIRED_ERROR_WORKFLOW}" to the settings object`,
       fixable: true,
       fix: {
         description: 'Add errorWorkflow setting',
-        apply: (content: string) => {
-          const wf = JSON.parse(content);
-          wf.settings = wf.settings || {};
-          wf.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
-          return JSON.stringify(wf, null, 2);
+        apply: (fileContent: string) => {
+          const data = JSON.parse(fileContent);
+          if (!data.settings) {
+            data.settings = {};
+          }
+          data.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
+          return JSON.stringify(data, null, 2);
         },
       },
     });
-  } else if (workflow.settings.errorWorkflow !== REQUIRED_ERROR_WORKFLOW) {
+  } else if (settings.errorWorkflow !== REQUIRED_ERROR_WORKFLOW) {
     findings.push({
-      rule: RULE_ID,
-      severity: 'must',
+      rule: metadata.id,
+      severity: metadata.severity,
       path,
-      message: `errorWorkflow must use placeholder "${REQUIRED_ERROR_WORKFLOW}", found hardcoded value`,
-      raw_details: `Replace the hardcoded errorWorkflow value with the placeholder: "${REQUIRED_ERROR_WORKFLOW}"`,
-      guideRef: metadata.guideRef,
+      message: `Setting errorWorkflow has wrong value: "${settings.errorWorkflow}"`,
+      raw_details: `Change to: "${REQUIRED_ERROR_WORKFLOW}"`,
       fixable: true,
       fix: {
-        description: 'Fix errorWorkflow to use placeholder',
-        apply: (content: string) => {
-          const wf = JSON.parse(content);
-          wf.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
-          return JSON.stringify(wf, null, 2);
+        description: 'Fix errorWorkflow setting',
+        apply: (fileContent: string) => {
+          const data = JSON.parse(fileContent);
+          data.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
+          return JSON.stringify(data, null, 2);
+        },
+      },
+    });
+  }
+
+  // Check executionOrder
+  if (!settings.executionOrder) {
+    findings.push({
+      rule: metadata.id,
+      severity: metadata.severity,
+      path,
+      message: 'Missing required setting: executionOrder',
+      raw_details: `Add "executionOrder": "${REQUIRED_EXECUTION_ORDER}" to the settings object`,
+      fixable: true,
+      fix: {
+        description: 'Add executionOrder setting',
+        apply: (fileContent: string) => {
+          const data = JSON.parse(fileContent);
+          if (!data.settings) {
+            data.settings = {};
+          }
+          data.settings.executionOrder = REQUIRED_EXECUTION_ORDER;
+          return JSON.stringify(data, null, 2);
+        },
+      },
+    });
+  } else if (settings.executionOrder !== REQUIRED_EXECUTION_ORDER) {
+    findings.push({
+      rule: metadata.id,
+      severity: metadata.severity,
+      path,
+      message: `Setting executionOrder has wrong value: "${settings.executionOrder}"`,
+      raw_details: `Change to: "${REQUIRED_EXECUTION_ORDER}"`,
+      fixable: true,
+      fix: {
+        description: 'Fix executionOrder setting',
+        apply: (fileContent: string) => {
+          const data = JSON.parse(fileContent);
+          data.settings.executionOrder = REQUIRED_EXECUTION_ORDER;
+          return JSON.stringify(data, null, 2);
         },
       },
     });
@@ -168,5 +126,3 @@ export function checkWorkflowSettings(content: string, path: string): Finding[] 
 
   return findings;
 }
-
-export default checkWorkflowSettings;

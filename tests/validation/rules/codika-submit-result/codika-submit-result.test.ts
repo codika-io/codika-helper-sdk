@@ -99,6 +99,45 @@ describe('CODIKA-SUBMIT Rule', () => {
     });
   });
 
+  describe('invalid terminal nodes (BUG FIX: these should FAIL)', () => {
+    it('should FAIL when workflow ends with Respond to Webhook', () => {
+      const { graph } = loadLocalFixture('invalid-responds-to-webhook.json');
+      const findings = codikaSubmitResult(graph, ctx);
+
+      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
+      expect(submitFindings).toHaveLength(1);
+      expect(submitFindings[0].severity).toBe('must');
+    });
+
+    it('should FAIL when workflow ends with Stop and Output', () => {
+      const { graph } = loadLocalFixture('invalid-stop-and-output.json');
+      const findings = codikaSubmitResult(graph, ctx);
+
+      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
+      expect(submitFindings).toHaveLength(1);
+      expect(submitFindings[0].severity).toBe('must');
+    });
+
+    it('should FAIL when workflow ends with No Operation', () => {
+      const { graph } = loadLocalFixture('invalid-no-operation.json');
+      const findings = codikaSubmitResult(graph, ctx);
+
+      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
+      expect(submitFindings).toHaveLength(1);
+      expect(submitFindings[0].severity).toBe('must');
+    });
+
+    it('should FAIL when one branch ends with invalid terminal node', () => {
+      const { graph } = loadLocalFixture('invalid-mixed-endpoints.json');
+      const findings = codikaSubmitResult(graph, ctx);
+
+      // Should detect the Respond to Webhook branch as invalid
+      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
+      expect(submitFindings).toHaveLength(1);
+      expect(submitFindings[0].severity).toBe('must');
+    });
+  });
+
   describe('edge cases', () => {
     it('should PASS when workflow ends with reportError operation', () => {
       const workflowJson = JSON.stringify({

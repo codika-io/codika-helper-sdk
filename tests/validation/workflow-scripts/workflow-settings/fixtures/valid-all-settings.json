@@ -1,22 +1,21 @@
 {
-  "name": "Valid Workflow With All Settings",
+  "name": "Workflow with All Required Settings",
   "nodes": [
     {
       "id": "webhook-001",
-      "name": "Webhook",
+      "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [0, 0],
-      "webhookId": "test-webhook",
       "parameters": {
-        "path": "test",
-        "responseMode": "lastNode"
+        "httpMethod": "POST",
+        "path": "/test"
       }
     }
   ],
   "connections": {},
   "settings": {
-    "executionOrder": "v1",
-    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}",
+    "executionOrder": "v1"
   }
 }

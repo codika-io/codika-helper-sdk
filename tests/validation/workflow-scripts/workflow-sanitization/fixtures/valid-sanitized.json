@@ -1,5 +1,5 @@
 {
-  "name": "Workflow Missing executionOrder Setting",
+  "name": "Clean Sanitized Workflow",
   "nodes": [
     {
       "id": "webhook-001",
@@ -15,6 +15,7 @@
   ],
   "connections": {},
   "settings": {
-    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}",
+    "executionOrder": "v1"
   }
 }

@@ -59,6 +59,35 @@ describe('CONFIG-WORKFLOWS Script', () => {
     });
   });
 
+  describe('BUG FIX: severity and error handling', () => {
+    it('should FAIL with "must" severity when workflow file not in WORKFLOW_FILES', async () => {
+      const useCasePath = join(FIXTURES_PATH, 'unlisted-workflow');
+      const findings = await checkWorkflowImports(useCasePath);
+
+      // Filter for findings about unlisted files
+      const unlistedFindings = findings.filter(f =>
+        f.message.includes('not listed') || f.message.includes('not in WORKFLOW_FILES')
+      );
+
+      // BUG: Currently uses "should" severity, but it MUST be "must"
+      expect(unlistedFindings.length).toBeGreaterThan(0);
+      expect(unlistedFindings[0].severity).toBe('must');
+    });
+
+    it('should FAIL when config.ts cannot be parsed', async () => {
+      const useCasePath = join(FIXTURES_PATH, 'broken-config');
+      const findings = await checkWorkflowImports(useCasePath);
+
+      // BUG: Currently silently swallows parsing errors
+      const parseErrors = findings.filter(f =>
+        f.message.includes('Cannot parse') || f.message.includes('parse')
+      );
+
+      expect(parseErrors.length).toBeGreaterThan(0);
+      expect(parseErrors[0].severity).toBe('must');
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle non-existent use-case path', async () => {
       const useCasePath = '/non/existent/path';

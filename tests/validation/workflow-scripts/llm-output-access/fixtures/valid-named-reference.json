@@ -1,0 +1,126 @@
+{
+  "name": "Valid LLM Output Access - Named Reference",
+  "nodes": [
+    {
+      "id": "webhook-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/test"
+      }
+    },
+    {
+      "id": "chain-llm-001",
+      "name": "Translate Text",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [220, 0],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate to French: {{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "claude-model-001",
+      "name": "Claude Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [172, 192],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list"
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "{{FLEXCRED_ANTHROPIC_ID_DERCXELF}}",
+          "name": "{{FLEXCRED_ANTHROPIC_NAME_DERCXELF}}"
+        }
+      }
+    },
+    {
+      "id": "output-parser-001",
+      "name": "Translation Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [316, 192],
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"translated_text\": \"Bonjour\",\n  \"source_language\": \"English\"\n}"
+      }
+    },
+    {
+      "id": "set-001",
+      "name": "Intermediate Node",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 0],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ Date.now() }}",
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-001",
+      "name": "Format Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 0],
+      "parameters": {
+        "jsCode": "// Correctly access the translation output using named reference\nconst translation = $('Translate Text').first().json.output;\nconst translatedText = translation.translated_text;\nconst sourceLanguage = translation.source_language;\n\nreturn [{\n  json: {\n    result: translatedText,\n    from: sourceLanguage,\n    timestamp: $json.timestamp\n  }\n}];"
+      }
+    },
+    {
+      "id": "codika-submit-001",
+      "name": "Codika Submit Result",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [880, 0],
+      "parameters": {
+        "resource": "result",
+        "operation": "submitResult",
+        "resultData": "={{ $json }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Translate Text", "type": "main", "index": 0 }]]
+    },
+    "Claude Model": {
+      "ai_languageModel": [[{ "node": "Translate Text", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Translation Parser": {
+      "ai_outputParser": [[{ "node": "Translate Text", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "Translate Text": {
+      "main": [[{ "node": "Intermediate Node", "type": "main", "index": 0 }]]
+    },
+    "Intermediate Node": {
+      "main": [[{ "node": "Format Output", "type": "main", "index": 0 }]]
+    },
+    "Format Output": {
+      "main": [[{ "node": "Codika Submit Result", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

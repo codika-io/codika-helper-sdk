@@ -1,0 +1,18 @@
+{
+  "id": "workflow-12345-abcde",
+  "versionId": "version-67890",
+  "name": "Workflow with multiple forbidden properties",
+  "meta": {
+    "instanceId": "instance-abc"
+  },
+  "active": true,
+  "tags": [
+    { "id": "1", "name": "production" }
+  ],
+  "pinData": {},
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "name": "Invalid: Mixed Endpoints (one valid, one Respond to Webhook)",
+  "nodes": [
+    {
+      "id": "webhook-001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test"
+      }
+    },
+    {
+      "id": "codika-init-001",
+      "name": "Codika Init",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "parameters": {
+        "operation": "initWorkflow"
+      }
+    },
+    {
+      "id": "if-001",
+      "name": "IF Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "parameters": {}
+    },
+    {
+      "id": "codika-submit-001",
+      "name": "Codika Submit Result",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [660, -100],
+      "parameters": {
+        "operation": "submitResult"
+      }
+    },
+    {
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [660, 100],
+      "parameters": {
+        "respondWith": "allIncomingItems"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]]
+    },
+    "Codika Init": {
+      "main": [[{ "node": "IF Success", "type": "main", "index": 0 }]]
+    },
+    "IF Success": {
+      "main": [
+        [{ "node": "Codika Submit Result", "type": "main", "index": 0 }],
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

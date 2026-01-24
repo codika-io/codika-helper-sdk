@@ -11,6 +11,7 @@ import { checkPlaceholderSyntax } from './placeholder-syntax.js';
 import { checkCredentialPlaceholders } from './credential-placeholders.js';
 import { checkWorkflowSettings } from './workflow-settings.js';
 import { checkWorkflowSanitization } from './workflow-sanitization.js';
+import { checkLlmOutputAccess } from './llm-output-access.js';
 
 /**
  * All workflow scripts to run during validation
@@ -24,7 +25,7 @@ export const workflowScripts: WorkflowScript[] = [
   checkCredentialPlaceholders,
   checkWorkflowSettings,
   checkWorkflowSanitization,
-  // Add more workflow scripts here
+  checkLlmOutputAccess,
 ];
 
 // Re-export individual scripts
@@ -33,3 +34,4 @@ export { checkPlaceholderSyntax } from './placeholder-syntax.js';
 export { checkCredentialPlaceholders } from './credential-placeholders.js';
 export { checkWorkflowSettings } from './workflow-settings.js';
 export { checkWorkflowSanitization } from './workflow-sanitization.js';
+export { checkLlmOutputAccess } from './llm-output-access.js';

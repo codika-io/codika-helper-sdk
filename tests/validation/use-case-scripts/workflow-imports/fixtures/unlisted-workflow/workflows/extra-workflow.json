@@ -1,20 +1,21 @@
 {
-  "name": "Workflow Missing executionOrder Setting",
+  "name": "Extra Workflow (NOT Listed in WORKFLOW_FILES)",
   "nodes": [
     {
-      "id": "webhook-001",
+      "id": "webhook-002",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [0, 0],
       "parameters": {
         "httpMethod": "POST",
-        "path": "/test"
+        "path": "extra"
       }
     }
   ],
   "connections": {},
   "settings": {
+    "executionOrder": "v1",
     "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
   }
 }

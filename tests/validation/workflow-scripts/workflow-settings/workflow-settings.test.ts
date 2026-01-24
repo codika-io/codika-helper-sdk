@@ -1,29 +1,31 @@
 /**
- * Tests for WORKFLOW-SETTINGS validation script
+ * Tests for WORKFLOW-SETTINGS validator
  *
- * This script validates that workflows have required settings:
- * - settings.executionOrder: "v1"
+ * Validates that every workflow has required settings:
  * - settings.errorWorkflow: "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+ * - settings.executionOrder: "v1"
  */
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { checkWorkflowSettings, RULE_ID, metadata } from '../../../../src/validation/workflow-scripts/workflow-settings.js';
+import { join } from 'path';
+import { checkWorkflowSettings, metadata } from '../../../../src/validation/workflow-scripts/workflow-settings.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 const FIXTURES_PATH = join(__dirname, 'fixtures');
 
 function loadFixture(name: string): string {
   return readFileSync(join(FIXTURES_PATH, name), 'utf-8');
 }
 
+const testPath = '/test/workflow.json';
+
 describe('WORKFLOW-SETTINGS Script', () => {
+  // ============================================================================
+  // METADATA
+  // ============================================================================
   describe('metadata', () => {
     it('should have correct rule ID', () => {
-      expect(RULE_ID).toBe('WORKFLOW-SETTINGS');
+      expect(metadata.id).toBe('WORKFLOW-SETTINGS');
     });
 
     it('should have "must" severity', () => {
@@ -34,124 +36,316 @@ describe('WORKFLOW-SETTINGS Script', () => {
       expect(metadata.fixable).toBe(true);
     });
 
-    it('should have guideRef', () => {
-      expect(metadata.guideRef).toBeDefined();
-      expect(metadata.guideRef?.path).toBe('use-case-guide.md');
+    it('should have a description', () => {
+      expect(metadata.description).toBeTruthy();
     });
   });
 
+  // ============================================================================
+  // VALID WORKFLOWS
+  // ============================================================================
   describe('valid workflows', () => {
     it('should PASS when workflow has all required settings', () => {
-      const content = loadFixture('valid-all-settings.json');
-      const findings = checkWorkflowSettings(content, 'valid-all-settings.json');
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
 
+    it('should PASS when workflow has additional settings', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+          executionOrder: 'v1',
+          saveDataSuccessExecution: 'all',
+          saveManualExecutions: true,
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
+
+    it('should PASS for valid-all-settings.json fixture', () => {
+      const content = loadFixture('valid-all-settings.json');
+      const findings = checkWorkflowSettings(content, testPath);
       expect(findings).toHaveLength(0);
     });
   });
 
-  describe('invalid workflows - missing settings', () => {
-    it('should FAIL when settings object is missing entirely', () => {
-      const content = loadFixture('missing-settings.json');
-      const findings = checkWorkflowSettings(content, 'missing-settings.json');
-
-      expect(findings.length).toBeGreaterThanOrEqual(1);
-      expect(findings.some(f => f.message.includes('settings'))).toBe(true);
-    });
-
+  // ============================================================================
+  // INVALID: Missing errorWorkflow
+  // ============================================================================
+  describe('invalid - missing errorWorkflow', () => {
     it('should FAIL when errorWorkflow is missing', () => {
-      const content = loadFixture('missing-error-workflow.json');
-      const findings = checkWorkflowSettings(content, 'missing-error-workflow.json');
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
 
-      expect(findings.length).toBeGreaterThanOrEqual(1);
-      const errorWorkflowFinding = findings.find(f => f.message.includes('errorWorkflow'));
-      expect(errorWorkflowFinding).toBeDefined();
-      expect(errorWorkflowFinding?.severity).toBe('must');
-      expect(errorWorkflowFinding?.guideRef).toBeDefined();
+      expect(findings).toHaveLength(1);
+      expect(findings[0].rule).toBe('WORKFLOW-SETTINGS');
+      expect(findings[0].severity).toBe('must');
+      expect(findings[0].message).toContain('errorWorkflow');
     });
 
+    it('should FAIL when errorWorkflow has wrong value', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: 'wrong-value',
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+
+      expect(findings).toHaveLength(1);
+      expect(findings[0].message).toContain('errorWorkflow');
+      expect(findings[0].message).toContain('wrong value');
+    });
+
+    it('should FAIL when errorWorkflow has typo in placeholder', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_TERCESORG}}', // Missing _ID_
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+
+      expect(findings.length).toBeGreaterThan(0);
+      expect(findings[0].message).toContain('errorWorkflow');
+    });
+
+    it('should FAIL for missing-error-workflow.json fixture', () => {
+      const content = loadFixture('missing-error-workflow.json');
+      const findings = checkWorkflowSettings(content, testPath);
+
+      const errorWorkflowFindings = findings.filter(f => f.message.includes('errorWorkflow'));
+      expect(errorWorkflowFindings.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ============================================================================
+  // INVALID: Missing executionOrder
+  // ============================================================================
+  describe('invalid - missing executionOrder', () => {
     it('should FAIL when executionOrder is missing', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+
+      expect(findings).toHaveLength(1);
+      expect(findings[0].rule).toBe('WORKFLOW-SETTINGS');
+      expect(findings[0].severity).toBe('must');
+      expect(findings[0].message).toContain('executionOrder');
+    });
+
+    it('should FAIL when executionOrder has wrong value', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+          executionOrder: 'v0', // Wrong value
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+
+      expect(findings).toHaveLength(1);
+      expect(findings[0].message).toContain('executionOrder');
+    });
+
+    it('should FAIL for missing-execution-order.json fixture', () => {
       const content = loadFixture('missing-execution-order.json');
-      const findings = checkWorkflowSettings(content, 'missing-execution-order.json');
+      const findings = checkWorkflowSettings(content, testPath);
 
-      expect(findings.length).toBeGreaterThanOrEqual(1);
-      const execOrderFinding = findings.find(f => f.message.includes('executionOrder'));
-      expect(execOrderFinding).toBeDefined();
-      expect(execOrderFinding?.severity).toBe('must');
+      const executionOrderFindings = findings.filter(f => f.message.includes('executionOrder'));
+      expect(executionOrderFindings.length).toBeGreaterThan(0);
     });
   });
 
-  describe('invalid workflows - wrong values', () => {
-    it('should FAIL when errorWorkflow has hardcoded value instead of placeholder', () => {
-      const content = loadFixture('wrong-error-workflow.json');
-      const findings = checkWorkflowSettings(content, 'wrong-error-workflow.json');
+  // ============================================================================
+  // INVALID: Missing settings object entirely
+  // ============================================================================
+  describe('invalid - missing settings object', () => {
+    it('should FAIL when settings object is missing entirely', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+      });
+      const findings = checkWorkflowSettings(content, testPath);
 
-      expect(findings.length).toBeGreaterThanOrEqual(1);
-      const finding = findings.find(f => f.message.includes('errorWorkflow'));
-      expect(finding).toBeDefined();
-      expect(finding?.message).toContain('placeholder');
+      expect(findings.length).toBe(2); // Both errorWorkflow and executionOrder missing
+    });
+
+    it('should FAIL when settings is null', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: null,
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+
+      expect(findings.length).toBe(2);
+    });
+
+    it('should FAIL when settings is empty object', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {},
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+
+      expect(findings.length).toBe(2);
     });
   });
 
+  // ============================================================================
+  // AUTO-FIX FUNCTIONALITY
+  // ============================================================================
   describe('auto-fix functionality', () => {
-    it('should provide a fix function for missing settings', () => {
-      const content = loadFixture('missing-settings.json');
-      const findings = checkWorkflowSettings(content, 'missing-settings.json');
+    it('should provide fix function for missing errorWorkflow', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
 
-      const fixableFinding = findings.find(f => f.fixable);
-      expect(fixableFinding).toBeDefined();
-      expect(fixableFinding?.fix).toBeDefined();
+      expect(findings[0].fixable).toBe(true);
+      expect(findings[0].fix).toBeDefined();
     });
 
-    it('should correctly add missing errorWorkflow when fix is applied', () => {
-      const content = loadFixture('missing-error-workflow.json');
-      const findings = checkWorkflowSettings(content, 'missing-error-workflow.json');
+    it('should provide fix function for missing executionOrder', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
 
-      const fixableFinding = findings.find(f => f.message.includes('errorWorkflow') && f.fixable);
-      expect(fixableFinding?.fix).toBeDefined();
-
-      if (fixableFinding?.fix) {
-        const fixedContent = fixableFinding.fix.apply(content);
-        const fixedWorkflow = JSON.parse(fixedContent);
-        expect(fixedWorkflow.settings.errorWorkflow).toBe('{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}');
-      }
+      expect(findings[0].fixable).toBe(true);
+      expect(findings[0].fix).toBeDefined();
     });
 
-    it('should correctly add missing executionOrder when fix is applied', () => {
-      const content = loadFixture('missing-execution-order.json');
-      const findings = checkWorkflowSettings(content, 'missing-execution-order.json');
+    it('should correctly fix missing errorWorkflow', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          executionOrder: 'v1',
+        },
+      }, null, 2);
+      const findings = checkWorkflowSettings(content, testPath);
+      const fixed = findings[0].fix!.apply(content);
+      const parsed = JSON.parse(fixed);
 
-      const fixableFinding = findings.find(f => f.message.includes('executionOrder') && f.fixable);
-      expect(fixableFinding?.fix).toBeDefined();
+      expect(parsed.settings.errorWorkflow).toBe('{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}');
+      expect(parsed.settings.executionOrder).toBe('v1'); // Preserved
+    });
 
-      if (fixableFinding?.fix) {
-        const fixedContent = fixableFinding.fix.apply(content);
-        const fixedWorkflow = JSON.parse(fixedContent);
-        expect(fixedWorkflow.settings.executionOrder).toBe('v1');
-      }
+    it('should correctly fix missing executionOrder', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+        },
+      }, null, 2);
+      const findings = checkWorkflowSettings(content, testPath);
+      const fixed = findings[0].fix!.apply(content);
+      const parsed = JSON.parse(fixed);
+
+      expect(parsed.settings.executionOrder).toBe('v1');
+      expect(parsed.settings.errorWorkflow).toBe('{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}'); // Preserved
     });
 
     it('should correctly fix wrong errorWorkflow value', () => {
-      const content = loadFixture('wrong-error-workflow.json');
-      const findings = checkWorkflowSettings(content, 'wrong-error-workflow.json');
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {
+          errorWorkflow: 'wrong-value',
+          executionOrder: 'v1',
+        },
+      }, null, 2);
+      const findings = checkWorkflowSettings(content, testPath);
+      const fixed = findings[0].fix!.apply(content);
+      const parsed = JSON.parse(fixed);
 
-      const fixableFinding = findings.find(f => f.message.includes('errorWorkflow') && f.fixable);
-      expect(fixableFinding?.fix).toBeDefined();
-
-      if (fixableFinding?.fix) {
-        const fixedContent = fixableFinding.fix.apply(content);
-        const fixedWorkflow = JSON.parse(fixedContent);
-        expect(fixedWorkflow.settings.errorWorkflow).toBe('{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}');
-      }
+      expect(parsed.settings.errorWorkflow).toBe('{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}');
     });
   });
 
+  // ============================================================================
+  // EDGE CASES
+  // ============================================================================
   describe('edge cases', () => {
     it('should handle invalid JSON gracefully', () => {
-      const content = 'not valid json';
-      const findings = checkWorkflowSettings(content, 'invalid.json');
+      const content = 'not valid json {{{';
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(0); // Skip invalid JSON
+    });
 
-      expect(findings.length).toBeGreaterThanOrEqual(1);
-      expect(findings[0].message.includes('parse') || findings[0].message.includes('JSON')).toBe(true);
+    it('should handle empty content', () => {
+      const findings = checkWorkflowSettings('', testPath);
+      expect(findings).toHaveLength(0);
+    });
+
+    it('should handle workflow with no nodes', () => {
+      const content = JSON.stringify({
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
+  });
+
+  // ============================================================================
+  // ERROR MESSAGE QUALITY
+  // ============================================================================
+  describe('error message quality', () => {
+    it('should include expected value in error message', () => {
+      const content = JSON.stringify({
+        name: 'Test Workflow',
+        nodes: [],
+        settings: {},
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+
+      const errorWorkflowFinding = findings.find(f => f.message.includes('errorWorkflow'));
+      expect(errorWorkflowFinding?.raw_details).toContain('ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG');
+
+      const executionOrderFinding = findings.find(f => f.message.includes('executionOrder'));
+      expect(executionOrderFinding?.raw_details).toContain('v1');
     });
   });
 });

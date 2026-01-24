@@ -27,13 +27,6 @@ export const metadata: RuleMetadata = {
 // Valid result operations
 const VALID_RESULT_OPERATIONS = ['submitResult', 'reportError'];
 
-// Nodes that are considered terminal (end of workflow)
-const TERMINAL_NODE_PATTERNS = [
-  'respondtowebhook',
-  'stopandoutput',
-  'nooperation',
-];
-
 /**
  * Check if a node is a sub-workflow trigger (exempt from rule)
  */
@@ -53,14 +46,6 @@ function isCodikaResultNode(node: NodeRef): boolean {
   const operation = params.operation as string | undefined;
 
   return VALID_RESULT_OPERATIONS.includes(operation || '');
-}
-
-/**
- * Check if a node is a terminal node (workflow ends there)
- */
-function isTerminalNode(node: NodeRef): boolean {
-  const nodeType = node.type.toLowerCase();
-  return TERMINAL_NODE_PATTERNS.some(p => nodeType.includes(p));
 }
 
 /**
@@ -130,14 +115,6 @@ export const codikaSubmitResult: RuleRunner = (graph: Graph, ctx: RuleContext): 
 
     // Check if it's a Codika result node
     if (isCodikaResultNode(terminal)) {
-      continue;
-    }
-
-    // Check if it's another acceptable terminal node
-    // (like Respond to Webhook which handles response directly)
-    if (isTerminalNode(terminal)) {
-      // For respond to webhook, we should still have Codika Submit somewhere
-      // but this is a softer requirement
       continue;
     }
 

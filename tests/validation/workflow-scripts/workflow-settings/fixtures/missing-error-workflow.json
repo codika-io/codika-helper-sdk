@@ -3,14 +3,13 @@
   "nodes": [
     {
       "id": "webhook-001",
-      "name": "Webhook",
+      "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [0, 0],
-      "webhookId": "test-webhook",
       "parameters": {
-        "path": "test",
-        "responseMode": "lastNode"
+        "httpMethod": "POST",
+        "path": "/test"
       }
     }
   ],

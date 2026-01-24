@@ -1,20 +1,21 @@
 {
-  "name": "Workflow Missing executionOrder Setting",
+  "name": "Main Workflow (Broken Config Test)",
   "nodes": [
     {
-      "id": "webhook-001",
+      "id": "webhook-003",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [0, 0],
       "parameters": {
         "httpMethod": "POST",
-        "path": "/test"
+        "path": "broken"
       }
     }
   ],
   "connections": {},
   "settings": {
+    "executionOrder": "v1",
     "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
   }
 }

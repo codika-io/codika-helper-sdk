@@ -137,16 +137,31 @@ export async function checkWorkflowImports(useCasePath: string): Promise<Finding
           if (!declaredNames.has(actualFile)) {
             findings.push({
               rule: metadata.id,
-              severity: 'should',
+              severity: 'must',
               path: join(workflowsPath, actualFile),
               message: `Workflow file not listed in WORKFLOW_FILES: ${actualFile}`,
               raw_details: `Add this file to WORKFLOW_FILES array or remove it from workflows/`,
             });
           }
         }
+      } else {
+        // Could not parse WORKFLOW_FILES from config.ts
+        findings.push({
+          rule: metadata.id,
+          severity: 'must',
+          path: configPath,
+          message: 'Cannot parse WORKFLOW_FILES array from config.ts',
+          raw_details: 'Ensure config.ts exports a valid WORKFLOW_FILES array with proper syntax',
+        });
       }
     } catch (error) {
-      // Config reading failed - covered by other checks
+      findings.push({
+        rule: metadata.id,
+        severity: 'must',
+        path: configPath,
+        message: `Cannot parse WORKFLOW_FILES in config.ts: ${(error as Error).message}`,
+        raw_details: 'Fix syntax errors in config.ts or ensure WORKFLOW_FILES is properly formatted',
+      });
     }
   }
 
