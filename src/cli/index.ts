@@ -14,10 +14,13 @@
  */
 
 import { program } from 'commander';
+import { createRequire } from 'module';
 import { deployCommand } from './commands/deploy.js';
 import { verifyCommand } from './commands/verify/index.js';
 
-const VERSION = '1.3.0';
+// Read version from package.json dynamically
+const require = createRequire(import.meta.url);
+const { version: VERSION } = require('../../package.json');
 
 program
   .name('codika-helper')
