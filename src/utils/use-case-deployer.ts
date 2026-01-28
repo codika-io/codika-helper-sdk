@@ -160,10 +160,9 @@ function readMetadataFiles(metadataDir: string): MetadataDocument[] {
  * Read use case source files (config.ts and workflow JSONs) as metadata documents
  *
  * @param useCasePath - Path to the use case folder
- * @param workflowFiles - List of workflow file names from config
  * @returns Array of MetadataDocument objects for source files
  */
-function readUseCaseSourceFiles(useCasePath: string, workflowFiles: string[]): MetadataDocument[] {
+function readUseCaseSourceFiles(useCasePath: string): MetadataDocument[] {
   const documents: MetadataDocument[] = [];
 
   // 1. Read config.ts
@@ -176,15 +175,13 @@ function readUseCaseSourceFiles(useCasePath: string, workflowFiles: string[]): M
   // 2. Read all workflow JSON files from workflows/ directory
   const workflowsPath = join(useCasePath, 'workflows');
   if (existsSync(workflowsPath)) {
-    // If WORKFLOW_FILES is specified, use those; otherwise read all .json files
-    const filesToRead = workflowFiles.length > 0
-      ? workflowFiles
-      : readdirSync(workflowsPath).filter(f => f.endsWith('.json'));
+    // Always read all .json files from workflows folder (ignore WORKFLOW_FILES)
+    const workflowFiles = readdirSync(workflowsPath).filter(f => f.endsWith('.json'));
 
-    for (const workflowFile of filesToRead) {
+    for (const workflowFile of workflowFiles) {
       const workflowPath = join(workflowsPath, workflowFile);
-      // Use workflows/ prefix in filename to organize in storage
-      const doc = readFileAsMetadata(workflowPath, `workflows/${workflowFile}`, `Workflow definition: ${workflowFile}`);
+      // Use "workflow-" prefix (not "workflows/") to avoid sanitization issues
+      const doc = readFileAsMetadata(workflowPath, `workflow-${workflowFile}`, `Workflow: ${workflowFile}`);
       if (doc) {
         documents.push(doc);
       }
@@ -293,7 +290,7 @@ export async function deployUseCaseFromFolder(
   const metadataDocuments: MetadataDocument[] = [];
 
   // 1. Always include use case source files (config.ts and workflow JSONs)
-  const sourceFiles = readUseCaseSourceFiles(useCasePath, workflowFiles);
+  const sourceFiles = readUseCaseSourceFiles(useCasePath);
   metadataDocuments.push(...sourceFiles);
 
   // 2. Add any additional metadata files from the metadata directory
