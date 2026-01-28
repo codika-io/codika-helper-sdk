@@ -5,8 +5,11 @@ Codika helper SDK - types and utilities for use case configuration.
 ## Publishing to NPM
 
 ```bash
+npm login
 npm version patch  # or minor / major
-npm publish
+npm publish --access=public
+
+/Users/romainpattyn/.codika/codika-agent/scripts/update-helper-sdk-version.sh x.y.z
 ```
 
 ## Installation
