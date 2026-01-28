@@ -10,6 +10,7 @@ import type {
   DeployProcessUseCaseResponse,
   DeployProcessUseCaseSuccessResponse,
   DeployProcessUseCaseErrorResponse,
+  MetadataDocument,
 } from '../types/process-types.js';
 
 /**
@@ -28,6 +29,8 @@ export interface DeployOptions {
   versionStrategy?: VersionStrategy;
   /** Explicit version (required if versionStrategy is 'explicit') */
   explicitVersion?: string;
+  /** Optional metadata documents to upload alongside the deployment */
+  metadataDocuments?: MetadataDocument[];
 }
 
 /**
@@ -69,6 +72,7 @@ export async function deployProcess(
     apiUrl,
     versionStrategy,
     explicitVersion,
+    metadataDocuments,
   } = options;
 
   // Build request body
@@ -83,6 +87,10 @@ export async function deployProcess(
 
   if (explicitVersion) {
     requestBody.explicitVersion = explicitVersion;
+  }
+
+  if (metadataDocuments && metadataDocuments.length > 0) {
+    requestBody.metadataDocuments = metadataDocuments;
   }
 
   // Make API request

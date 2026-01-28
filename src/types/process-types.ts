@@ -638,11 +638,48 @@ export interface ProcessDeploymentConfigurationInput {
 
 export type VersionStrategy = 'major_bump' | 'minor_bump' | 'explicit';
 
+// ============================================================================
+// Metadata Document Types
+// ============================================================================
+
+/**
+ * Metadata document for deployment
+ * Allows uploading any document type (JSON, Markdown, etc.) alongside use case deployments
+ */
+export interface MetadataDocument {
+  /** Filename with extension (e.g., "session_log.md", "task_state.json") */
+  filename: string;
+  /** MIME content type (e.g., "application/json", "text/markdown") */
+  contentType: string;
+  /** Base64-encoded file content */
+  contentBase64: string;
+  /** Optional description of the document */
+  description?: string;
+  /** Optional tags for categorization */
+  tags?: string[];
+}
+
+/**
+ * Result of uploading a metadata document
+ */
+export interface MetadataDocumentUploadResult {
+  /** Original filename */
+  filename: string;
+  /** Storage path in Firebase Storage */
+  storagePath: string;
+  /** Whether the upload was successful */
+  success: boolean;
+  /** Error message if upload failed */
+  error?: string;
+}
+
 export interface DeployProcessUseCaseRequest {
   projectId: string;
   versionStrategy?: VersionStrategy;
   explicitVersion?: string;
   configuration: ProcessDeploymentConfigurationInput;
+  /** Optional metadata documents to store alongside the deployment */
+  metadataDocuments?: MetadataDocument[];
 }
 
 export interface DeployedWorkflowInfo {
@@ -661,6 +698,8 @@ export interface DeployProcessUseCaseSuccessData {
   workflowsDeployed: DeployedWorkflowInfo[];
   deploymentStatus: 'deployed' | 'failed' | 'pending';
   error?: string;
+  /** Results of metadata document uploads, if any were provided */
+  metadataDocumentsStored?: MetadataDocumentUploadResult[];
 }
 
 export interface DeployProcessUseCaseSuccessResponse {

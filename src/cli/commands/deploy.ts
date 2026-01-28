@@ -22,6 +22,7 @@ export const deployCommand = new Command('deploy')
     'minor_bump'
   )
   .option('--explicit-version <version>', 'Explicit version (required if strategy is explicit)')
+  .option('--metadata-dir <path>', 'Path to metadata directory containing files to upload alongside deployment')
   .option('--json', 'Output result as JSON')
   .action(async (path: string, options: DeployCommandOptions) => {
     try {
@@ -47,6 +48,7 @@ interface DeployCommandOptions {
   apiKey?: string;
   versionStrategy: string;
   explicitVersion?: string;
+  metadataDir?: string;
   json?: boolean;
 }
 
@@ -90,6 +92,9 @@ async function runDeploy(useCasePath: string, options: DeployCommandOptions): Pr
     exitWithError('Explicit version is required when using --version-strategy explicit');
   }
 
+  // Resolve metadata directory if provided
+  const metadataDir = options.metadataDir ? resolve(options.metadataDir) : undefined;
+
   // Deploy
   const result = await deployUseCaseFromFolder({
     useCasePath: absolutePath,
@@ -97,6 +102,7 @@ async function runDeploy(useCasePath: string, options: DeployCommandOptions): Pr
     apiKey,
     versionStrategy,
     explicitVersion: options.explicitVersion,
+    metadataDir,
   });
 
   // Output result

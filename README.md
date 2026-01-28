@@ -2,6 +2,13 @@
 
 Codika helper SDK - types and utilities for use case configuration.
 
+## Publishing to NPM
+
+```bash
+npm version patch  # or minor / major
+npm publish
+```
+
 ## Installation
 
 ```bash
