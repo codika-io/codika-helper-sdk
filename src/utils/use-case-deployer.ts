@@ -3,7 +3,8 @@
  * High-level function to deploy a use case from its folder path
  */
 
-import { join, extname, basename } from 'path';
+import { createHash } from 'crypto';
+import { join, extname, basename, dirname } from 'path';
 import { pathToFileURL } from 'url';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import type { ProcessDeploymentConfigurationInput, VersionStrategy, MetadataDocument } from '../types/process-types.js';
@@ -28,8 +29,8 @@ export interface DeployUseCaseOptions {
   versionStrategy?: VersionStrategy;
   /** Explicit version (required if versionStrategy is 'explicit') */
   explicitVersion?: string;
-  /** Optional path to metadata directory containing files to upload */
-  metadataDir?: string;
+  /** Additional files to include (e.g., PRD, logs) */
+  additionalFiles?: Array<{ absolutePath: string; relativePath: string }>;
 }
 
 /**
@@ -71,25 +72,53 @@ const MIME_TYPES: Record<string, string> = {
 /**
  * Get MIME type for a file based on extension
  */
-function getMimeType(filename: string): string {
-  const ext = extname(filename).toLowerCase();
+function getMimeType(filePath: string): string {
+  const ext = extname(filePath).toLowerCase();
   return MIME_TYPES[ext] || 'application/octet-stream';
+}
+
+/**
+ * Generate a short hash of the relative path for collision-safe storage filenames
+ */
+function hashPath(relativePath: string): string {
+  return createHash('md5').update(relativePath).digest('hex').substring(0, 8);
+}
+
+/**
+ * Get the storage filename with hash prefix to prevent collisions
+ * Files with same name in different folders get different hashes
+ */
+function getStorageFilename(relativePath: string): string {
+  const filename = basename(relativePath);
+  return `${hashPath(relativePath)}-${filename}`;
+}
+
+/**
+ * Validate that a relative path is safe (no absolute paths or traversal)
+ */
+function validateRelativePath(relativePath: string): void {
+  if (relativePath.startsWith('/')) {
+    throw new Error(`relativePath must not be absolute: ${relativePath}`);
+  }
+  if (relativePath.includes('..')) {
+    throw new Error(`relativePath must not contain '..': ${relativePath}`);
+  }
 }
 
 /**
  * Read a single file and convert to MetadataDocument
  *
- * @param filePath - Absolute path to the file
- * @param filename - Filename to use in the metadata document (can include subdirectory prefix)
+ * @param absolutePath - Absolute path to the file
+ * @param relativePath - Relative path for storage and reconstruction
  * @param description - Optional description for the document
  * @returns MetadataDocument or null if file cannot be read
  */
-function readFileAsMetadata(filePath: string, filename: string, description?: string): MetadataDocument | null {
-  if (!existsSync(filePath)) {
+function readFileAsDocument(absolutePath: string, relativePath: string, description?: string): MetadataDocument | null {
+  if (!existsSync(absolutePath)) {
     return null;
   }
 
-  const fileStat = statSync(filePath);
+  const fileStat = statSync(absolutePath);
 
   // Skip directories
   if (fileStat.isDirectory()) {
@@ -98,66 +127,30 @@ function readFileAsMetadata(filePath: string, filename: string, description?: st
 
   // Skip files larger than 10MB
   if (fileStat.size > 10 * 1024 * 1024) {
-    console.warn(`Skipping ${filename}: exceeds 10MB size limit`);
+    console.warn(`Skipping ${relativePath}: exceeds 10MB size limit`);
     return null;
   }
 
   try {
-    const content = readFileSync(filePath);
+    const content = readFileSync(absolutePath);
     const contentBase64 = content.toString('base64');
-    const contentType = getMimeType(filename);
+    const contentType = getMimeType(absolutePath);
 
     return {
-      filename,
+      relativePath,
       contentType,
       contentBase64,
       ...(description && { description }),
     };
   } catch (error) {
-    console.warn(`Failed to read ${filename}: ${error instanceof Error ? error.message : error}`);
+    console.warn(`Failed to read ${relativePath}: ${error instanceof Error ? error.message : error}`);
     return null;
   }
 }
 
 /**
- * Read metadata files from a directory and convert to MetadataDocument array
- *
- * @param metadataDir - Path to the metadata directory
- * @returns Array of MetadataDocument objects
- */
-function readMetadataFiles(metadataDir: string): MetadataDocument[] {
-  const documents: MetadataDocument[] = [];
-
-  if (!existsSync(metadataDir)) {
-    return documents;
-  }
-
-  const stat = statSync(metadataDir);
-  if (!stat.isDirectory()) {
-    return documents;
-  }
-
-  const files = readdirSync(metadataDir);
-
-  for (const file of files) {
-    const filePath = join(metadataDir, file);
-
-    // Skip hidden files
-    if (file.startsWith('.')) {
-      continue;
-    }
-
-    const doc = readFileAsMetadata(filePath, file);
-    if (doc) {
-      documents.push(doc);
-    }
-  }
-
-  return documents;
-}
-
-/**
  * Read use case source files (config.ts and workflow JSONs) as metadata documents
+ * All files use their relative path for exact reconstruction
  *
  * @param useCasePath - Path to the use case folder
  * @returns Array of MetadataDocument objects for source files
@@ -167,7 +160,7 @@ function readUseCaseSourceFiles(useCasePath: string): MetadataDocument[] {
 
   // 1. Read config.ts
   const configPath = join(useCasePath, 'config.ts');
-  const configDoc = readFileAsMetadata(configPath, 'config.ts', 'Use case configuration file');
+  const configDoc = readFileAsDocument(configPath, 'config.ts', 'Use case configuration');
   if (configDoc) {
     documents.push(configDoc);
   }
@@ -175,13 +168,14 @@ function readUseCaseSourceFiles(useCasePath: string): MetadataDocument[] {
   // 2. Read all workflow JSON files from workflows/ directory
   const workflowsPath = join(useCasePath, 'workflows');
   if (existsSync(workflowsPath)) {
-    // Always read all .json files from workflows folder (ignore WORKFLOW_FILES)
     const workflowFiles = readdirSync(workflowsPath).filter(f => f.endsWith('.json'));
 
     for (const workflowFile of workflowFiles) {
-      const workflowPath = join(workflowsPath, workflowFile);
-      // Use "workflow-" prefix (not "workflows/") to avoid sanitization issues
-      const doc = readFileAsMetadata(workflowPath, `workflow-${workflowFile}`, `Workflow: ${workflowFile}`);
+      const doc = readFileAsDocument(
+        join(workflowsPath, workflowFile),
+        `workflows/${workflowFile}`,  // relativePath includes folder
+        `Workflow: ${workflowFile}`
+      );
       if (doc) {
         documents.push(doc);
       }
@@ -234,7 +228,7 @@ export async function deployUseCaseFromFolder(
     apiUrl,
     versionStrategy,
     explicitVersion,
-    metadataDir,
+    additionalFiles,
   } = options;
 
   // Validate use case structure
@@ -286,17 +280,21 @@ export async function deployUseCaseFromFolder(
   const configuration = configModule.getConfiguration();
   const workflowFiles = configModule.WORKFLOW_FILES || [];
 
-  // Build metadata documents array
-  const metadataDocuments: MetadataDocument[] = [];
+  // Build document list - all files use relativePath for reconstruction
+  const documents: MetadataDocument[] = [];
 
-  // 1. Always include use case source files (config.ts and workflow JSONs)
-  const sourceFiles = readUseCaseSourceFiles(useCasePath);
-  metadataDocuments.push(...sourceFiles);
+  // 1. Source files (config.ts, workflows/)
+  documents.push(...readUseCaseSourceFiles(useCasePath));
 
-  // 2. Add any additional metadata files from the metadata directory
-  if (metadataDir) {
-    const additionalFiles = readMetadataFiles(metadataDir);
-    metadataDocuments.push(...additionalFiles);
+  // 2. Additional files (PRD, logs, etc.)
+  if (additionalFiles) {
+    for (const file of additionalFiles) {
+      validateRelativePath(file.relativePath);
+      const doc = readFileAsDocument(file.absolutePath, file.relativePath);
+      if (doc) {
+        documents.push(doc);
+      }
+    }
   }
 
   // Deploy to the platform
@@ -307,7 +305,7 @@ export async function deployUseCaseFromFolder(
     apiUrl,
     versionStrategy,
     explicitVersion,
-    metadataDocuments: metadataDocuments.length > 0 ? metadataDocuments : undefined,
+    metadataDocuments: documents.length > 0 ? documents : undefined,
   });
 
   // Return result with additional context for archiving

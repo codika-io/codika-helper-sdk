@@ -5,7 +5,7 @@
  */
 
 import { Command } from 'commander';
-import { resolve } from 'path';
+import { resolve, isAbsolute } from 'path';
 import { existsSync } from 'fs';
 import { deployUseCaseFromFolder, isDeploySuccess } from '../../utils/use-case-deployer.js';
 import { formatSuccess, formatError, toJson, exitWithError } from '../utils/output.js';
@@ -22,7 +22,12 @@ export const deployCommand = new Command('deploy')
     'minor_bump'
   )
   .option('--explicit-version <version>', 'Explicit version (required if strategy is explicit)')
-  .option('--metadata-dir <path>', 'Path to metadata directory containing files to upload alongside deployment')
+  .option(
+    '--additional-file <absolutePath:relativePath>',
+    'Add file with its relative path (repeatable)',
+    (value: string, previous: string[]) => previous.concat([value]),
+    [] as string[]
+  )
   .option('--json', 'Output result as JSON')
   .action(async (path: string, options: DeployCommandOptions) => {
     try {
@@ -48,7 +53,7 @@ interface DeployCommandOptions {
   apiKey?: string;
   versionStrategy: string;
   explicitVersion?: string;
-  metadataDir?: string;
+  additionalFile?: string[];
   json?: boolean;
 }
 
@@ -92,8 +97,27 @@ async function runDeploy(useCasePath: string, options: DeployCommandOptions): Pr
     exitWithError('Explicit version is required when using --version-strategy explicit');
   }
 
-  // Resolve metadata directory if provided
-  const metadataDir = options.metadataDir ? resolve(options.metadataDir) : undefined;
+  // Parse additional files
+  const additionalFiles = options.additionalFile?.map((entry: string) => {
+    const colonIdx = entry.indexOf(':');
+    if (colonIdx === -1) {
+      exitWithError(`Invalid --additional-file format: "${entry}". Expected "absolutePath:relativePath"`);
+    }
+    const absPath = entry.slice(0, colonIdx);
+    const relPath = entry.slice(colonIdx + 1);
+
+    if (!relPath) {
+      exitWithError(`Missing relativePath in --additional-file: "${entry}"`);
+    }
+
+    // Resolve absolute path (support relative paths on command line)
+    const resolvedAbsPath = isAbsolute(absPath) ? absPath : resolve(absPath);
+
+    return {
+      absolutePath: resolvedAbsPath,
+      relativePath: relPath,
+    };
+  });
 
   // Deploy
   const result = await deployUseCaseFromFolder({
@@ -102,7 +126,7 @@ async function runDeploy(useCasePath: string, options: DeployCommandOptions): Pr
     apiKey,
     versionStrategy,
     explicitVersion: options.explicitVersion,
-    metadataDir,
+    additionalFiles,
   });
 
   // Output result

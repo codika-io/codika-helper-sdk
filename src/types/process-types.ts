@@ -644,27 +644,25 @@ export type VersionStrategy = 'major_bump' | 'minor_bump' | 'explicit';
 
 /**
  * Metadata document for deployment
- * Allows uploading any document type (JSON, Markdown, etc.) alongside use case deployments
+ * Represents ANY file with its relative path for exact reconstruction
  */
 export interface MetadataDocument {
-  /** Filename with extension (e.g., "session_log.md", "task_state.json") */
-  filename: string;
+  /** Relative path from use case root (e.g., "config.ts", "workflows/main.json", ".codika-agent/prd/prd.md") */
+  relativePath: string;
   /** MIME content type (e.g., "application/json", "text/markdown") */
   contentType: string;
   /** Base64-encoded file content */
   contentBase64: string;
   /** Optional description of the document */
   description?: string;
-  /** Optional tags for categorization */
-  tags?: string[];
 }
 
 /**
  * Result of uploading a metadata document
  */
 export interface MetadataDocumentUploadResult {
-  /** Original filename */
-  filename: string;
+  /** Relative path for reconstruction */
+  relativePath: string;
   /** Storage path in Firebase Storage */
   storagePath: string;
   /** Whether the upload was successful */
