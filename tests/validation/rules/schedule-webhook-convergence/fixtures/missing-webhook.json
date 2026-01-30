@@ -1,0 +1,47 @@
+{
+  "name": "Invalid - Missing Webhook",
+  "nodes": [
+    {
+      "id": "schedule-001",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 0 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "init-001",
+      "name": "Codika Init",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "parameters": {
+        "operation": "initWorkflow"
+      }
+    },
+    {
+      "id": "code-001",
+      "name": "Process",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Daily Schedule": {
+      "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]]
+    },
+    "Codika Init": {
+      "main": [[{ "node": "Process", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

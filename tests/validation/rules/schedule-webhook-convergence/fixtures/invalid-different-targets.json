@@ -1,0 +1,53 @@
+{
+  "name": "Invalid - Different Targets",
+  "nodes": [
+    {
+      "id": "schedule-001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {}
+    },
+    {
+      "id": "webhook-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "parameters": {}
+    },
+    {
+      "id": "init-schedule-001",
+      "name": "Init for Schedule",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "parameters": {
+        "operation": "initWorkflow"
+      }
+    },
+    {
+      "id": "init-webhook-001",
+      "name": "Init for Webhook",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [220, 300],
+      "parameters": {
+        "operation": "initWorkflow"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{ "node": "Init for Schedule", "type": "main", "index": 0 }]]
+    },
+    "Webhook": {
+      "main": [[{ "node": "Init for Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

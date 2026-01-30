@@ -1,0 +1,20 @@
+{
+  "name": "HTTP Workflow",
+  "nodes": [
+    {
+      "id": "webhook-http",
+      "name": "Submit Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/submit"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

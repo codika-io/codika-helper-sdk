@@ -9,6 +9,7 @@ import type { RuleRunner } from '@replikanti/flowlint-core';
 import { codikaInitRequired } from './codika-init-required.js';
 import { codikaSubmitResult } from './codika-submit-result.js';
 import { subworkflowMinParams } from './subworkflow-min-params.js';
+import { scheduleWebhookConvergence } from './schedule-webhook-convergence.js';
 
 /**
  * All custom Flowlint rules for Codika workflows
@@ -19,6 +20,7 @@ export const customRules: RuleRunner[] = [
   codikaInitRequired,
   codikaSubmitResult,
   subworkflowMinParams,
+  scheduleWebhookConvergence,
   // Add more custom rules here as they are implemented
 ];
 
@@ -26,3 +28,4 @@ export const customRules: RuleRunner[] = [
 export { codikaInitRequired } from './codika-init-required.js';
 export { codikaSubmitResult } from './codika-submit-result.js';
 export { subworkflowMinParams } from './subworkflow-min-params.js';
+export { scheduleWebhookConvergence } from './schedule-webhook-convergence.js';

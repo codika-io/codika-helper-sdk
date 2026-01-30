@@ -10,6 +10,9 @@ import { checkConfigExports } from './config-exports.js';
 import { checkWorkflowImports } from './workflow-imports.js';
 import { checkSchemaTypes } from './schema-types.js';
 import { checkSubworkflowReferences } from './subworkflow-references.js';
+import { checkCalledByConsistency } from './calledby-consistency.js';
+import { checkIntegrationInheritance } from './integration-inheritance.js';
+import { checkWebhookPathConsistency } from './webhook-path-consistency.js';
 
 /**
  * All use-case scripts to run during validation
@@ -22,7 +25,9 @@ export const useCaseScripts: UseCaseScript[] = [
   checkWorkflowImports,
   checkSchemaTypes,
   checkSubworkflowReferences,
-  // Add more use-case scripts here
+  checkCalledByConsistency,
+  checkIntegrationInheritance,
+  checkWebhookPathConsistency,
 ];
 
 // Re-export individual scripts
@@ -30,3 +35,6 @@ export { checkConfigExports } from './config-exports.js';
 export { checkWorkflowImports } from './workflow-imports.js';
 export { checkSchemaTypes } from './schema-types.js';
 export { checkSubworkflowReferences } from './subworkflow-references.js';
+export { checkCalledByConsistency } from './calledby-consistency.js';
+export { checkIntegrationInheritance } from './integration-inheritance.js';
+export { checkWebhookPathConsistency } from './webhook-path-consistency.js';

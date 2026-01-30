@@ -1,0 +1,42 @@
+{
+  "name": "Standalone Workflow",
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {}
+    },
+    {
+      "name": "Anthropic",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "parameters": {},
+      "credentials": {
+        "anthropicApi": {
+          "id": "{{FLEXCRED_ANTHROPIC_ID_DERCXELF}}",
+          "name": "{{FLEXCRED_ANTHROPIC_NAME_DERCXELF}}"
+        }
+      }
+    },
+    {
+      "name": "Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [400, 0],
+      "parameters": {},
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{USERCRED_GMAIL_OAUTH_ID_DERCRESU}}",
+          "name": "{{USERCRED_GMAIL_OAUTH_NAME_DERCRESU}}"
+        }
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

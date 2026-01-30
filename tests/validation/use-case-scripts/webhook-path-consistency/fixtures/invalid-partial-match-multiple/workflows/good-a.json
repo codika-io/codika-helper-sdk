@@ -1,0 +1,20 @@
+{
+  "name": "Good Workflow A",
+  "nodes": [
+    {
+      "id": "webhook-a",
+      "name": "Webhook A",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/action-a"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

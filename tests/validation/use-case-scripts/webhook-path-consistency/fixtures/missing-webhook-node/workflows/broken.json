@@ -1,0 +1,19 @@
+{
+  "name": "Broken Workflow",
+  "nodes": [
+    {
+      "id": "code-001",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "jsCode": "return items;"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

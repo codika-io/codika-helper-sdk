@@ -1,0 +1,20 @@
+{
+  "name": "Mismatch Workflow",
+  "nodes": [
+    {
+      "id": "webhook-mismatch",
+      "name": "Webhook Mismatch",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/actual-path"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "Valid Schedule with Webhook - Same Target",
+  "nodes": [
+    {
+      "id": "schedule-001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "webhook-001",
+      "name": "Manual Trigger Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 200],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/manual-run"
+      }
+    },
+    {
+      "id": "codika-init-001",
+      "name": "Codika Init",
+      "type": "n8n-nodes-codika.codika",
+      "typeVersion": 1,
+      "position": [200, 100],
+      "parameters": {
+        "operation": "initWorkflow"
+      }
+    },
+    {
+      "id": "process-001",
+      "name": "Process Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 100],
+      "parameters": {
+        "jsCode": "return items;"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]]
+    },
+    "Manual Trigger Webhook": {
+      "main": [[{ "node": "Codika Init", "type": "main", "index": 0 }]]
+    },
+    "Codika Init": {
+      "main": [[{ "node": "Process Data", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

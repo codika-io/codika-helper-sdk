@@ -1,0 +1,20 @@
+{
+  "name": "Workflow B",
+  "nodes": [
+    {
+      "id": "webhook-b",
+      "name": "Webhook B",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/action-b"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
