@@ -12,6 +12,7 @@ import { checkCredentialPlaceholders } from './credential-placeholders.js';
 import { checkWorkflowSettings } from './workflow-settings.js';
 import { checkWorkflowSanitization } from './workflow-sanitization.js';
 import { checkLlmOutputAccess } from './llm-output-access.js';
+import { checkWebhookId } from './webhook-id.js';
 
 /**
  * All workflow scripts to run during validation
@@ -26,6 +27,7 @@ export const workflowScripts: WorkflowScript[] = [
   checkWorkflowSettings,
   checkWorkflowSanitization,
   checkLlmOutputAccess,
+  checkWebhookId,
 ];
 
 // Re-export individual scripts
@@ -35,3 +37,4 @@ export { checkCredentialPlaceholders } from './credential-placeholders.js';
 export { checkWorkflowSettings } from './workflow-settings.js';
 export { checkWorkflowSanitization } from './workflow-sanitization.js';
 export { checkLlmOutputAccess } from './llm-output-access.js';
+export { checkWebhookId } from './webhook-id.js';

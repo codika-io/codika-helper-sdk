@@ -1,0 +1,31 @@
+{
+  "name": "Workflow With One Valid and One Missing Webhook ID",
+  "nodes": [
+    {
+      "name": "Webhook With ID",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "webhook-with-id",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "with-id"
+      }
+    },
+    {
+      "name": "Webhook Without ID",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 600],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "without-id"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}"
+  }
+}

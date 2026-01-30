@@ -4,12 +4,12 @@ This document describes all validation rules used by the Codika Helper SDK to ve
 
 ## Overview
 
-The validation system has **13 validators** organized into 3 categories:
+The validation system has **14 validators** organized into 3 categories:
 
 | Category | Count | Purpose |
 |----------|-------|---------|
 | **Flowlint Rules** | 3 | Graph-based workflow structure validation |
-| **Workflow Scripts** | 6 | JSON content validation for individual workflows |
+| **Workflow Scripts** | 7 | JSON content validation for individual workflows |
 | **Use-Case Scripts** | 4 | Project-level configuration validation |
 
 ### Severity Levels
@@ -380,6 +380,49 @@ $('Classify').item.json.confidence  ❌
 
 ---
 
+### WEBHOOK-ID
+
+| Property | Value |
+|----------|-------|
+| **Rule ID** | `WEBHOOK-ID` |
+| **Severity** | `must` |
+| **Fixable** | Yes |
+| **Category** | Webhook |
+
+**Description:** Webhook nodes must have a `webhookId` property for production webhook registration.
+
+**Why:** Without `webhookId`, the webhook path is never registered in production even when the workflow is active, causing 404 errors at runtime.
+
+**What It Checks:**
+- Finds all `n8n-nodes-base.webhook` nodes
+- Verifies each has a `webhookId` string property at the node level (sibling to `name`, `type`, `parameters`)
+
+**Valid:**
+```json
+{
+  "name": "HTTP Trigger",
+  "type": "n8n-nodes-base.webhook",
+  "typeVersion": 2,
+  "webhookId": "http-trigger",
+  "parameters": { "path": "my-webhook" }
+}
+```
+
+**Invalid:**
+```json
+{
+  "name": "HTTP Trigger",
+  "type": "n8n-nodes-base.webhook",
+  "typeVersion": 2,
+  "parameters": { "path": "my-webhook" }
+  // Missing webhookId  ❌
+}
+```
+
+**Auto-Fix:** Generates a `webhookId` by slugifying the node name (e.g., `"HTTP Trigger"` → `"http-trigger"`).
+
+---
+
 ## Use-Case Scripts
 
 These scripts validate project-level configuration across the entire use-case folder.
@@ -523,10 +566,10 @@ workflows: [
 
 ### By Severity
 
-**Must (Critical - 12 rules):**
+**Must (Critical - 13 rules):**
 - CODIKA-INIT, CODIKA-SUBMIT, SUBWKFL-MIN-PARAMS
 - INSTPARM-QUOTE, PLACEHOLDER-SYNTAX, WORKFLOW-SANITIZATION, WORKFLOW-SETTINGS
-- LLM-OUTPUT-ACCESS
+- LLM-OUTPUT-ACCESS, WEBHOOK-ID
 - CONFIG-EXPORTS, CONFIG-WORKFLOWS, SCHEMA-TYPES, SUBWKFL-REFERENCES
 
 **Should (Recommended - 1 rule):**
@@ -534,12 +577,13 @@ workflows: [
 
 ### By Auto-Fix Capability
 
-**Fixable (5 rules):**
+**Fixable (6 rules):**
 - INSTPARM-QUOTE - Removes quotes around placeholders
 - PLACEHOLDER-SYNTAX - Corrects suffix for known types
 - WORKFLOW-SANITIZATION - Removes forbidden properties
 - WORKFLOW-SETTINGS - Adds/corrects required settings
 - LLM-OUTPUT-ACCESS - Adds .output prefix for LLM chain outputs
+- WEBHOOK-ID - Adds webhookId derived from node name
 
 **Not Fixable (8 rules):**
 - CODIKA-INIT, CODIKA-SUBMIT, SUBWKFL-MIN-PARAMS
@@ -548,12 +592,13 @@ workflows: [
 
 ### Test Coverage
 
-Total: **333 tests** across 13 test files
+Total: **365 tests** across 14 test files
 
 | Validator | Tests |
 |-----------|-------|
 | PLACEHOLDER-SYNTAX | 123 |
 | CRED-PLACEHOLDER | 47 |
+| WEBHOOK-ID | 32 |
 | WORKFLOW-SANITIZATION | 27 |
 | WORKFLOW-SETTINGS | 26 |
 | LLM-OUTPUT-ACCESS | 23 |
