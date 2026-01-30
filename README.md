@@ -9,7 +9,7 @@ npm login
 npm version patch  # or minor / major
 npm publish --access=public
 
-/Users/romainpattyn/.codika/.claude/scripts/update-helper-sdk-version.sh x.y.z
+$HOME/.codika/.claude/scripts/update-helper-sdk-version.sh x.y.z
 ```
 
 ## Installation
