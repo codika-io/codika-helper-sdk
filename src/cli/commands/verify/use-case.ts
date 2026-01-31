@@ -69,10 +69,17 @@ export const useCaseCommand = new Command('use-case')
       });
 
       if (options.json) {
+        // Compute rule counts from findings
+        const ruleCount: Record<string, number> = {};
+        for (const f of result.findings) {
+          ruleCount[f.rule] = (ruleCount[f.rule] || 0) + 1;
+        }
+
         console.log(JSON.stringify({
           valid: result.valid,
           path: absolutePath,
           summary: result.summary,
+          ruleCount,
           filesValidated: result.filesValidated,
           findings: result.findings.map(f => ({
             rule: f.rule,

@@ -27,7 +27,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "cli:local": "./scripts/toggle-cli.sh local",
+    "cli:public": "./scripts/toggle-cli.sh public",
+    "cli:status": "./scripts/toggle-cli.sh status"
   },
   "keywords": [
     "codika",
