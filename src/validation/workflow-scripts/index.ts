@@ -13,6 +13,7 @@ import { checkWorkflowSettings } from './workflow-settings.js';
 import { checkWorkflowSanitization } from './workflow-sanitization.js';
 import { checkLlmOutputAccess } from './llm-output-access.js';
 import { checkWebhookId } from './webhook-id.js';
+import { checkLlmModelId } from './llm-model-id.js';
 
 /**
  * All workflow scripts to run during validation
@@ -28,6 +29,7 @@ export const workflowScripts: WorkflowScript[] = [
   checkWorkflowSanitization,
   checkLlmOutputAccess,
   checkWebhookId,
+  checkLlmModelId,
 ];
 
 // Re-export individual scripts
@@ -38,3 +40,4 @@ export { checkWorkflowSettings } from './workflow-settings.js';
 export { checkWorkflowSanitization } from './workflow-sanitization.js';
 export { checkLlmOutputAccess } from './llm-output-access.js';
 export { checkWebhookId } from './webhook-id.js';
+export { checkLlmModelId } from './llm-model-id.js';
