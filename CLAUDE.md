@@ -67,6 +67,21 @@ codika-helper verify workflow <path> [--json] [--fix]
 codika-helper deploy <path>
 ```
 
+## Development Guidelines
+
+### Adding New Validation Rules
+
+**Always use test-driven development (TDD):**
+
+1. **Write the test first** - Create test cases in the appropriate test file before implementing the rule
+2. **Implement the feature** - Write the validation rule to make the tests pass
+3. **Refactor** - Clean up the implementation while keeping tests green
+
+This approach ensures:
+- Rules are well-tested from the start
+- Edge cases are considered upfront
+- The rule's behavior is documented through tests
+
 ## Key Files
 
 - `src/cli/commands/verify/use-case.ts` - Use-case validation command with JSON output
