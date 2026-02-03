@@ -13,6 +13,8 @@ import { checkSubworkflowReferences } from './subworkflow-references.js';
 import { checkCalledByConsistency } from './calledby-consistency.js';
 import { checkIntegrationInheritance } from './integration-inheritance.js';
 import { checkWebhookPathConsistency } from './webhook-path-consistency.js';
+import { checkTriggersRequired } from './triggers-required.js';
+import { checkTriggerTypeConsistency } from './trigger-type-consistency.js';
 
 /**
  * All use-case scripts to run during validation
@@ -28,6 +30,8 @@ export const useCaseScripts: UseCaseScript[] = [
   checkCalledByConsistency,
   checkIntegrationInheritance,
   checkWebhookPathConsistency,
+  checkTriggersRequired,
+  checkTriggerTypeConsistency,
 ];
 
 // Re-export individual scripts
@@ -38,3 +42,5 @@ export { checkSubworkflowReferences } from './subworkflow-references.js';
 export { checkCalledByConsistency } from './calledby-consistency.js';
 export { checkIntegrationInheritance } from './integration-inheritance.js';
 export { checkWebhookPathConsistency } from './webhook-path-consistency.js';
+export { checkTriggersRequired } from './triggers-required.js';
+export { checkTriggerTypeConsistency } from './trigger-type-consistency.js';
