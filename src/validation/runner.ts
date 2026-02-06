@@ -38,10 +38,10 @@ import { applyFixes } from './fixer.js';
  * Add more rules here as needed:
  * R5 - No outgoing connections: Expected for terminal nodes (Submit/Error)
  * R8 - Data never reaches consumer: False positive for LangChain sub-nodes
- * R12 - No error branch: False positive for parser nodes
  */
 export const DEFAULT_EXCLUDED_RULES: string[] = [
-  'R3', // Idempotency guard - false positive for parser nodes
+  'R3',  // Idempotency guard - false positive for parser nodes
+  'R12', // Replaced by custom ERROR-BRANCH-REQUIRED rule that excludes LangChain sub-nodes
 ];
 
 /**
