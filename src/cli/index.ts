@@ -8,14 +8,15 @@
  *   codika-helper <command> [options]
  *
  * Commands:
- *   deploy <path>           Deploy a use case to the Codika platform
- *   verify workflow <path>  Validate a single workflow JSON file
- *   verify use-case <path>  Validate an entire use-case folder
+ *   deploy use-case <path>                   Deploy a use case to the Codika platform
+ *   deploy process-data-ingestion <path>     Deploy a process-level data ingestion configuration
+ *   verify workflow <path>                   Validate a single workflow JSON file
+ *   verify use-case <path>                   Validate an entire use-case folder
  */
 
 import { program } from 'commander';
 import { createRequire } from 'module';
-import { deployCommand } from './commands/deploy.js';
+import { deployCommand } from './commands/deploy/index.js';
 import { verifyCommand } from './commands/verify/index.js';
 
 // Read version from package.json dynamically

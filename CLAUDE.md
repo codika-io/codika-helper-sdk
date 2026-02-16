@@ -8,10 +8,19 @@ CLI tool for deploying and validating Codika use cases.
 src/
   cli/                    # CLI commands
     commands/
-      deploy.ts           # Deploy use cases to Codika platform
+      deploy/
+        index.ts          # Parent deploy command
+        use-case.ts       # Deploy use cases to Codika platform
+        process-data-ingestion.ts  # Deploy process-level data ingestion
       verify/
+        index.ts          # Parent verify command
         use-case.ts       # Validate entire use-case folders
         workflow.ts       # Validate single workflow files
+  utils/
+    deploy-client.ts              # Low-level process deployment HTTP client
+    use-case-deployer.ts          # High-level use case deployer
+    data-ingestion-deploy-client.ts  # Low-level data ingestion deployment HTTP client
+    data-ingestion-deployer.ts    # High-level data ingestion deployer
   validation/             # Validation rules and runner
 scripts/
   toggle-cli.sh           # Toggle between local dev and npm versions
@@ -57,14 +66,17 @@ npm run build
 ### CLI Usage
 
 ```bash
+# Deploy a use case
+codika-helper deploy use-case <path> [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+
+# Deploy process-level data ingestion
+codika-helper deploy process-data-ingestion <path> [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+
 # Validate a use-case folder
 codika-helper verify use-case <path> [--json] [--fix] [--strict]
 
 # Validate a single workflow
 codika-helper verify workflow <path> [--json] [--fix]
-
-# Deploy a use case
-codika-helper deploy <path>
 ```
 
 ## Development Guidelines

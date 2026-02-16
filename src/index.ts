@@ -32,6 +32,23 @@ export {
   type DeployUseCaseResult,
 } from './utils/use-case-deployer.js';
 
+// Data ingestion deployment client
+export {
+  deployDataIngestion,
+  deployDataIngestionOrThrow,
+  isDataIngestionDeploySuccess,
+  isDataIngestionDeployError,
+  type DeployDataIngestionOptions,
+  type DeployDataIngestionResult,
+} from './utils/data-ingestion-deploy-client.js';
+
+// High-level data ingestion deployer
+export {
+  deployDataIngestionFromFolder,
+  type DeployDataIngestionFromFolderOptions,
+  type DeployDataIngestionFromFolderResult,
+} from './utils/data-ingestion-deployer.js';
+
 // Validation
 export {
   validateWorkflow,

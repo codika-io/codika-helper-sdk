@@ -1,5 +1,5 @@
 /**
- * Deploy Command
+ * Deploy Use Case Command
  *
  * Deploys a use case to the Codika platform.
  */
@@ -7,11 +7,11 @@
 import { Command } from 'commander';
 import { resolve, isAbsolute } from 'path';
 import { existsSync } from 'fs';
-import { deployUseCaseFromFolder, isDeploySuccess } from '../../utils/use-case-deployer.js';
-import { formatSuccess, formatError, toJson, exitWithError } from '../utils/output.js';
-import type { VersionStrategy } from '../../types/process-types.js';
+import { deployUseCaseFromFolder, isDeploySuccess } from '../../../utils/use-case-deployer.js';
+import { formatSuccess, formatError, toJson, exitWithError } from '../../utils/output.js';
+import type { VersionStrategy } from '../../../types/process-types.js';
 
-export const deployCommand = new Command('deploy')
+export const useCaseCommand = new Command('use-case')
   .description('Deploy a use case to the Codika platform')
   .argument('<path>', 'Path to the use case folder (containing config.ts and workflows/)')
   .option('--api-url <url>', 'Codika API URL (env: CODIKA_API_URL)')
@@ -29,9 +29,9 @@ export const deployCommand = new Command('deploy')
     [] as string[]
   )
   .option('--json', 'Output result as JSON')
-  .action(async (path: string, options: DeployCommandOptions) => {
+  .action(async (path: string, options: UseCaseCommandOptions) => {
     try {
-      await runDeploy(path, options);
+      await runDeployUseCase(path, options);
     } catch (error) {
       if (options.json) {
         console.log(JSON.stringify({
@@ -48,7 +48,7 @@ export const deployCommand = new Command('deploy')
     }
   });
 
-interface DeployCommandOptions {
+interface UseCaseCommandOptions {
   apiUrl?: string;
   apiKey?: string;
   versionStrategy: string;
@@ -57,7 +57,7 @@ interface DeployCommandOptions {
   json?: boolean;
 }
 
-async function runDeploy(useCasePath: string, options: DeployCommandOptions): Promise<void> {
+async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOptions): Promise<void> {
   // Resolve path
   const absolutePath = resolve(useCasePath);
 

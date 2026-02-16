@@ -315,7 +315,24 @@ export interface SubworkflowTrigger {
   calledBy?: string[]; // workflowTemplateIds
 }
 
-export type WorkflowTrigger = HttpTrigger | ScheduleTrigger | ServiceEventTrigger | SubworkflowTrigger;
+// Data Ingestion Trigger - "What KB documents feed into this workflow?"
+// Workflows with this trigger type are NOT shown in the playground UI.
+// They are triggered internally when KB documents are parsed.
+export interface DataIngestionTrigger {
+  triggerId: string;
+  type: 'data_ingestion';
+  title?: string | null;
+  description?: string;
+  // Webhook path templates (resolved during deployment via placeholder replacement)
+  webhooks: {
+    embed: string;   // e.g., '{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/instance-embed'
+    delete: string;  // e.g., '{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/instance-embed-delete'
+  };
+  // Cost per successful embedding execution (in display credits)
+  cost?: number;
+}
+
+export type WorkflowTrigger = HttpTrigger | ScheduleTrigger | ServiceEventTrigger | SubworkflowTrigger | DataIngestionTrigger;
 
 // ============================================================================
 // Workflow Category & Data Ingestion Types
