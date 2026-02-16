@@ -25,7 +25,7 @@ export const metadata: RuleMetadata = {
 };
 
 // Valid result operations
-const VALID_RESULT_OPERATIONS = ['submitResult', 'reportError'];
+const VALID_RESULT_OPERATIONS = ['submitResult', 'reportError', 'ingestionCallback'];
 
 /**
  * Check if a node is a sub-workflow trigger (exempt from rule)

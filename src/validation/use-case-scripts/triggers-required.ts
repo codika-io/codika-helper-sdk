@@ -127,7 +127,8 @@ export async function checkTriggersRequired(useCasePath: string): Promise<Findin
           `- type: 'http' — for webhook-triggered workflows\n` +
           `- type: 'schedule' — for cron/scheduled workflows\n` +
           `- type: 'service_event' — for third-party service triggers (Gmail, Google Drive, Slack, etc.)\n` +
-          `- type: 'subworkflow' — for workflows called by other workflows\n\n` +
+          `- type: 'subworkflow' — for workflows called by other workflows\n` +
+          `- type: 'data_ingestion' — for RAG document embedding pipelines\n\n` +
           `See documentation:\n` +
           `- .guides/${GUIDE_REF.path} > "${GUIDE_REF.section}"`,
         guideRef: GUIDE_REF,
