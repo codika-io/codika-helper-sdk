@@ -29,6 +29,7 @@ export const ENDPOINTS = {
   createProject: '/createProjectViaApiKey',
   deployDocuments: '/deployUseCaseDocuments',
   getMetadata: '/getMetadataDocumentsEndpoint',
+  getExecutionDetails: '/getExecutionDetailsPublic',
   verifyApiKey: '/verifyApiKey',
 } as const;
 

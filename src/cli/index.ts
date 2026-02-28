@@ -20,6 +20,7 @@
 import { program, Command } from 'commander';
 import { createRequire } from 'module';
 import { deployCommand } from './commands/deploy/index.js';
+import { getCommand } from './commands/get/index.js';
 import { projectCommand } from './commands/project/index.js';
 import { verifyCommand } from './commands/verify/index.js';
 import { configCommand, runConfigSet } from './commands/config/index.js';
@@ -35,6 +36,7 @@ program
 
 // Register commands
 program.addCommand(deployCommand);
+program.addCommand(getCommand);
 program.addCommand(projectCommand);
 program.addCommand(verifyCommand);
 program.addCommand(configCommand);
