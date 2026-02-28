@@ -15,6 +15,7 @@ const PROJECT_JSON_FILENAME = 'project.json';
 
 export interface ProjectJson {
   projectId: string;
+  devProcessInstanceId?: string;
 }
 
 /**
@@ -30,7 +31,11 @@ export function readProjectJson(useCasePath: string): ProjectJson | null {
     const raw = readFileSync(filePath, 'utf-8');
     const parsed = JSON.parse(raw);
     if (typeof parsed.projectId === 'string' && parsed.projectId) {
-      return { projectId: parsed.projectId };
+      const result: ProjectJson = { projectId: parsed.projectId };
+      if (typeof parsed.devProcessInstanceId === 'string' && parsed.devProcessInstanceId) {
+        result.devProcessInstanceId = parsed.devProcessInstanceId;
+      }
+      return result;
     }
     return null;
   } catch {
@@ -44,6 +49,25 @@ export function readProjectJson(useCasePath: string): ProjectJson | null {
 export function writeProjectJson(dirPath: string, data: ProjectJson): string {
   const filePath = join(dirPath, PROJECT_JSON_FILENAME);
   writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
+  return filePath;
+}
+
+/**
+ * Update project.json by merging partial data into the existing file.
+ * Creates the file if it doesn't exist (requires at least projectId in that case).
+ */
+export function updateProjectJson(dirPath: string, update: Partial<ProjectJson>): string {
+  const filePath = join(dirPath, PROJECT_JSON_FILENAME);
+  let existing: Record<string, unknown> = {};
+  if (existsSync(filePath)) {
+    try {
+      existing = JSON.parse(readFileSync(filePath, 'utf-8'));
+    } catch {
+      // If file is corrupt, start fresh
+    }
+  }
+  const merged = { ...existing, ...update };
+  writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
   return filePath;
 }
 

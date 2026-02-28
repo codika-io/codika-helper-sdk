@@ -88,6 +88,7 @@ export { applyFixes } from './validation/fixer.js';
 export {
   readProjectJson,
   writeProjectJson,
+  updateProjectJson,
   resolveProjectId,
   type ProjectJson,
 } from './utils/project-json.js';

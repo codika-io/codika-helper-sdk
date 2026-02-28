@@ -10,6 +10,7 @@ import { existsSync } from 'fs';
 import { deployUseCaseFromFolder, isDeploySuccess } from '../../../utils/use-case-deployer.js';
 import { formatSuccess, formatError, toJson, exitWithError } from '../../utils/output.js';
 import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
+import { updateProjectJson } from '../../../utils/project-json.js';
 import type { VersionStrategy } from '../../../types/process-types.js';
 
 export const useCaseCommand = new Command('use-case')
@@ -125,6 +126,13 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     explicitVersion: options.explicitVersion,
     additionalFiles,
   });
+
+  // Auto-save processInstanceId to project.json for post-deploy workflows
+  if (isDeploySuccess(result) && result.data.processInstanceId) {
+    updateProjectJson(absolutePath, {
+      devProcessInstanceId: result.data.processInstanceId,
+    });
+  }
 
   // Output result
   if (options.json) {
