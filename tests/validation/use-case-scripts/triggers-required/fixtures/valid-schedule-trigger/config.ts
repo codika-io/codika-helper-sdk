@@ -8,8 +8,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const PROJECT_ID = 'test-valid-schedule';
-
 export const WORKFLOW_FILES = [join(__dirname, 'workflows/scheduled.json')];
 
 export function getConfiguration() {

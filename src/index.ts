@@ -84,6 +84,14 @@ export { workflowScripts } from './validation/workflow-scripts/index.js';
 export { useCaseScripts } from './validation/use-case-scripts/index.js';
 export { applyFixes } from './validation/fixer.js';
 
+// Project JSON (project ID management)
+export {
+  readProjectJson,
+  writeProjectJson,
+  resolveProjectId,
+  type ProjectJson,
+} from './utils/project-json.js';
+
 // Configuration
 export {
   readConfig,

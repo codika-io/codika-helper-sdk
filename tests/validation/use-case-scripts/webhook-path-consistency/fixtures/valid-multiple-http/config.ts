@@ -8,8 +8,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const PROJECT_ID = 'test-valid-multiple-http';
-
 export const WORKFLOW_FILES = [
   join(__dirname, 'workflows/workflow-a.json'),
   join(__dirname, 'workflows/workflow-b.json'),

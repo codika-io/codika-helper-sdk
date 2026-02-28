@@ -5,8 +5,6 @@
 
 import { join } from 'path';
 
-export const PROJECT_ID = 'test-unlisted-12345';
-
 // Only lists main-workflow.json, but extra-workflow.json also exists
 export const WORKFLOW_FILES = [
   join(__dirname, 'workflows/main-workflow.json'),

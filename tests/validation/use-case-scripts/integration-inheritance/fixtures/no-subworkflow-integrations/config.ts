@@ -8,8 +8,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const PROJECT_ID = 'test-project';
-
 export const WORKFLOW_FILES = [
   join(__dirname, 'workflows/parent.json'),
   join(__dirname, 'workflows/sub-helper.json'),

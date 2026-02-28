@@ -45,12 +45,12 @@ describe('CONFIG-EXPORTS Script', () => {
       expect(finding.message).toContain('Missing config.ts');
     });
 
-    it('should FAIL when PROJECT_ID is missing', async () => {
+    it('should FAIL when project.json is missing', async () => {
       const useCasePath = join(FIXTURES_PATH, 'invalid-config');
       const findings = await checkConfigExports(useCasePath);
 
-      const projectIdFinding = findings.find(f => f.message.includes('PROJECT_ID'));
-      expect(projectIdFinding).toBeDefined();
+      const projectJsonFinding = findings.find(f => f.message.includes('Missing project.json'));
+      expect(projectJsonFinding).toBeDefined();
     });
 
     it('should FAIL when WORKFLOW_FILES is missing', async () => {
@@ -73,7 +73,7 @@ describe('CONFIG-EXPORTS Script', () => {
       const useCasePath = join(FIXTURES_PATH, 'invalid-config');
       const findings = await checkConfigExports(useCasePath);
 
-      // Should have 3 findings: PROJECT_ID, WORKFLOW_FILES, getConfiguration
+      // Should have 3 findings: project.json, WORKFLOW_FILES, getConfiguration
       expect(findings.length).toBeGreaterThanOrEqual(3);
     });
   });
@@ -91,8 +91,8 @@ describe('CONFIG-EXPORTS Script', () => {
       const useCasePath = join(FIXTURES_PATH, 'invalid-config');
       const findings = await checkConfigExports(useCasePath);
 
-      const projectIdFinding = findings.find(f => f.message.includes('PROJECT_ID'));
-      expect(projectIdFinding?.raw_details).toContain('export const PROJECT_ID');
+      const projectJsonFinding = findings.find(f => f.message.includes('Missing project.json'));
+      expect(projectJsonFinding?.raw_details).toContain('project.json');
     });
   });
 });

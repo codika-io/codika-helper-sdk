@@ -5,12 +5,14 @@
  */
 
 import { Command } from 'commander';
+import { resolve } from 'path';
 import {
   createProject,
   isCreateProjectSuccess,
   isCreateProjectError,
 } from '../../../utils/project-client.js';
 import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
+import { writeProjectJson } from '../../../utils/project-json.js';
 
 export const createProjectCommand = new Command('create')
   .description('Create a new project on the Codika platform')
@@ -18,6 +20,7 @@ export const createProjectCommand = new Command('create')
   .option('--description <description>', 'Project description')
   .option('--template-id <templateId>', 'Template ID (defaults to platform default)')
   .option('--organization-id <organizationId>', 'Organization ID (required for admin key, derived from org API key)')
+  .option('--path <dir>', 'Write project.json into this directory after creation')
   .option('--api-url <url>', 'Codika API URL for project creation (env: CODIKA_PROJECT_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
   .option('--json', 'Output result as JSON')
@@ -44,6 +47,7 @@ interface CreateProjectCommandOptions {
   description?: string;
   templateId?: string;
   organizationId?: string;
+  path?: string;
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
@@ -72,14 +76,27 @@ async function runCreateProject(options: CreateProjectCommandOptions): Promise<v
     organizationId: options.organizationId,
   });
 
+  // Write project.json if --path was provided and creation succeeded
+  let projectJsonPath: string | undefined;
+  if (options.path && isCreateProjectSuccess(result)) {
+    const dirPath = resolve(options.path);
+    projectJsonPath = writeProjectJson(dirPath, { projectId: result.data.projectId });
+  }
+
   if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify({
+      ...result,
+      ...(projectJsonPath && { projectJsonPath }),
+    }, null, 2));
   } else if (isCreateProjectSuccess(result)) {
     console.log('');
     console.log('\x1b[32m✓ Project Created Successfully\x1b[0m');
     console.log('');
     console.log(`  Project ID: ${result.data.projectId}`);
     console.log(`  Request ID: ${result.requestId}`);
+    if (projectJsonPath) {
+      console.log(`  Wrote project.json to ${projectJsonPath}`);
+    }
     console.log('');
   } else if (isCreateProjectError(result)) {
     console.log('');

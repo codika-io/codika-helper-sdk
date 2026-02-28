@@ -31,6 +31,7 @@ src/
     data-ingestion-deploy-client.ts  # Low-level data ingestion deployment HTTP client
     data-ingestion-deployer.ts    # High-level data ingestion deployer
     project-client.ts             # Low-level project creation HTTP client
+    project-json.ts               # Read/write project.json, resolve project ID
   validation/             # Validation rules and runner
 scripts/
   toggle-cli.sh           # Toggle between local dev and npm versions
@@ -87,16 +88,16 @@ codika-helper config show
 codika-helper config clear
 
 # Deploy a use case
-codika-helper deploy use-case <path> [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika-helper deploy use-case <path> [--project-id <id>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
 
 # Deploy process-level data ingestion
-codika-helper deploy process-data-ingestion <path> [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika-helper deploy process-data-ingestion <path> [--project-id <id>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
 
 # Validate a use-case folder
 codika-helper verify use-case <path> [--json] [--fix] [--strict]
 
-# Create a project via API key
-codika-helper project create --name "My Project" [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
+# Create a project via API key (--path writes project.json into the use case folder)
+codika-helper project create --name "My Project" [--path <dir>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
 
 # Validate a single workflow
 codika-helper verify workflow <path> [--json] [--fix]
@@ -112,6 +113,16 @@ API key and base URL are resolved with this priority chain:
 4. Production default (base URL only)
 
 Run `codika-helper login` to save credentials to the config file. Existing env-var workflows are unaffected.
+
+### Project ID Resolution
+
+The project ID (deployment target) is resolved with this priority chain:
+
+1. `--project-id` flag (highest)
+2. `project.json` file in the use case folder (`{"projectId": "..."}`)
+3. `PROJECT_ID` export in `config.ts` (backward compatibility)
+
+Use `codika-helper project create --name "..." --path ./my-use-case` to create a project and write `project.json` automatically. Existing use cases that export `PROJECT_ID` from `config.ts` continue to work unchanged.
 
 ## Development Guidelines
 

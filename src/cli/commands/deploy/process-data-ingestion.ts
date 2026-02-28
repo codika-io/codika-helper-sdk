@@ -23,6 +23,7 @@ import type { DataIngestionVersionStrategy } from '../../../types/process-types.
 interface DataIngestionCommandOptions {
   apiUrl?: string;
   apiKey?: string;
+  projectId?: string;
   versionStrategy: string;
   explicitVersion?: string;
   json?: boolean;
@@ -33,6 +34,7 @@ export const processDataIngestionCommand = new Command('process-data-ingestion')
   .argument('<path>', 'Path to the use case folder (containing config.ts with getDataIngestionConfig)')
   .option('--api-url <url>', 'Codika Data Ingestion API URL (env: CODIKA_DATA_INGESTION_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
+  .option('--project-id <id>', 'Override project ID (skips project.json and config.ts)')
   .option(
     '--version-strategy <strategy>',
     'Version strategy: major_bump, minor_bump, or explicit',
@@ -100,6 +102,7 @@ async function runDeployDataIngestion(
     useCasePath: absolutePath,
     apiUrl,
     apiKey,
+    projectId: options.projectId,
     versionStrategy,
     explicitVersion: options.explicitVersion,
   });

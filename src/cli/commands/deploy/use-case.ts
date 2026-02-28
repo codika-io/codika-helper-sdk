@@ -17,6 +17,7 @@ export const useCaseCommand = new Command('use-case')
   .argument('<path>', 'Path to the use case folder (containing config.ts and workflows/)')
   .option('--api-url <url>', 'Codika API URL (env: CODIKA_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
+  .option('--project-id <id>', 'Override project ID (skips project.json and config.ts)')
   .option(
     '--version-strategy <strategy>',
     'Version strategy: major_bump, minor_bump, or explicit',
@@ -52,6 +53,7 @@ export const useCaseCommand = new Command('use-case')
 interface UseCaseCommandOptions {
   apiUrl?: string;
   apiKey?: string;
+  projectId?: string;
   versionStrategy: string;
   explicitVersion?: string;
   additionalFile?: string[];
@@ -118,6 +120,7 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     useCasePath: absolutePath,
     apiUrl,
     apiKey,
+    projectId: options.projectId,
     versionStrategy,
     explicitVersion: options.explicitVersion,
     additionalFiles,

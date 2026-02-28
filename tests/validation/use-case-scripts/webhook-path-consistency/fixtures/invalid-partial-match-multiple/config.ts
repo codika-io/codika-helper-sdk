@@ -8,8 +8,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const PROJECT_ID = 'test-invalid-partial';
-
 export const WORKFLOW_FILES = [
   join(__dirname, 'workflows/good-a.json'),
   join(__dirname, 'workflows/good-b.json'),

@@ -4,8 +4,6 @@
 
 import { join } from 'path';
 
-export const PROJECT_ID = 'test-project-id-12345';
-
 export const WORKFLOW_FILES = [
   join(__dirname, 'workflows/main-workflow.json'),
 ];

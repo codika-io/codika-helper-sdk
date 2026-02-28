@@ -8,8 +8,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const PROJECT_ID = 'test-empty-triggers';
-
 export const WORKFLOW_FILES = [join(__dirname, 'workflows/gdrive-watcher.json')];
 
 export function getConfiguration() {

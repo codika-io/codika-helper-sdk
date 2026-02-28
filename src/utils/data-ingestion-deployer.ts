@@ -6,6 +6,7 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { existsSync } from 'fs';
+import { resolveProjectId } from './project-json.js';
 import type {
   ProcessDataIngestionConfigInput,
   DataIngestionVersionStrategy,
@@ -25,6 +26,8 @@ export interface DeployDataIngestionFromFolderOptions {
   apiKey: string;
   /** API URL for data ingestion deployment endpoint */
   apiUrl: string;
+  /** Override project ID (highest priority — skips project.json and config.ts) */
+  projectId?: string;
   /** Version strategy (defaults to 'minor_bump') */
   versionStrategy?: DataIngestionVersionStrategy;
   /** Explicit version (required if versionStrategy is 'explicit') */
@@ -35,7 +38,6 @@ export interface DeployDataIngestionFromFolderOptions {
  * Expected exports from a config.ts file for data ingestion deployment
  */
 interface DataIngestionConfigModule {
-  PROJECT_ID: string;
   getDataIngestionConfig: () => ProcessDataIngestionConfigInput;
   DATA_INGESTION_WORKFLOW_FILE: string;
 }
@@ -45,7 +47,7 @@ interface DataIngestionConfigModule {
  * Combines the base DeployDataIngestionResult with additional context for archiving
  */
 export type DeployDataIngestionFromFolderResult = DeployDataIngestionResult & {
-  /** The project ID from config.ts */
+  /** The project ID used for deployment */
   projectId: string;
   /** The configuration that was deployed (useful for archiving) */
   config: ProcessDataIngestionConfigInput;
@@ -58,7 +60,7 @@ export type DeployDataIngestionFromFolderResult = DeployDataIngestionResult & {
  *
  * This function:
  * 1. Dynamically imports config.ts from the use case folder
- * 2. Extracts PROJECT_ID and calls getDataIngestionConfig()
+ * 2. Calls getDataIngestionConfig() and resolves the project ID from project.json
  * 3. Deploys the data ingestion configuration to the Codika platform
  * 4. Returns the result along with context needed for archiving
  *
@@ -97,7 +99,7 @@ export async function deployDataIngestionFromFolder(
       `Missing config.ts at ${configPath}\n\n` +
         'Expected structure:\n' +
         '  use-case-folder/\n' +
-        '  ├── config.ts           (must export PROJECT_ID, getDataIngestionConfig, DATA_INGESTION_WORKFLOW_FILE)\n' +
+        '  ├── config.ts           (must export getDataIngestionConfig, DATA_INGESTION_WORKFLOW_FILE)\n' +
         '  └── workflows/\n' +
         '      └── *-ingestion.json'
     );
@@ -109,12 +111,6 @@ export async function deployDataIngestionFromFolder(
   const configModule = (await import(configUrl)) as DataIngestionConfigModule;
 
   // Validate required exports
-  if (!configModule.PROJECT_ID) {
-    throw new Error(
-      `config.ts at ${useCasePath} must export PROJECT_ID`
-    );
-  }
-
   if (typeof configModule.getDataIngestionConfig !== 'function') {
     throw new Error(
       `config.ts at ${useCasePath} must export getDataIngestionConfig function`
@@ -127,8 +123,11 @@ export async function deployDataIngestionFromFolder(
     );
   }
 
-  // Get project ID and data ingestion configuration
-  const projectId = configModule.PROJECT_ID;
+  // Resolve project ID: --project-id flag > project.json
+  const { projectId } = resolveProjectId({
+    flagValue: options.projectId,
+    useCasePath,
+  });
   const config = configModule.getDataIngestionConfig();
   const workflowFile = configModule.DATA_INGESTION_WORKFLOW_FILE;
 

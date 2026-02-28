@@ -2,9 +2,10 @@
  * Script: CONFIG-EXPORTS
  *
  * Validates that config.ts exports the required members:
- * - PROJECT_ID (string)
  * - WORKFLOW_FILES (array)
  * - getConfiguration (function)
+ *
+ * Also checks that project.json exists in the use case folder.
  */
 
 import { existsSync, readFileSync } from 'fs';
@@ -16,8 +17,8 @@ export const metadata: RuleMetadata = {
   id: 'CONFIG-EXPORTS',
   name: 'config_exports',
   severity: 'must',
-  description: 'config.ts must export PROJECT_ID, WORKFLOW_FILES, and getConfiguration',
-  details: 'Ensure your config.ts file exports all required members for deployment',
+  description: 'config.ts must export WORKFLOW_FILES and getConfiguration, and project.json must exist',
+  details: 'Ensure your config.ts file exports all required members and project.json contains the target project ID',
   category: 'config',
 };
 
@@ -43,7 +44,7 @@ export async function checkConfigExports(useCasePath: string): Promise<Finding[]
       severity: 'must',
       path: useCasePath,
       message: 'Missing config.ts file',
-      raw_details: 'Create a config.ts file that exports PROJECT_ID, WORKFLOW_FILES, and getConfiguration()',
+      raw_details: 'Create a config.ts file that exports WORKFLOW_FILES and getConfiguration()',
     });
     return findings;
   }
@@ -65,14 +66,14 @@ export async function checkConfigExports(useCasePath: string): Promise<Finding[]
   // Check for required exports using simple regex patterns
   // (A full AST parser would be more robust but this covers common cases)
 
-  // Check for PROJECT_ID export
-  if (!/export\s+(const|let|var)\s+PROJECT_ID\s*=/s.test(content)) {
+  // Check for project.json
+  if (!existsSync(join(useCasePath, 'project.json'))) {
     findings.push({
       rule: metadata.id,
       severity: 'must',
-      path: configPath,
-      message: 'Missing export: PROJECT_ID',
-      raw_details: 'Add: export const PROJECT_ID = \'your-project-id\';',
+      path: useCasePath,
+      message: 'Missing project.json',
+      raw_details: 'Create project.json with {"projectId": "..."} in the use case folder, or run: codika-helper project create --name "..." --path .',
     });
   }
 

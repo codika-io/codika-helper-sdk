@@ -14,6 +14,7 @@ import {
   isDeployError,
   type DeployResult,
 } from './deploy-client.js';
+import { resolveProjectId } from './project-json.js';
 
 /**
  * Options for deploying a use case from folder
@@ -25,6 +26,8 @@ export interface DeployUseCaseOptions {
   apiKey: string;
   /** API URL for deployment */
   apiUrl: string;
+  /** Override project ID (highest priority — skips project.json and config.ts) */
+  projectId?: string;
   /** Version strategy (defaults to 'minor_bump') */
   versionStrategy?: VersionStrategy;
   /** Explicit version (required if versionStrategy is 'explicit') */
@@ -189,7 +192,6 @@ function readUseCaseSourceFiles(useCasePath: string): MetadataDocument[] {
  * Expected exports from a config.ts/config.js file
  */
 interface ConfigModule {
-  PROJECT_ID: string;
   WORKFLOW_FILES: string[];
   getConfiguration: () => ProcessDeploymentConfigurationInput;
 }
@@ -199,7 +201,7 @@ interface ConfigModule {
  *
  * This function:
  * 1. Dynamically imports config.js from the use case folder
- * 2. Extracts PROJECT_ID and calls getConfiguration()
+ * 2. Calls getConfiguration() and resolves the project ID from project.json
  * 3. Deploys to the Codika platform
  * 4. Returns the result along with context needed for archiving
  *
@@ -263,20 +265,17 @@ export async function deployUseCaseFromFolder(
   const configModule = (await import(configUrl)) as ConfigModule;
 
   // Validate required exports
-  if (!configModule.PROJECT_ID) {
-    throw new Error(
-      `config.js at ${useCasePath} must export PROJECT_ID`
-    );
-  }
-
   if (typeof configModule.getConfiguration !== 'function') {
     throw new Error(
       `config.js at ${useCasePath} must export getConfiguration function`
     );
   }
 
-  // Get project ID and configuration
-  const projectId = configModule.PROJECT_ID;
+  // Resolve project ID: --project-id flag > project.json
+  const { projectId } = resolveProjectId({
+    flagValue: options.projectId,
+    useCasePath,
+  });
   const configuration = configModule.getConfiguration();
   const workflowFiles = configModule.WORKFLOW_FILES || [];
 

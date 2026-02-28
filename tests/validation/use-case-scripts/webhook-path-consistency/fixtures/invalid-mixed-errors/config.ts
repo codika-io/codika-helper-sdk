@@ -11,8 +11,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const PROJECT_ID = 'test-invalid-mixed';
-
 export const WORKFLOW_FILES = [
   join(__dirname, 'workflows/mismatch.json'),
   join(__dirname, 'workflows/correct.json'),
