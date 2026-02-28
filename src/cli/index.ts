@@ -24,6 +24,7 @@ import { getCommand } from './commands/get/index.js';
 import { projectCommand } from './commands/project/index.js';
 import { verifyCommand } from './commands/verify/index.js';
 import { configCommand, runConfigSet } from './commands/config/index.js';
+import { triggerCommand } from './commands/trigger.js';
 
 // Read version from package.json dynamically
 const require = createRequire(import.meta.url);
@@ -40,6 +41,7 @@ program.addCommand(getCommand);
 program.addCommand(projectCommand);
 program.addCommand(verifyCommand);
 program.addCommand(configCommand);
+program.addCommand(triggerCommand);
 
 // Top-level `login` alias for `config set`
 const loginCommand = new Command('login')

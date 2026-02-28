@@ -30,6 +30,8 @@ export const ENDPOINTS = {
   deployDocuments: '/deployUseCaseDocuments',
   getMetadata: '/getMetadataDocumentsEndpoint',
   getExecutionDetails: '/getExecutionDetailsPublic',
+  triggerWorkflow: '/triggerWebhookPublic',
+  getExecutionStatus: '/getExecutionStatusPublic',
   verifyApiKey: '/verifyApiKey',
 } as const;
 
