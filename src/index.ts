@@ -49,6 +49,18 @@ export {
   type DeployDataIngestionFromFolderResult,
 } from './utils/data-ingestion-deployer.js';
 
+// Project client
+export {
+  createProject as createProjectViaApi,
+  createProjectOrThrow as createProjectViaApiOrThrow,
+  isCreateProjectSuccess,
+  isCreateProjectError,
+  type CreateProjectOptions,
+  type CreateProjectResponse,
+  type CreateProjectSuccessResponse,
+  type CreateProjectErrorResponse,
+} from './utils/project-client.js';
+
 // Validation
 export {
   validateWorkflow,
@@ -71,3 +83,19 @@ export { customRules } from './validation/rules/index.js';
 export { workflowScripts } from './validation/workflow-scripts/index.js';
 export { useCaseScripts } from './validation/use-case-scripts/index.js';
 export { applyFixes } from './validation/fixer.js';
+
+// Configuration
+export {
+  readConfig,
+  writeConfig,
+  clearConfig,
+  resolveApiKey,
+  resolveBaseUrl,
+  resolveEndpointUrl,
+  maskApiKey,
+  PRODUCTION_BASE_URL,
+  ENDPOINTS,
+  API_KEY_MISSING_MESSAGE,
+  type CodikaConfig,
+  type EndpointName,
+} from './utils/config.js';

@@ -17,6 +17,7 @@ import {
   isDataIngestionDeploySuccess,
 } from '../../../utils/data-ingestion-deployer.js';
 import { exitWithError } from '../../utils/output.js';
+import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
 import type { DataIngestionVersionStrategy } from '../../../types/process-types.js';
 
 interface DataIngestionCommandOptions {
@@ -70,20 +71,13 @@ async function runDeployDataIngestion(
     exitWithError(`Use case path does not exist: ${absolutePath}`);
   }
 
-  // Get API URL from options or environment
-  const apiUrl = options.apiUrl || process.env.CODIKA_DATA_INGESTION_API_URL;
-  if (!apiUrl) {
-    exitWithError(
-      'API URL is required. Provide --api-url or set CODIKA_DATA_INGESTION_API_URL environment variable.'
-    );
-  }
+  // Resolve API URL: --api-url > CODIKA_DATA_INGESTION_API_URL env > config baseUrl + path > production default
+  const apiUrl = resolveEndpointUrl('deployDataIngestion', options.apiUrl);
 
-  // Get API key from options or environment
-  const apiKey = options.apiKey || process.env.CODIKA_API_KEY;
+  // Resolve API key: --api-key > CODIKA_API_KEY env > config file
+  const apiKey = resolveApiKey(options.apiKey);
   if (!apiKey) {
-    exitWithError(
-      'API key is required. Provide --api-key or set CODIKA_API_KEY environment variable.'
-    );
+    exitWithError(API_KEY_MISSING_MESSAGE);
   }
 
   // Validate version strategy

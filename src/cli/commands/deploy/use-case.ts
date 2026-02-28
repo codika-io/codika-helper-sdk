@@ -9,6 +9,7 @@ import { resolve, isAbsolute } from 'path';
 import { existsSync } from 'fs';
 import { deployUseCaseFromFolder, isDeploySuccess } from '../../../utils/use-case-deployer.js';
 import { formatSuccess, formatError, toJson, exitWithError } from '../../utils/output.js';
+import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
 import type { VersionStrategy } from '../../../types/process-types.js';
 
 export const useCaseCommand = new Command('use-case')
@@ -66,20 +67,13 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     exitWithError(`Use case path does not exist: ${absolutePath}`);
   }
 
-  // Get API URL from options or environment
-  const apiUrl = options.apiUrl || process.env.CODIKA_API_URL;
-  if (!apiUrl) {
-    exitWithError(
-      'API URL is required. Provide --api-url or set CODIKA_API_URL environment variable.'
-    );
-  }
+  // Resolve API URL: --api-url > CODIKA_API_URL env > config baseUrl + path > production default
+  const apiUrl = resolveEndpointUrl('deployUseCase', options.apiUrl);
 
-  // Get API key from options or environment
-  const apiKey = options.apiKey || process.env.CODIKA_API_KEY;
+  // Resolve API key: --api-key > CODIKA_API_KEY env > config file
+  const apiKey = resolveApiKey(options.apiKey);
   if (!apiKey) {
-    exitWithError(
-      'API key is required. Provide --api-key or set CODIKA_API_KEY environment variable.'
-    );
+    exitWithError(API_KEY_MISSING_MESSAGE);
   }
 
   // Validate version strategy

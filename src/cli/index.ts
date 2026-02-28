@@ -8,16 +8,21 @@
  *   codika-helper <command> [options]
  *
  * Commands:
- *   deploy use-case <path>                   Deploy a use case to the Codika platform
- *   deploy process-data-ingestion <path>     Deploy a process-level data ingestion configuration
- *   verify workflow <path>                   Validate a single workflow JSON file
- *   verify use-case <path>                   Validate an entire use-case folder
+ *   login                                       Save API key (alias for config set)
+ *   config set|show|clear                       Manage CLI configuration
+ *   deploy use-case <path>                      Deploy a use case to the Codika platform
+ *   deploy process-data-ingestion <path>        Deploy a process-level data ingestion configuration
+ *   project create --name "..."                 Create a new project
+ *   verify workflow <path>                      Validate a single workflow JSON file
+ *   verify use-case <path>                      Validate an entire use-case folder
  */
 
-import { program } from 'commander';
+import { program, Command } from 'commander';
 import { createRequire } from 'module';
 import { deployCommand } from './commands/deploy/index.js';
+import { projectCommand } from './commands/project/index.js';
 import { verifyCommand } from './commands/verify/index.js';
+import { configCommand, runConfigSet } from './commands/config/index.js';
 
 // Read version from package.json dynamically
 const require = createRequire(import.meta.url);
@@ -30,6 +35,19 @@ program
 
 // Register commands
 program.addCommand(deployCommand);
+program.addCommand(projectCommand);
 program.addCommand(verifyCommand);
+program.addCommand(configCommand);
+
+// Top-level `login` alias for `config set`
+const loginCommand = new Command('login')
+  .description('Save API key (alias for "config set")')
+  .option('--api-key <key>', 'API key (skips interactive prompt)')
+  .option('--base-url <url>', 'Base URL override (default: production)')
+  .option('--skip-verify', 'Save without verifying the key')
+  .action(async (options) => {
+    await runConfigSet(options);
+  });
+program.addCommand(loginCommand);
 
 program.parse();
