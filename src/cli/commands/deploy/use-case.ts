@@ -2,6 +2,7 @@
  * Deploy Use Case Command
  *
  * Deploys a use case to the Codika platform.
+ * Manages local version.json tracking and deployment archiving.
  */
 
 import { Command } from 'commander';
@@ -11,7 +12,15 @@ import { deployUseCaseFromFolder, isDeploySuccess } from '../../../utils/use-cas
 import { formatSuccess, formatError, toJson, exitWithError } from '../../utils/output.js';
 import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
 import { updateProjectJson } from '../../../utils/project-json.js';
-import type { VersionStrategy } from '../../../types/process-types.js';
+import {
+  readVersion,
+  writeVersion,
+  parseSemver,
+  formatSemver,
+  incrementSemver,
+  resolveVersionStrategies,
+} from '../../../utils/version-manager.js';
+import { archiveDeployment, updateProjectInfo } from '../../../utils/deployment-archiver.js';
 
 export const useCaseCommand = new Command('use-case')
   .description('Deploy a use case to the Codika platform')
@@ -19,12 +28,10 @@ export const useCaseCommand = new Command('use-case')
   .option('--api-url <url>', 'Codika API URL (env: CODIKA_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
   .option('--project-id <id>', 'Override project ID (skips project.json and config.ts)')
-  .option(
-    '--version-strategy <strategy>',
-    'Version strategy: major_bump, minor_bump, or explicit',
-    'minor_bump'
-  )
-  .option('--explicit-version <version>', 'Explicit version (required if strategy is explicit)')
+  .option('--patch', 'Patch version bump (default)')
+  .option('--minor', 'Minor version bump')
+  .option('--major', 'Major version bump')
+  .option('--version <version>', 'Explicit API version (X.Y format)')
   .option(
     '--additional-file <absolutePath:relativePath>',
     'Add file with its relative path (repeatable)',
@@ -55,8 +62,10 @@ interface UseCaseCommandOptions {
   apiUrl?: string;
   apiKey?: string;
   projectId?: string;
-  versionStrategy: string;
-  explicitVersion?: string;
+  patch?: boolean;
+  minor?: boolean;
+  major?: boolean;
+  version?: string;
   additionalFile?: string[];
   json?: boolean;
 }
@@ -79,20 +88,19 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     exitWithError(API_KEY_MISSING_MESSAGE);
   }
 
-  // Validate version strategy
-  const validStrategies = ['major_bump', 'minor_bump', 'explicit'];
-  if (!validStrategies.includes(options.versionStrategy)) {
-    exitWithError(
-      `Invalid version strategy: ${options.versionStrategy}. Must be one of: ${validStrategies.join(', ')}`
-    );
-  }
+  // Resolve version strategies from shorthand flags
+  const { apiStrategy, localStrategy, explicitVersion } = resolveVersionStrategies({
+    patch: options.patch,
+    minor: options.minor,
+    major: options.major,
+    version: options.version,
+  });
 
-  const versionStrategy = options.versionStrategy as VersionStrategy;
-
-  // Validate explicit version if strategy is explicit
-  if (versionStrategy === 'explicit' && !options.explicitVersion) {
-    exitWithError('Explicit version is required when using --version-strategy explicit');
-  }
+  // Read current local version and compute new version
+  const currentVersion = readVersion(absolutePath);
+  const currentSemver = parseSemver(currentVersion);
+  const newSemver = incrementSemver(currentSemver, localStrategy);
+  const newLocalVersion = formatSemver(newSemver);
 
   // Parse additional files
   const additionalFiles = options.additionalFile?.map((entry: string) => {
@@ -122,23 +130,46 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     apiUrl,
     apiKey,
     projectId: options.projectId,
-    versionStrategy,
-    explicitVersion: options.explicitVersion,
+    versionStrategy: apiStrategy,
+    explicitVersion,
     additionalFiles,
   });
 
-  // Auto-save processInstanceId to project.json for post-deploy workflows
-  if (isDeploySuccess(result) && result.data.processInstanceId) {
-    updateProjectJson(absolutePath, {
-      devProcessInstanceId: result.data.processInstanceId,
+  // On success: update version.json, archive, update project info
+  if (isDeploySuccess(result)) {
+    // Auto-save processInstanceId to project.json for post-deploy workflows
+    if (result.data.processInstanceId) {
+      updateProjectJson(absolutePath, {
+        devProcessInstanceId: result.data.processInstanceId,
+      });
+    }
+
+    // Write bumped version to version.json
+    writeVersion(absolutePath, newLocalVersion);
+
+    // Archive deployment locally
+    await archiveDeployment({
+      useCasePath: absolutePath,
+      projectId: result.projectId,
+      apiVersion: result.data.version,
+      useCaseVersion: newLocalVersion,
+      result,
     });
+
+    // Update project-info.json with version mapping
+    await updateProjectInfo(
+      absolutePath,
+      result.projectId,
+      result.data.version,
+      newLocalVersion
+    );
   }
 
   // Output result
   if (options.json) {
-    console.log(toJson(result));
+    console.log(toJson(result, isDeploySuccess(result) ? newLocalVersion : undefined));
   } else if (isDeploySuccess(result)) {
-    console.log(formatSuccess(result));
+    console.log(formatSuccess(result, newLocalVersion));
   } else {
     console.log(formatError(result));
   }

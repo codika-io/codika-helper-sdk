@@ -10,7 +10,7 @@ import { isDeploySuccess, isDeployError } from '../../utils/use-case-deployer.js
 /**
  * Format a successful deployment result for human-readable output
  */
-export function formatSuccess(result: DeployUseCaseResult): string {
+export function formatSuccess(result: DeployUseCaseResult, localVersion?: string): string {
   if (!isDeploySuccess(result)) {
     return formatError(result);
   }
@@ -21,9 +21,14 @@ export function formatSuccess(result: DeployUseCaseResult): string {
     '',
     `  Template ID:  ${result.data.templateId}`,
     `  API Version:  ${result.data.version}`,
-    `  Process ID:   ${result.data.processId}`,
-    `  Status:       ${result.data.deploymentStatus}`,
   ];
+
+  if (localVersion) {
+    lines.push(`  Local Version: ${localVersion}`);
+  }
+
+  lines.push(`  Process ID:   ${result.data.processId}`);
+  lines.push(`  Status:       ${result.data.deploymentStatus}`);
 
   if (result.data.isNewProcess) {
     lines.push(`  New Process:  yes`);
@@ -94,12 +99,13 @@ export function formatError(result: DeployUseCaseResult): string {
 /**
  * Convert result to JSON for --json output mode
  */
-export function toJson(result: DeployUseCaseResult): string {
+export function toJson(result: DeployUseCaseResult, localVersion?: string): string {
   if (isDeploySuccess(result)) {
     return JSON.stringify({
       success: true,
       templateId: result.data.templateId,
       version: result.data.version,
+      ...(localVersion && { localVersion }),
       processId: result.data.processId,
       deploymentStatus: result.data.deploymentStatus,
       isNewProcess: result.data.isNewProcess,
