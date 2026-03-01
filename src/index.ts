@@ -117,4 +117,5 @@ export {
   type CodikaConfig,
   type ProfileData,
   type EndpointName,
+  type ExpiryCheck,
 } from './utils/config.js';

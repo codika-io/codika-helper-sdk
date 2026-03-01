@@ -8,7 +8,7 @@
  *   codika-helper logout <name>     # remove specific profile
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import {
   getActiveProfile,
   removeProfile,
@@ -18,7 +18,7 @@ import {
 export const logoutCommand = new Command('logout')
   .description('Remove a profile')
   .argument('[name]', 'Profile name to remove (default: active profile)')
-  .option('--list-names', undefined, false)
+  .addOption(new Option('--list-names').hideHelp())
   .action((name: string | undefined, options: { listNames?: boolean }) => {
     // Hidden: print profile names one per line (for shell completion)
     if (options.listNames) {

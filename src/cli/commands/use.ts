@@ -8,7 +8,7 @@
  *   codika-helper use <name>       # switch to profile
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import {
   listProfiles,
   setActiveProfile,
@@ -18,7 +18,7 @@ import {
 export const useCommand = new Command('use')
   .description('Switch active profile or list profiles')
   .argument('[name]', 'Profile name to switch to')
-  .option('--list-names', undefined, false)
+  .addOption(new Option('--list-names').hideHelp())
   .action((name: string | undefined, options: { listNames?: boolean }) => {
     // Hidden: print profile names one per line (for shell completion)
     if (options.listNames) {

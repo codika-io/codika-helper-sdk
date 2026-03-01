@@ -330,7 +330,7 @@ export function checkProfileExpiry(): ExpiryCheck | null {
   return {
     daysLeft,
     expiresAt,
-    expired: daysLeft < 0,
+    expired: daysLeft <= 0,
     profileName: active.name,
   };
 }
