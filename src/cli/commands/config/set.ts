@@ -2,26 +2,34 @@
  * Config Set Command
  *
  * Saves API key to the config file and verifies it against the platform.
- * Base URL defaults to production; --base-url flag overrides for dev/staging.
+ * Persists full profile metadata (org name, scopes, etc.) from verification.
  *
  * Usage:
  *   codika-helper config set
  *   codika-helper config set --api-key <key>
  *   codika-helper config set --api-key <key> --base-url <url>
+ *   codika-helper config set --name my-profile
  */
 
 import { Command } from 'commander';
 import { createInterface } from 'readline';
 import {
-  writeConfig,
   maskApiKey,
   resolveEndpointUrl,
+  upsertProfile,
+  setActiveProfile,
+  readConfig,
+  deriveProfileName,
+  findProfileByOrgId,
+  removeProfile,
   PRODUCTION_BASE_URL,
+  type ProfileData,
 } from '../../../utils/config.js';
 
 export interface ConfigSetOptions {
   apiKey?: string;
   baseUrl?: string;
+  name?: string;
   skipVerify?: boolean;
 }
 
@@ -58,12 +66,45 @@ export async function runConfigSet(options: ConfigSetOptions): Promise<void> {
       process.exit(1);
     }
 
-    // Save config
-    writeConfig({ apiKey, ...(baseUrl !== PRODUCTION_BASE_URL && { baseUrl }) });
+    // Build profile data from verification response
+    const profileData: ProfileData = {
+      apiKey,
+      type: (result.data?.type as ProfileData['type']) || 'org-api-key',
+      ...(result.data?.organizationId && { organizationId: result.data.organizationId }),
+      ...(result.data?.organizationName && { organizationName: result.data.organizationName }),
+      ...(result.data?.keyName && { keyName: result.data.keyName }),
+      ...(result.data?.keyPrefix && { keyPrefix: result.data.keyPrefix }),
+      ...(result.data?.scopes && { scopes: result.data.scopes }),
+      ...(result.data?.createdAt && { createdAt: result.data.createdAt }),
+      ...(result.data?.expiresAt && { expiresAt: result.data.expiresAt }),
+      ...(baseUrl !== PRODUCTION_BASE_URL && { baseUrl }),
+    };
+
+    // Determine profile name
+    const config = readConfig();
+    let profileName: string;
+
+    if (options.name) {
+      profileName = options.name;
+    } else if (result.data?.organizationId) {
+      // If a profile for this org already exists, replace it
+      const existing = findProfileByOrgId(result.data.organizationId);
+      if (existing) {
+        profileName = existing.name;
+      } else {
+        profileName = deriveProfileName(result.data, new Set(Object.keys(config.profiles)));
+      }
+    } else {
+      profileName = deriveProfileName(result.data ?? {}, new Set(Object.keys(config.profiles)));
+    }
+
+    upsertProfile(profileName, profileData);
+    setActiveProfile(profileName);
 
     console.log('');
     console.log('\x1b[32m\u2713 Logged in successfully\x1b[0m');
     console.log('');
+    console.log(`  Profile:      ${profileName} (active)`);
     if (result.data?.organizationName) {
       console.log(`  Organization: ${result.data.organizationName}`);
     }
@@ -82,12 +123,23 @@ export async function runConfigSet(options: ConfigSetOptions): Promise<void> {
     }
     console.log('');
   } else {
-    // Skip verification — just save
-    writeConfig({ apiKey, ...(baseUrl !== PRODUCTION_BASE_URL && { baseUrl }) });
+    // Skip verification — save with minimal profile data
+    const config = readConfig();
+    const profileName = options.name || deriveProfileName({}, new Set(Object.keys(config.profiles)));
+
+    const profileData: ProfileData = {
+      apiKey,
+      type: apiKey.startsWith('cka_') ? 'admin-api-key' : 'org-api-key',
+      ...(baseUrl !== PRODUCTION_BASE_URL && { baseUrl }),
+    };
+
+    upsertProfile(profileName, profileData);
+    setActiveProfile(profileName);
 
     console.log('');
     console.log('\x1b[32m\u2713 Configuration saved\x1b[0m');
     console.log('');
+    console.log(`  Profile:  ${profileName} (active)`);
     console.log(`  API key:  ${maskApiKey(apiKey)}`);
     if (baseUrl !== PRODUCTION_BASE_URL) {
       console.log(`  Base URL: ${baseUrl}`);
@@ -100,6 +152,7 @@ export const configSetCommand = new Command('set')
   .description('Save API key and base URL to config file')
   .option('--api-key <key>', 'API key (skips interactive prompt)')
   .option('--base-url <url>', 'Base URL override (default: production)')
+  .option('--name <name>', 'Custom profile name (auto-derived if omitted)')
   .option('--skip-verify', 'Save without verifying the key')
   .action(async (options: ConfigSetOptions) => {
     await runConfigSet(options);
@@ -107,7 +160,7 @@ export const configSetCommand = new Command('set')
 
 // ── Verify API key against the platform ──────────────────
 
-interface VerifyResult {
+export interface VerifyResult {
   success: boolean;
   error?: string;
   data?: {
@@ -123,7 +176,7 @@ interface VerifyResult {
   };
 }
 
-async function verifyApiKeyRemote(apiKey: string, url: string): Promise<VerifyResult> {
+export async function verifyApiKeyRemote(apiKey: string, url: string): Promise<VerifyResult> {
   try {
     const response = await fetch(url, {
       method: 'POST',

@@ -16,6 +16,7 @@ const PROJECT_JSON_FILENAME = 'project.json';
 export interface ProjectJson {
   projectId: string;
   devProcessInstanceId?: string;
+  organizationId?: string;
 }
 
 /**
@@ -34,6 +35,9 @@ export function readProjectJson(useCasePath: string): ProjectJson | null {
       const result: ProjectJson = { projectId: parsed.projectId };
       if (typeof parsed.devProcessInstanceId === 'string' && parsed.devProcessInstanceId) {
         result.devProcessInstanceId = parsed.devProcessInstanceId;
+      }
+      if (typeof parsed.organizationId === 'string' && parsed.organizationId) {
+        result.organizationId = parsed.organizationId;
       }
       return result;
     }

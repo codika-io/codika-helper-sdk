@@ -10,8 +10,8 @@ import { resolve, isAbsolute } from 'path';
 import { existsSync } from 'fs';
 import { deployUseCaseFromFolder, isDeploySuccess } from '../../../utils/use-case-deployer.js';
 import { formatSuccess, formatError, toJson, exitWithError } from '../../utils/output.js';
-import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
-import { updateProjectJson } from '../../../utils/project-json.js';
+import { resolveApiKeyForOrg, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
+import { readProjectJson, updateProjectJson } from '../../../utils/project-json.js';
 import {
   readVersion,
   writeVersion,
@@ -82,10 +82,18 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
   // Resolve API URL: --api-url > CODIKA_API_URL env > config baseUrl + path > production default
   const apiUrl = resolveEndpointUrl('deployUseCase', options.apiUrl);
 
-  // Resolve API key: --api-key > CODIKA_API_KEY env > config file
-  const apiKey = resolveApiKey(options.apiKey);
+  // Resolve API key with org-aware fallback: flag > env > matching org profile > active profile
+  const projectJson = readProjectJson(absolutePath);
+  const keyResult = resolveApiKeyForOrg({
+    flagValue: options.apiKey,
+    organizationId: projectJson?.organizationId,
+  });
+  const apiKey = keyResult.apiKey;
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
+  }
+  if (keyResult.autoSelected && keyResult.profileName && !options.json) {
+    console.log(`Using profile "${keyResult.profileName}" (matches project organization)`);
   }
 
   // Resolve version strategies from shorthand flags

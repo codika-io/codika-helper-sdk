@@ -1,8 +1,8 @@
 /**
  * Config Show Command
  *
- * Displays the current configuration with sources.
- * Exit 0 if configured, exit 1 if no API key is set.
+ * Displays the current configuration with all profiles.
+ * Exit 0 if configured, exit 1 if no profiles set.
  *
  * Usage:
  *   codika-helper config show
@@ -10,9 +10,8 @@
 
 import { Command } from 'commander';
 import {
-  resolveApiKey,
+  listProfiles,
   resolveBaseUrl,
-  describeApiKeySource,
   describeBaseUrlSource,
   maskApiKey,
   PRODUCTION_BASE_URL,
@@ -21,28 +20,37 @@ import {
 export const configShowCommand = new Command('show')
   .description('Display current configuration')
   .action(() => {
-    const apiKey = resolveApiKey();
+    const profiles = listProfiles();
     const baseUrl = resolveBaseUrl();
-    const keySource = describeApiKeySource();
     const urlSource = describeBaseUrlSource();
 
     console.log('');
     console.log('Codika Helper Configuration');
     console.log('');
-    if (apiKey) {
-      console.log(`  API key:  ${maskApiKey(apiKey)}  (${keySource})`);
-    } else {
-      console.log(`  API key:  \x1b[33mnot set\x1b[0m`);
+
+    if (profiles.length === 0) {
+      console.log('  No profiles configured.');
+      console.log('');
+      console.log("Run 'codika-helper login' to configure your API key.");
+      console.log('');
+      process.exit(1);
     }
-    // Only show base URL if it's not the default
-    if (baseUrl !== PRODUCTION_BASE_URL) {
-      console.log(`  Base URL: ${baseUrl}  (${urlSource})`);
+
+    console.log('  Profiles:');
+    console.log('');
+    for (const { name, profile, active } of profiles) {
+      const marker = active ? '\u25cf' : ' ';
+      const orgLabel = profile.type === 'admin-api-key'
+        ? '(admin)'
+        : (profile.organizationName || '');
+      const keyDisplay = maskApiKey(profile.apiKey);
+      console.log(`    ${marker} ${name.padEnd(20)} ${orgLabel.padEnd(20)} ${keyDisplay}`);
     }
     console.log('');
 
-    if (!apiKey) {
-      console.log(`Run 'codika-helper login' to configure your API key.`);
+    // Only show base URL if it's not the default
+    if (baseUrl !== PRODUCTION_BASE_URL) {
+      console.log(`  Base URL: ${baseUrl}  (${urlSource})`);
       console.log('');
-      process.exit(1);
     }
   });

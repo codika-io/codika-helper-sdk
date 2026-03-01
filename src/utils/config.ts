@@ -2,19 +2,34 @@
  * Configuration Module
  *
  * Manages persistent CLI configuration stored in ~/.config/codika-helper/config.json.
- * Provides resolution chains for API key and base URL:
- *   --flag > environment variable > config file > default
+ * Supports multiple profiles (API keys with metadata) and active profile switching.
+ *
+ * Resolution chains for API key and base URL:
+ *   --flag > environment variable > active profile > default
  */
 
-import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync, chmodSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync } from 'fs';
+import { join } from 'path';
 import { homedir } from 'os';
 
 // ── Types ────────────────────────────────────────────────
 
+export interface ProfileData {
+  apiKey: string;
+  type: 'org-api-key' | 'admin-api-key';
+  organizationId?: string;
+  organizationName?: string;
+  keyName?: string;
+  keyPrefix?: string;
+  scopes?: string[];
+  createdAt?: string;
+  expiresAt?: string;
+  baseUrl?: string | null;
+}
+
 export interface CodikaConfig {
-  apiKey?: string;
-  baseUrl?: string;
+  activeProfile: string | null;
+  profiles: Record<string, ProfileData>;
 }
 
 export type EndpointName = keyof typeof ENDPOINTS;
@@ -49,16 +64,22 @@ function getConfigPath(): string {
 
 // ── Read / Write / Clear ─────────────────────────────────
 
+const EMPTY_CONFIG: CodikaConfig = { activeProfile: null, profiles: {} };
+
 export function readConfig(): CodikaConfig {
   const path = getConfigPath();
   if (!existsSync(path)) {
-    return {};
+    return { ...EMPTY_CONFIG, profiles: {} };
   }
   try {
     const raw = readFileSync(path, 'utf-8');
-    return JSON.parse(raw) as CodikaConfig;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.profiles === 'object') {
+      return parsed as CodikaConfig;
+    }
+    return { ...EMPTY_CONFIG, profiles: {} };
   } catch {
-    return {};
+    return { ...EMPTY_CONFIG, profiles: {} };
   }
 }
 
@@ -76,24 +97,124 @@ export function clearConfig(): void {
   }
 }
 
+// ── Profile management ───────────────────────────────────
+
+export function getActiveProfile(): { name: string; profile: ProfileData } | null {
+  const config = readConfig();
+  if (!config.activeProfile || !config.profiles[config.activeProfile]) {
+    return null;
+  }
+  return { name: config.activeProfile, profile: config.profiles[config.activeProfile] };
+}
+
+export function listProfiles(): Array<{ name: string; profile: ProfileData; active: boolean }> {
+  const config = readConfig();
+  return Object.entries(config.profiles).map(([name, profile]) => ({
+    name,
+    profile,
+    active: name === config.activeProfile,
+  }));
+}
+
+export function setActiveProfile(name: string): void {
+  const config = readConfig();
+  if (!config.profiles[name]) {
+    throw new Error(`Profile "${name}" does not exist.`);
+  }
+  config.activeProfile = name;
+  writeConfig(config);
+}
+
+export function upsertProfile(name: string, data: ProfileData): void {
+  const config = readConfig();
+  config.profiles[name] = data;
+  // If this is the only profile, make it active
+  if (!config.activeProfile || !config.profiles[config.activeProfile]) {
+    config.activeProfile = name;
+  }
+  writeConfig(config);
+}
+
+export function removeProfile(name: string): void {
+  const config = readConfig();
+  if (!config.profiles[name]) {
+    throw new Error(`Profile "${name}" does not exist.`);
+  }
+  delete config.profiles[name];
+  // If we removed the active profile, switch to the first remaining or null
+  if (config.activeProfile === name) {
+    const remaining = Object.keys(config.profiles);
+    config.activeProfile = remaining.length > 0 ? remaining[0] : null;
+  }
+  writeConfig(config);
+}
+
+export function findProfileByOrgId(orgId: string): { name: string; profile: ProfileData } | null {
+  const config = readConfig();
+  for (const [name, profile] of Object.entries(config.profiles)) {
+    if (profile.organizationId === orgId) {
+      return { name, profile };
+    }
+  }
+  return null;
+}
+
+// ── Profile name derivation ──────────────────────────────
+
+export function deriveProfileName(
+  data: { type?: string; organizationName?: string; keyName?: string; keyPrefix?: string },
+  existingNames: Set<string>,
+): string {
+  let base: string;
+  if (data.type === 'org-api-key' && data.organizationName) {
+    base = slugify(data.organizationName);
+  } else if (data.keyName) {
+    base = slugify(data.keyName);
+  } else if (data.keyPrefix) {
+    base = data.keyPrefix;
+  } else {
+    base = 'default';
+  }
+
+  if (!base) base = 'default';
+
+  let name = base;
+  let i = 2;
+  while (existingNames.has(name)) {
+    name = `${base}-${i}`;
+    i++;
+  }
+  return name;
+}
+
+function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 // ── Resolution chains ────────────────────────────────────
 
 /**
- * Resolve API key with priority: flag > CODIKA_API_KEY env > config file
+ * Resolve API key with priority: flag > CODIKA_API_KEY env > active profile
  */
 export function resolveApiKey(flagValue?: string): string | undefined {
   if (flagValue) return flagValue;
   if (process.env.CODIKA_API_KEY) return process.env.CODIKA_API_KEY;
-  return readConfig().apiKey;
+  const active = getActiveProfile();
+  return active?.profile.apiKey;
 }
 
 /**
- * Resolve base URL with priority: flag > CODIKA_BASE_URL env > config file > production default
+ * Resolve base URL with priority: flag > CODIKA_BASE_URL env > active profile > production default
  */
 export function resolveBaseUrl(flagValue?: string): string {
   if (flagValue) return flagValue;
   if (process.env.CODIKA_BASE_URL) return process.env.CODIKA_BASE_URL;
-  return readConfig().baseUrl || PRODUCTION_BASE_URL;
+  const active = getActiveProfile();
+  if (active?.profile.baseUrl) return active.profile.baseUrl;
+  return PRODUCTION_BASE_URL;
 }
 
 /**
@@ -125,22 +246,43 @@ export function resolveEndpointUrl(endpoint: EndpointName, flagOverride?: string
 }
 
 /**
- * Describe the source of the current API key (for `config show`)
+ * Resolve API key with org-aware fallback.
+ * Priority: flag > env > profile matching organizationId > active profile
  */
+export function resolveApiKeyForOrg(options: {
+  flagValue?: string;
+  organizationId?: string;
+}): { apiKey: string | undefined; profileName?: string; autoSelected?: boolean } {
+  if (options.flagValue) return { apiKey: options.flagValue };
+  if (process.env.CODIKA_API_KEY) return { apiKey: process.env.CODIKA_API_KEY };
+
+  // Try to match by organizationId
+  if (options.organizationId) {
+    const match = findProfileByOrgId(options.organizationId);
+    if (match) {
+      return { apiKey: match.profile.apiKey, profileName: match.name, autoSelected: true };
+    }
+  }
+
+  const active = getActiveProfile();
+  return { apiKey: active?.profile.apiKey, profileName: active?.name };
+}
+
+// ── Source descriptions ──────────────────────────────────
+
 export function describeApiKeySource(flagValue?: string): string {
   if (flagValue) return 'flag';
   if (process.env.CODIKA_API_KEY) return 'env (CODIKA_API_KEY)';
-  if (readConfig().apiKey) return 'config file';
+  const active = getActiveProfile();
+  if (active) return `profile "${active.name}"`;
   return 'not set';
 }
 
-/**
- * Describe the source of the current base URL (for `config show`)
- */
 export function describeBaseUrlSource(flagValue?: string): string {
   if (flagValue) return 'flag';
   if (process.env.CODIKA_BASE_URL) return 'env (CODIKA_BASE_URL)';
-  if (readConfig().baseUrl) return 'config file';
+  const active = getActiveProfile();
+  if (active?.profile.baseUrl) return `profile "${active.name}"`;
   return 'default (production)';
 }
 

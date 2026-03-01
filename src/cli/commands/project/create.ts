@@ -11,8 +11,9 @@ import {
   isCreateProjectSuccess,
   isCreateProjectError,
 } from '../../../utils/project-client.js';
-import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
+import { resolveApiKey, resolveEndpointUrl, getActiveProfile, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
 import { writeProjectJson } from '../../../utils/project-json.js';
+import type { ProjectJson } from '../../../utils/project-json.js';
 
 export const createProjectCommand = new Command('create')
   .description('Create a new project on the Codika platform')
@@ -80,7 +81,15 @@ async function runCreateProject(options: CreateProjectCommandOptions): Promise<v
   let projectJsonPath: string | undefined;
   if (options.path && isCreateProjectSuccess(result)) {
     const dirPath = resolve(options.path);
-    projectJsonPath = writeProjectJson(dirPath, { projectId: result.data.projectId });
+    const projectData: ProjectJson = { projectId: result.data.projectId };
+
+    // Include organizationId from --organization-id flag or active profile
+    const orgId = options.organizationId || getActiveProfile()?.profile.organizationId;
+    if (orgId) {
+      projectData.organizationId = orgId;
+    }
+
+    projectJsonPath = writeProjectJson(dirPath, projectData);
   }
 
   if (options.json) {

@@ -25,6 +25,9 @@ import { projectCommand } from './commands/project/index.js';
 import { verifyCommand } from './commands/verify/index.js';
 import { configCommand, runConfigSet } from './commands/config/index.js';
 import { triggerCommand } from './commands/trigger.js';
+import { whoamiCommand } from './commands/whoami.js';
+import { useCommand } from './commands/use.js';
+import { logoutCommand } from './commands/logout.js';
 
 // Read version from package.json dynamically
 const require = createRequire(import.meta.url);
@@ -48,10 +51,14 @@ const loginCommand = new Command('login')
   .description('Save API key (alias for "config set")')
   .option('--api-key <key>', 'API key (skips interactive prompt)')
   .option('--base-url <url>', 'Base URL override (default: production)')
+  .option('--name <name>', 'Custom profile name (auto-derived if omitted)')
   .option('--skip-verify', 'Save without verifying the key')
   .action(async (options) => {
     await runConfigSet(options);
   });
 program.addCommand(loginCommand);
+program.addCommand(whoamiCommand);
+program.addCommand(useCommand);
+program.addCommand(logoutCommand);
 
 program.parse();

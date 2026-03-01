@@ -17,7 +17,8 @@ import {
   isDataIngestionDeploySuccess,
 } from '../../../utils/data-ingestion-deployer.js';
 import { exitWithError } from '../../utils/output.js';
-import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
+import { resolveApiKeyForOrg, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
+import { readProjectJson } from '../../../utils/project-json.js';
 import type { DataIngestionVersionStrategy } from '../../../types/process-types.js';
 
 interface DataIngestionCommandOptions {
@@ -76,10 +77,18 @@ async function runDeployDataIngestion(
   // Resolve API URL: --api-url > CODIKA_DATA_INGESTION_API_URL env > config baseUrl + path > production default
   const apiUrl = resolveEndpointUrl('deployDataIngestion', options.apiUrl);
 
-  // Resolve API key: --api-key > CODIKA_API_KEY env > config file
-  const apiKey = resolveApiKey(options.apiKey);
+  // Resolve API key with org-aware fallback: flag > env > matching org profile > active profile
+  const projectJson = readProjectJson(absolutePath);
+  const keyResult = resolveApiKeyForOrg({
+    flagValue: options.apiKey,
+    organizationId: projectJson?.organizationId,
+  });
+  const apiKey = keyResult.apiKey;
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
+  }
+  if (keyResult.autoSelected && keyResult.profileName && !options.json) {
+    console.log(`Using profile "${keyResult.profileName}" (matches project organization)`);
   }
 
   // Validate version strategy
