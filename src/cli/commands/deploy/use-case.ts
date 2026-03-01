@@ -8,10 +8,11 @@
 import { Command } from 'commander';
 import { resolve, isAbsolute } from 'path';
 import { existsSync } from 'fs';
-import { deployUseCaseFromFolder, isDeploySuccess } from '../../../utils/use-case-deployer.js';
-import { formatSuccess, formatError, toJson, exitWithError } from '../../utils/output.js';
-import { resolveApiKeyForOrg, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
-import { readProjectJson, updateProjectJson } from '../../../utils/project-json.js';
+import { deployUseCaseFromFolder, resolveUseCaseDeployment, isDeploySuccess } from '../../../utils/use-case-deployer.js';
+import { formatSuccess, formatError, toJson, exitWithError, formatDryRunDeployment } from '../../utils/output.js';
+import { resolveApiKey, resolveEndpointUrl, describeApiKeySource, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
+import { validateUseCase } from '../../../validation/runner.js';
+import { updateProjectJson } from '../../../utils/project-json.js';
 import {
   readVersion,
   writeVersion,
@@ -39,6 +40,7 @@ export const useCaseCommand = new Command('use-case')
     [] as string[]
   )
   .option('--json', 'Output result as JSON')
+  .option('--dry-run', 'Preview what would be deployed without calling the API')
   .action(async (path: string, options: UseCaseCommandOptions) => {
     try {
       await runDeployUseCase(path, options);
@@ -68,6 +70,7 @@ interface UseCaseCommandOptions {
   version?: string;
   additionalFile?: string[];
   json?: boolean;
+  dryRun?: boolean;
 }
 
 async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOptions): Promise<void> {
@@ -82,18 +85,10 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
   // Resolve API URL: --api-url > CODIKA_API_URL env > config baseUrl + path > production default
   const apiUrl = resolveEndpointUrl('deployUseCase', options.apiUrl);
 
-  // Resolve API key with org-aware fallback: flag > env > matching org profile > active profile
-  const projectJson = readProjectJson(absolutePath);
-  const keyResult = resolveApiKeyForOrg({
-    flagValue: options.apiKey,
-    organizationId: projectJson?.organizationId,
-  });
-  const apiKey = keyResult.apiKey;
+  // Resolve API key: --api-key > CODIKA_API_KEY env > config file
+  const apiKey = resolveApiKey(options.apiKey);
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
-  }
-  if (keyResult.autoSelected && keyResult.profileName && !options.json) {
-    console.log(`Using profile "${keyResult.profileName}" (matches project organization)`);
   }
 
   // Resolve version strategies from shorthand flags
@@ -131,6 +126,65 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
       relativePath: relPath,
     };
   });
+
+  // Dry-run: resolve everything, run validation, display results, exit
+  if (options.dryRun) {
+    const resolved = await resolveUseCaseDeployment({
+      useCasePath: absolutePath,
+      apiUrl,
+      apiKey,
+      projectId: options.projectId,
+      versionStrategy: apiStrategy,
+      explicitVersion,
+      additionalFiles,
+    });
+
+    // Run validation
+    const validationResult = await validateUseCase({ path: absolutePath });
+
+    // Build dry-run data
+    const dryRunData = {
+      useCasePath: absolutePath,
+      projectId: resolved.projectId,
+      projectIdSource: resolved.projectIdSource,
+      apiKeySource: describeApiKeySource(options.apiKey),
+      apiUrl: resolved.apiUrl,
+      version: {
+        current: currentVersion,
+        next: newLocalVersion,
+        localStrategy,
+        apiStrategy,
+        ...(explicitVersion && { explicitApiVersion: explicitVersion }),
+      },
+      configuration: {
+        title: resolved.configuration.title,
+        subtitle: resolved.configuration.subtitle,
+        workflowCount: resolved.configuration.workflows.length,
+        tags: resolved.configuration.tags || [],
+        integrations: resolved.configuration.integrationUids || [],
+      },
+      workflows: resolved.configuration.workflows.map(w => ({
+        templateId: w.workflowTemplateId,
+        name: w.workflowName,
+        triggerTypes: w.triggers?.map(t => t.type) || [],
+        base64Size: w.n8nWorkflowJsonBase64?.length || 0,
+      })),
+      metadataDocuments: resolved.metadataDocuments.length,
+      validation: {
+        valid: validationResult.valid,
+        summary: validationResult.summary,
+      },
+    };
+
+    if (options.json) {
+      console.log(JSON.stringify(dryRunData, null, 2));
+    } else {
+      console.log(formatDryRunDeployment(dryRunData));
+    }
+
+    process.exit(validationResult.valid ? 0 : 1);
+    return;
+  }
 
   // Deploy
   const result = await deployUseCaseFromFolder({

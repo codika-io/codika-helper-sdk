@@ -24,9 +24,14 @@ src/
         index.ts          # Parent verify command
         use-case.ts       # Validate entire use-case folders
         workflow.ts       # Validate single workflow files
+      init.ts             # Scaffold a new use case folder
       whoami.ts           # Show current authenticated identity
       use.ts              # Switch active profile or list profiles
       logout.ts           # Remove a profile
+    templates/
+      slug.ts             # Name-to-slug utility
+      config-template.ts  # config.ts generator
+      workflow-templates.ts  # Workflow JSON generators (HTTP, schedule, subworkflow)
   utils/
     config.ts                     # Multi-profile config, resolution chains, profile CRUD
     deploy-client.ts              # Low-level process deployment HTTP client
@@ -97,6 +102,9 @@ codika-helper logout <profile-name>     # remove specific profile
 codika-helper config show               # show all profiles
 codika-helper config clear              # clear everything
 codika-helper config clear --profile <name>  # clear one profile
+
+# Scaffold a new use case
+codika-helper init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--json]
 
 # Deploy a use case
 codika-helper deploy use-case <path> [--project-id <id>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]

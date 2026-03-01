@@ -18,7 +18,17 @@ import {
 export const useCommand = new Command('use')
   .description('Switch active profile or list profiles')
   .argument('[name]', 'Profile name to switch to')
-  .action((name?: string) => {
+  .option('--list-names', undefined, false)
+  .action((name: string | undefined, options: { listNames?: boolean }) => {
+    // Hidden: print profile names one per line (for shell completion)
+    if (options.listNames) {
+      const profiles = listProfiles();
+      for (const p of profiles) {
+        console.log(p.name);
+      }
+      return;
+    }
+
     const profiles = listProfiles();
 
     if (profiles.length === 0) {

@@ -301,3 +301,36 @@ export const API_KEY_MISSING_MESSAGE = `API key is required. Either:
   1. Run 'codika-helper login' to save your key
   2. Set CODIKA_API_KEY environment variable
   3. Pass --api-key flag`;
+
+// ── Profile expiry check ─────────────────────────────────
+
+export interface ExpiryCheck {
+  daysLeft: number;
+  expiresAt: string;
+  expired: boolean;
+  profileName: string;
+}
+
+/**
+ * Check if the active profile's API key is near expiry or already expired.
+ * Returns null if no active profile or expiresAt is not set (key never expires).
+ */
+export function checkProfileExpiry(): ExpiryCheck | null {
+  const active = getActiveProfile();
+  if (!active) return null;
+
+  const { expiresAt } = active.profile;
+  if (!expiresAt) return null;
+
+  const expDate = new Date(expiresAt);
+  const now = new Date();
+  const diffMs = expDate.getTime() - now.getTime();
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  return {
+    daysLeft,
+    expiresAt,
+    expired: daysLeft < 0,
+    profileName: active.name,
+  };
+}

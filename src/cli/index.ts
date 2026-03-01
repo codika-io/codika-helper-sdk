@@ -9,6 +9,7 @@
  *
  * Commands:
  *   login                                       Save API key (alias for config set)
+ *   init <path>                                 Scaffold a new use case folder
  *   config set|show|clear                       Manage CLI configuration
  *   deploy use-case <path>                      Deploy a use case to the Codika platform
  *   deploy process-data-ingestion <path>        Deploy a process-level data ingestion configuration
@@ -28,6 +29,10 @@ import { triggerCommand } from './commands/trigger.js';
 import { whoamiCommand } from './commands/whoami.js';
 import { useCommand } from './commands/use.js';
 import { logoutCommand } from './commands/logout.js';
+import { initCommand } from './commands/init.js';
+import { statusCommand } from './commands/status.js';
+import { completionCommand } from './commands/completion.js';
+import { checkProfileExpiry } from '../utils/config.js';
 
 // Read version from package.json dynamically
 const require = createRequire(import.meta.url);
@@ -57,8 +62,27 @@ const loginCommand = new Command('login')
     await runConfigSet(options);
   });
 program.addCommand(loginCommand);
+program.addCommand(initCommand);
 program.addCommand(whoamiCommand);
 program.addCommand(useCommand);
 program.addCommand(logoutCommand);
+program.addCommand(statusCommand);
+program.addCommand(completionCommand);
+
+// Profile expiry warning — runs before every command
+program.hook('preAction', () => {
+  const expiry = checkProfileExpiry();
+  if (!expiry) return;
+
+  if (expiry.expired) {
+    process.stderr.write(
+      `\x1b[33m\u26A0 API key "${expiry.profileName}" expired on ${new Date(expiry.expiresAt).toLocaleDateString()}. Run 'codika-helper login' to refresh.\x1b[0m\n`
+    );
+  } else if (expiry.daysLeft <= 7) {
+    process.stderr.write(
+      `\x1b[33m\u26A0 API key "${expiry.profileName}" expires in ${expiry.daysLeft} day${expiry.daysLeft !== 1 ? 's' : ''}. Run 'codika-helper login' to refresh.\x1b[0m\n`
+    );
+  }
+});
 
 program.parse();

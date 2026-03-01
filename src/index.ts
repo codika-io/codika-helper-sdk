@@ -110,6 +110,7 @@ export {
   findProfileByOrgId,
   deriveProfileName,
   maskApiKey,
+  checkProfileExpiry,
   PRODUCTION_BASE_URL,
   ENDPOINTS,
   API_KEY_MISSING_MESSAGE,

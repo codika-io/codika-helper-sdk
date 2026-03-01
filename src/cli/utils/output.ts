@@ -136,3 +136,114 @@ export function exitWithError(message: string, code: number = 2): never {
   console.error(`\x1b[31mError:\x1b[0m ${message}`);
   process.exit(code);
 }
+
+// ── Dry-run output ──────────────────────────────────────
+
+export interface DryRunData {
+  useCasePath: string;
+  projectId: string;
+  projectIdSource: string;
+  apiKeySource: string;
+  organizationName?: string;
+  apiUrl: string;
+  version: {
+    current: string;
+    next: string;
+    localStrategy: string;
+    apiStrategy: string;
+    explicitApiVersion?: string;
+  };
+  configuration: {
+    title: string;
+    subtitle: string;
+    workflowCount: number;
+    tags: string[];
+    integrations: string[];
+  };
+  workflows: Array<{
+    templateId: string;
+    name: string;
+    triggerTypes: string[];
+    base64Size: number;
+  }>;
+  metadataDocuments: number;
+  validation: {
+    valid: boolean;
+    summary: { must: number; should: number; nit: number; fixable: number };
+  };
+}
+
+/**
+ * Format dry-run deployment data for human-readable output
+ */
+export function formatDryRunDeployment(data: DryRunData): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push('\x1b[36m--- DRY RUN --- No changes will be made\x1b[0m');
+  lines.push('');
+
+  // Target section
+  lines.push('\x1b[1mTarget\x1b[0m');
+  lines.push(`  Project ID:    ${data.projectId} (from ${data.projectIdSource})`);
+  lines.push(`  API key:       ${data.apiKeySource}`);
+  if (data.organizationName) {
+    lines.push(`  Organization:  ${data.organizationName}`);
+  }
+  lines.push(`  API endpoint:  ${data.apiUrl}`);
+  lines.push('');
+
+  // Version section
+  lines.push('\x1b[1mVersion\x1b[0m');
+  lines.push(`  Local:   ${data.version.current} \u2192 ${data.version.next} (${data.version.localStrategy})`);
+  lines.push(`  API:     ${data.version.apiStrategy}${data.version.explicitApiVersion ? ` (${data.version.explicitApiVersion})` : ''}`);
+  lines.push('');
+
+  // Configuration section
+  lines.push('\x1b[1mConfiguration\x1b[0m');
+  lines.push(`  Title:          ${data.configuration.title}`);
+  if (data.configuration.subtitle) {
+    lines.push(`  Subtitle:       ${data.configuration.subtitle}`);
+  }
+  lines.push(`  Workflows:      ${data.configuration.workflowCount}`);
+  lines.push(`  Tags:           ${data.configuration.tags.length > 0 ? data.configuration.tags.join(', ') : '(none)'}`);
+  lines.push(`  Integrations:   ${data.configuration.integrations.length > 0 ? data.configuration.integrations.join(', ') : '(none)'}`);
+  lines.push('');
+
+  // Workflows section
+  lines.push('\x1b[1mWorkflows\x1b[0m');
+  for (const wf of data.workflows) {
+    const size = formatBytes(Math.round(wf.base64Size * 0.75)); // base64 -> raw estimate
+    const triggers = wf.triggerTypes.join(', ') || 'unknown';
+    lines.push(`  - ${wf.name} (${wf.templateId})`);
+    lines.push(`    Triggers: ${triggers} | Size: ~${size}`);
+  }
+  lines.push('');
+
+  // Metadata
+  lines.push(`\x1b[1mMetadata documents:\x1b[0m ${data.metadataDocuments}`);
+  lines.push('');
+
+  // Validation
+  const v = data.validation;
+  const validIcon = v.valid ? '\x1b[32m\u2713' : '\x1b[31m\u2717';
+  lines.push(`\x1b[1mValidation:\x1b[0m ${validIcon} ${v.valid ? 'PASSED' : 'FAILED'}\x1b[0m`);
+  if (v.summary.must > 0) {
+    lines.push(`  \x1b[31m${v.summary.must} must-fix violation${v.summary.must !== 1 ? 's' : ''}\x1b[0m`);
+  }
+  if (v.summary.should > 0) {
+    lines.push(`  \x1b[33m${v.summary.should} warning${v.summary.should !== 1 ? 's' : ''}\x1b[0m`);
+  }
+
+  lines.push('');
+  lines.push('To deploy for real, remove --dry-run');
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}

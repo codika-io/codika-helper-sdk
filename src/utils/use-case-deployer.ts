@@ -37,6 +37,22 @@ export interface DeployUseCaseOptions {
 }
 
 /**
+ * Resolved deployment data — everything needed to deploy, before the HTTP call
+ */
+export interface ResolvedUseCaseDeployment {
+  useCasePath: string;
+  projectId: string;
+  projectIdSource: 'flag' | 'project.json';
+  configuration: ProcessDeploymentConfigurationInput;
+  workflowFiles: string[];
+  metadataDocuments: MetadataDocument[];
+  apiUrl: string;
+  apiKey: string;
+  versionStrategy?: VersionStrategy;
+  explicitVersion?: string;
+}
+
+/**
  * Result of deploying a use case
  * Combines the base DeployResult with additional context for archiving
  */
@@ -197,33 +213,15 @@ interface ConfigModule {
 }
 
 /**
- * Deploy a use case by pointing at its folder
- *
- * This function:
- * 1. Dynamically imports config.js from the use case folder
- * 2. Calls getConfiguration() and resolves the project ID from project.json
- * 3. Deploys to the Codika platform
- * 4. Returns the result along with context needed for archiving
+ * Resolve all deployment data without making the HTTP call.
+ * This is the preparation phase shared by both real deploy and dry-run.
  *
  * @param options - Deployment options including the use case path
- * @returns Deployment result with additional context
- *
- * @example
- * ```typescript
- * const result = await deployUseCaseFromFolder({
- *   useCasePath: '/path/to/use-cases/my-use-case',
- *   apiKey: 'your-api-key',
- * });
- *
- * if (isDeploySuccess(result)) {
- *   console.log('Deployed version:', result.data.version);
- *   // Archive using result.configuration and result.workflowFiles
- * }
- * ```
+ * @returns Resolved deployment data ready for the HTTP call
  */
-export async function deployUseCaseFromFolder(
+export async function resolveUseCaseDeployment(
   options: DeployUseCaseOptions
-): Promise<DeployUseCaseResult> {
+): Promise<ResolvedUseCaseDeployment> {
   const {
     useCasePath,
     apiKey,
@@ -272,7 +270,7 @@ export async function deployUseCaseFromFolder(
   }
 
   // Resolve project ID: --project-id flag > project.json
-  const { projectId } = resolveProjectId({
+  const { projectId, source } = resolveProjectId({
     flagValue: options.projectId,
     useCasePath,
   });
@@ -296,23 +294,67 @@ export async function deployUseCaseFromFolder(
     }
   }
 
-  // Deploy to the platform
-  const result = await deployProcess({
+  return {
+    useCasePath,
     projectId,
+    projectIdSource: source as 'flag' | 'project.json',
     configuration,
-    apiKey,
+    workflowFiles,
+    metadataDocuments: documents,
     apiUrl,
+    apiKey,
     versionStrategy,
     explicitVersion,
-    metadataDocuments: documents.length > 0 ? documents : undefined,
+  };
+}
+
+/**
+ * Deploy a use case by pointing at its folder
+ *
+ * This function:
+ * 1. Resolves all deployment data (config, project ID, documents)
+ * 2. Makes the HTTP call to deploy to the Codika platform
+ * 3. Returns the result along with context needed for archiving
+ *
+ * @param options - Deployment options including the use case path
+ * @returns Deployment result with additional context
+ *
+ * @example
+ * ```typescript
+ * const result = await deployUseCaseFromFolder({
+ *   useCasePath: '/path/to/use-cases/my-use-case',
+ *   apiKey: 'your-api-key',
+ * });
+ *
+ * if (isDeploySuccess(result)) {
+ *   console.log('Deployed version:', result.data.version);
+ *   // Archive using result.configuration and result.workflowFiles
+ * }
+ * ```
+ */
+export async function deployUseCaseFromFolder(
+  options: DeployUseCaseOptions
+): Promise<DeployUseCaseResult> {
+  // Phase 1: Resolve everything
+  const resolved = await resolveUseCaseDeployment(options);
+
+  // Phase 2: Make the HTTP call (this is the only part dry-run skips)
+  const result = await deployProcess({
+    projectId: resolved.projectId,
+    configuration: resolved.configuration,
+    apiKey: resolved.apiKey,
+    apiUrl: resolved.apiUrl,
+    versionStrategy: resolved.versionStrategy,
+    explicitVersion: resolved.explicitVersion,
+    metadataDocuments: resolved.metadataDocuments.length > 0 ? resolved.metadataDocuments : undefined,
   });
 
   // Return result with additional context for archiving
   return {
     ...result,
-    projectId,
-    configuration,
-    workflowFiles,
+    projectId: resolved.projectId,
+    configuration: resolved.configuration,
+    workflowFiles: resolved.workflowFiles,
   };
 }
 
