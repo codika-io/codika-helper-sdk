@@ -104,7 +104,7 @@ codika-helper config clear              # clear everything
 codika-helper config clear --profile <name>  # clear one profile
 
 # Scaffold a new use case
-codika-helper init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--json]
+codika-helper init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--no-install] [--json]
 
 # Deploy a use case
 codika-helper deploy use-case <path> [--project-id <id>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]

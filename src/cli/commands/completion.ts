@@ -151,7 +151,7 @@ _codika_helper_completions() {
       return
       ;;
     init)
-      COMPREPLY=( $(compgen -W "--name --description --icon --no-project --project-id --api-url --api-key --json" -- "$cur") )
+      COMPREPLY=( $(compgen -W "--name --description --icon --no-project --project-id --no-install --api-url --api-key --json" -- "$cur") )
       return
       ;;
     whoami)
@@ -421,6 +421,7 @@ _codika_helper() {
             '--icon[Use case icon]:icon:' \\
             '--no-project[Skip project creation]' \\
             '--project-id[Project ID]:id:' \\
+            '--no-install[Skip npm install]' \\
             '--api-url[API base URL]:url:' \\
             '--api-key[API key]:key:' \\
             '--json[Output as JSON]' \\
@@ -588,6 +589,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from init' -l description -
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l icon -d 'Use case icon'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l no-project -d 'Skip project creation'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l project-id -d 'Project ID'
+complete -c codika-helper -n '__fish_seen_subcommand_from init' -l no-install -d 'Skip npm install'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l api-url -d 'API base URL'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l api-key -d 'API key'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l json -d 'Output as JSON'
