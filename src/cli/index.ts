@@ -41,7 +41,7 @@ const { version: VERSION } = require('../../package.json');
 program
   .name('codika-helper')
   .description('Codika Helper SDK CLI - Deploy and manage use cases')
-  .version(VERSION);
+  .version(VERSION, '-V, --cli-version');
 
 // Register commands
 program.addCommand(deployCommand);

@@ -18,7 +18,6 @@ import { readProjectJson } from '../../utils/project-json.js';
 interface TriggerOptions {
   processInstanceId?: string;
   path?: string;
-  payload?: string;
   payloadFile?: string;
   poll?: boolean;
   timeout?: string;
@@ -33,8 +32,7 @@ export const triggerCommand = new Command('trigger')
   .argument('<workflowId>', 'Workflow ID (from use case config)')
   .option('--process-instance-id <id>', 'Process instance ID')
   .option('--path <path>', 'Path to use case folder (to auto-resolve from project.json)')
-  .option('--payload <json>', 'Inline JSON payload')
-  .option('--payload-file <path>', 'Read payload from a JSON file')
+  .option('--payload-file <path>', 'Read payload from a JSON file, or "-" for stdin')
   .option('--poll', 'Poll for execution result')
   .option('--timeout <seconds>', 'Max poll time in seconds (default: 120)')
   .option('-o, --output <path>', 'Save result to file (with --poll)')
@@ -80,39 +78,30 @@ function resolveProcessInstanceId(options: TriggerOptions): string | undefined {
 }
 
 /**
- * Parse payload from --payload (inline JSON) or --payload-file (file path)
+ * Parse payload from --payload-file (file path or "-" for stdin)
  */
 function resolvePayload(options: TriggerOptions): Record<string, unknown> {
-  if (options.payload) {
-    try {
-      const parsed = JSON.parse(options.payload);
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        throw new Error('Payload must be a JSON object');
-      }
-      return parsed;
-    } catch (e) {
-      if (e instanceof SyntaxError) {
-        throw new Error(`Invalid JSON in --payload: ${e.message}`);
-      }
-      throw e;
-    }
-  }
-
   if (options.payloadFile) {
-    const filePath = resolve(options.payloadFile);
+    const isStdin = options.payloadFile === '-';
+    const source = isStdin ? 'stdin' : resolve(options.payloadFile);
     try {
-      const raw = readFileSync(filePath, 'utf-8');
+      const raw = isStdin
+        ? readFileSync(0, 'utf-8')
+        : readFileSync(source, 'utf-8');
+      if (!raw.trim()) {
+        throw new Error(isStdin ? 'No data received on stdin' : `Payload file is empty: ${source}`);
+      }
       const parsed = JSON.parse(raw);
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        throw new Error(`Payload file must contain a JSON object`);
+        throw new Error(isStdin ? 'Stdin payload must be a JSON object' : 'Payload file must contain a JSON object');
       }
       return parsed;
     } catch (e) {
       if (e instanceof SyntaxError) {
-        throw new Error(`Invalid JSON in ${filePath}: ${(e as Error).message}`);
+        throw new Error(`Invalid JSON in ${source}: ${(e as Error).message}`);
       }
-      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-        throw new Error(`Payload file not found: ${filePath}`);
+      if (!isStdin && (e as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new Error(`Payload file not found: ${source}`);
       }
       throw e;
     }

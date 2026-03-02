@@ -143,7 +143,7 @@ _codika_helper_completions() {
       esac
       ;;
     trigger)
-      COMPREPLY=( $(compgen -W "--api-key --process-instance-id --workflow-id --payload --json --poll --timeout" -- "$cur") )
+      COMPREPLY=( $(compgen -W "--api-key --process-instance-id --workflow-id --payload-file --json --poll --timeout --output --path" -- "$cur") )
       return
       ;;
     login)
@@ -400,10 +400,12 @@ _codika_helper() {
             '--api-key[API key]:key:' \\
             '--process-instance-id[Process instance ID]:id:' \\
             '--workflow-id[Workflow ID]:id:' \\
-            '--payload[JSON payload]:payload:' \\
+            '--payload-file[JSON file or - for stdin]:file:_files -g "*.json"' \\
             '--json[Output as JSON]' \\
             '--poll[Poll for completion]' \\
-            '--timeout[Poll timeout in seconds]:seconds:'
+            '--timeout[Poll timeout in seconds]:seconds:' \\
+            '--output[Save result to file]:file:_files' \\
+            '--path[Use case folder path]:path:_directories'
           ;;
         login)
           _arguments \\
@@ -567,10 +569,12 @@ complete -c codika-helper -n '__fish_seen_subcommand_from config; and __fish_see
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l api-key -d 'API key'
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l process-instance-id -d 'Process instance ID'
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l workflow-id -d 'Workflow ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l payload -d 'JSON payload'
+complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l payload-file -d 'JSON file or - for stdin' -rF
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l json -d 'Output as JSON'
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l poll -d 'Poll for completion'
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l timeout -d 'Poll timeout in seconds'
+complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l output -s o -d 'Save result to file' -rF
+complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l path -d 'Use case folder path' -rF
 
 # login options
 complete -c codika-helper -n '__fish_seen_subcommand_from login' -l api-key -d 'API key'
