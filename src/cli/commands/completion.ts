@@ -458,7 +458,7 @@ _codika_helper() {
   esac
 }
 
-compdef _codika_helper codika-helper`;
+compdef _codika_helper codika-helper 2>/dev/null`;
 }
 
 // ── Fish completion ──────────────────────────────────────
@@ -627,26 +627,63 @@ function installCompletion(): void {
     process.exit(1);
   }
 
-  const rcFile = getRcFile(shell);
-
   if (shell === 'fish') {
     const dir = join(homedir(), '.config', 'fish', 'completions');
     mkdirSync(dir, { recursive: true });
-    writeFileSync(rcFile, generateFishCompletion() + '\n');
-    console.log(`Completion installed to ${rcFile}`);
-    console.log('Restart your terminal or run: source ' + rcFile);
+    const fishFile = getRcFile(shell);
+    writeFileSync(fishFile, generateFishCompletion() + '\n');
+    console.log(`Completion installed to ${fishFile}`);
+    console.log('Restart your terminal or run: source ' + fishFile);
     return;
   }
 
-  // bash or zsh
-  if (existsSync(rcFile)) {
-    const content = readFileSync(rcFile, 'utf-8');
-    if (content.includes(BEGIN_MARKER)) {
-      console.log(`Completion already installed in ${rcFile}`);
-      return;
+  if (shell === 'zsh') {
+    // Install as a file in ~/.zsh/completions (fpath-based)
+    const completionsDir = join(homedir(), '.zsh', 'completions');
+    const completionFile = join(completionsDir, '_codika-helper');
+    mkdirSync(completionsDir, { recursive: true });
+    writeFileSync(completionFile, generateZshCompletion() + '\n');
+
+    const rcFile = getRcFile(shell);
+    let rcContent = existsSync(rcFile) ? readFileSync(rcFile, 'utf-8') : '';
+
+    // Remove old eval-based completion block if present
+    if (rcContent.includes(BEGIN_MARKER)) {
+      const beginIdx = rcContent.indexOf(BEGIN_MARKER);
+      const endIdx = rcContent.indexOf(END_MARKER);
+      if (beginIdx !== -1 && endIdx !== -1) {
+        const before = rcContent.slice(0, beginIdx).replace(/\n+$/, '\n');
+        const after = rcContent.slice(endIdx + END_MARKER.length).replace(/^\n+/, '\n');
+        rcContent = before + after;
+      }
     }
+
+    // Build the block we need at the top: fpath + compinit
+    const fpathLine = 'fpath=(~/.zsh/completions $fpath)';
+    const compinitLine = 'autoload -Uz compinit && compinit -C';
+    const hasFpath = rcContent.includes('~/.zsh/completions');
+    const hasCompinit = /autoload.*compinit/.test(rcContent);
+
+    // fpath must come before compinit so compinit discovers the completions
+    const linesToPrepend: string[] = [];
+    if (!hasFpath) linesToPrepend.push(fpathLine);
+    if (!hasCompinit) linesToPrepend.push(compinitLine);
+
+    if (linesToPrepend.length > 0) {
+      rcContent = linesToPrepend.join('\n') + '\n' + rcContent;
+    }
+
+    writeFileSync(rcFile, rcContent);
+
+    if (!hasFpath) console.log(`Added fpath entry to ${rcFile}`);
+    if (!hasCompinit) console.log(`Added compinit to ${rcFile}`);
+    console.log(`Completion installed to ${completionFile}`);
+    console.log('Restart your terminal for changes to take effect.');
+    return;
   }
 
+  // bash — eval-based approach
+  const rcFile = getRcFile(shell);
   const block = [
     '',
     BEGIN_MARKER,
@@ -654,6 +691,22 @@ function installCompletion(): void {
     END_MARKER,
     '',
   ].join('\n');
+
+  if (existsSync(rcFile)) {
+    const content = readFileSync(rcFile, 'utf-8');
+    if (content.includes(BEGIN_MARKER)) {
+      const beginIdx = content.indexOf(BEGIN_MARKER);
+      const endIdx = content.indexOf(END_MARKER);
+      if (beginIdx !== -1 && endIdx !== -1) {
+        const before = content.slice(0, beginIdx).replace(/\n+$/, '\n');
+        const after = content.slice(endIdx + END_MARKER.length);
+        writeFileSync(rcFile, before + block.trimStart() + after);
+        console.log(`Completion updated in ${rcFile}`);
+        console.log('Restart your terminal or run: source ' + rcFile);
+        return;
+      }
+    }
+  }
 
   appendFileSync(rcFile, block);
   console.log(`Completion installed in ${rcFile}`);
@@ -667,19 +720,45 @@ function uninstallCompletion(): void {
     process.exit(1);
   }
 
-  const rcFile = getRcFile(shell);
-
   if (shell === 'fish') {
-    if (existsSync(rcFile)) {
-      unlinkSync(rcFile);
-      console.log(`Completion removed from ${rcFile}`);
+    const fishFile = getRcFile(shell);
+    if (existsSync(fishFile)) {
+      unlinkSync(fishFile);
+      console.log(`Completion removed from ${fishFile}`);
     } else {
       console.log('No fish completion file found.');
     }
     return;
   }
 
-  // bash or zsh
+  if (shell === 'zsh') {
+    // Remove fpath-based completion file
+    const completionFile = join(homedir(), '.zsh', 'completions', '_codika-helper');
+    if (existsSync(completionFile)) {
+      unlinkSync(completionFile);
+      console.log(`Completion removed from ${completionFile}`);
+    }
+
+    // Also remove old eval-based block from .zshrc if present
+    const rcFile = getRcFile(shell);
+    if (existsSync(rcFile)) {
+      const content = readFileSync(rcFile, 'utf-8');
+      if (content.includes(BEGIN_MARKER)) {
+        const beginIdx = content.indexOf(BEGIN_MARKER);
+        const endIdx = content.indexOf(END_MARKER);
+        if (beginIdx !== -1 && endIdx !== -1) {
+          const before = content.slice(0, beginIdx).replace(/\n+$/, '\n');
+          const after = content.slice(endIdx + END_MARKER.length).replace(/^\n+/, '\n');
+          writeFileSync(rcFile, before + after);
+          console.log(`Removed old completion block from ${rcFile}`);
+        }
+      }
+    }
+    return;
+  }
+
+  // bash
+  const rcFile = getRcFile(shell);
   if (!existsSync(rcFile)) {
     console.log(`No ${shell} rc file found at ${rcFile}`);
     return;
@@ -694,7 +773,6 @@ function uninstallCompletion(): void {
     return;
   }
 
-  // Remove the block including any surrounding blank lines
   const before = content.slice(0, beginIdx).replace(/\n+$/, '\n');
   const after = content.slice(endIdx + END_MARKER.length).replace(/^\n+/, '\n');
   writeFileSync(rcFile, before + after);
