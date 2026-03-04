@@ -12,7 +12,7 @@ import { deployUseCaseFromFolder, resolveUseCaseDeployment, isDeploySuccess } fr
 import { formatSuccess, formatError, toJson, exitWithError, formatDryRunDeployment } from '../../utils/output.js';
 import { resolveApiKey, resolveEndpointUrl, describeApiKeySource, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
 import { validateUseCase } from '../../../validation/runner.js';
-import { updateProjectJson } from '../../../utils/project-json.js';
+import { readProjectJson, updateProjectJson } from '../../../utils/project-json.js';
 import {
   readVersion,
   writeVersion,
@@ -203,12 +203,19 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
 
   // On success: update version.json, archive, update project info
   if (isDeploySuccess(result)) {
-    // Auto-save processInstanceId to project.json for post-deploy workflows
+    // Auto-save processInstanceId and deployment history to project.json
+    const existingProject = readProjectJson(absolutePath, options.projectFile);
+    const deployments = existingProject?.deployments ?? {};
+    deployments[result.data.version] = {
+      templateId: result.data.templateId,
+      createdAt: new Date().toISOString(),
+    };
+
+    const projectUpdate: Record<string, unknown> = { deployments };
     if (result.data.processInstanceId) {
-      updateProjectJson(absolutePath, {
-        devProcessInstanceId: result.data.processInstanceId,
-      }, options.projectFile);
+      projectUpdate.devProcessInstanceId = result.data.processInstanceId;
     }
+    updateProjectJson(absolutePath, projectUpdate, options.projectFile);
 
     // Write bumped version to version.json
     writeVersion(absolutePath, newLocalVersion);

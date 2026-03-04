@@ -48,6 +48,8 @@ export const ENDPOINTS = {
   triggerWorkflow: '/triggerWebhookPublic',
   getExecutionStatus: '/getExecutionStatusPublic',
   verifyApiKey: '/verifyApiKey',
+  publishUseCase: '/publishProcessDeploymentPublic',
+  listExecutions: '/listExecutionsPublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────

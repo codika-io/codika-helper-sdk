@@ -16,6 +16,8 @@
  *   project create --name "..."                 Create a new project
  *   verify workflow <path>                      Validate a single workflow JSON file
  *   verify use-case <path>                      Validate an entire use-case folder
+ *   publish <templateId>                        Publish a deployment to production
+ *   list executions <processInstanceId>         List recent executions
  */
 
 import { program, Command } from 'commander';
@@ -32,6 +34,8 @@ import { logoutCommand } from './commands/logout.js';
 import { initCommand } from './commands/init.js';
 import { statusCommand } from './commands/status.js';
 import { completionCommand } from './commands/completion.js';
+import { publishCommand } from './commands/publish.js';
+import { listCommand } from './commands/list/index.js';
 import { checkProfileExpiry } from '../utils/config.js';
 
 // Read version from package.json dynamically
@@ -68,6 +72,8 @@ program.addCommand(useCommand);
 program.addCommand(logoutCommand);
 program.addCommand(statusCommand);
 program.addCommand(completionCommand);
+program.addCommand(publishCommand);
+program.addCommand(listCommand);
 
 // Profile expiry warning — runs before every command
 program.hook('preAction', () => {

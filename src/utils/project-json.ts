@@ -23,10 +23,17 @@ function resolveProjectFilePath(basePath: string, projectFile?: string): string 
   return isAbsolute(projectFile) ? projectFile : resolve(basePath, projectFile);
 }
 
+export interface DeploymentEntry {
+  templateId: string;
+  createdAt: string;
+}
+
 export interface ProjectJson {
   projectId: string;
   devProcessInstanceId?: string;
+  prodProcessInstanceId?: string;
   organizationId?: string;
+  deployments?: Record<string, DeploymentEntry>;
 }
 
 /**
@@ -49,8 +56,14 @@ export function readProjectJson(useCasePath: string, projectFile?: string): Proj
       if (typeof parsed.devProcessInstanceId === 'string' && parsed.devProcessInstanceId) {
         result.devProcessInstanceId = parsed.devProcessInstanceId;
       }
+      if (typeof parsed.prodProcessInstanceId === 'string' && parsed.prodProcessInstanceId) {
+        result.prodProcessInstanceId = parsed.prodProcessInstanceId;
+      }
       if (typeof parsed.organizationId === 'string' && parsed.organizationId) {
         result.organizationId = parsed.organizationId;
+      }
+      if (parsed.deployments && typeof parsed.deployments === 'object' && !Array.isArray(parsed.deployments)) {
+        result.deployments = parsed.deployments as Record<string, DeploymentEntry>;
       }
       return result;
     }
@@ -92,6 +105,12 @@ export function updateProjectJson(dirPath: string, update: Partial<ProjectJson>,
     }
   }
   const merged = { ...existing, ...update };
+
+  // Deep merge deployments: preserve existing entries when adding new ones
+  if (update.deployments && existing.deployments && typeof existing.deployments === 'object') {
+    merged.deployments = { ...existing.deployments, ...update.deployments };
+  }
+
   writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
   return filePath;
 }
