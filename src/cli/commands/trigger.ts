@@ -18,6 +18,7 @@ import { readProjectJson } from '../../utils/project-json.js';
 interface TriggerOptions {
   processInstanceId?: string;
   path?: string;
+  projectFile?: string;
   payloadFile?: string;
   poll?: boolean;
   timeout?: string;
@@ -32,6 +33,7 @@ export const triggerCommand = new Command('trigger')
   .argument('<workflowId>', 'Workflow ID (from use case config)')
   .option('--process-instance-id <id>', 'Process instance ID')
   .option('--path <path>', 'Path to use case folder (to auto-resolve from project.json)')
+  .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
   .option('--payload-file <path>', 'Read payload from a JSON file, or "-" for stdin')
   .option('--poll', 'Poll for execution result')
   .option('--timeout <seconds>', 'Max poll time in seconds (default: 120)')
@@ -67,11 +69,11 @@ function resolveProcessInstanceId(options: TriggerOptions): string | undefined {
   if (options.processInstanceId) return options.processInstanceId;
 
   if (options.path) {
-    const projectJson = readProjectJson(resolve(options.path));
+    const projectJson = readProjectJson(resolve(options.path), options.projectFile);
     if (projectJson?.devProcessInstanceId) return projectJson.devProcessInstanceId;
   }
 
-  const projectJson = readProjectJson(process.cwd());
+  const projectJson = readProjectJson(process.cwd(), options.projectFile);
   if (projectJson?.devProcessInstanceId) return projectJson.devProcessInstanceId;
 
   return undefined;

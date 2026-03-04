@@ -34,6 +34,8 @@ export interface DeployUseCaseOptions {
   explicitVersion?: string;
   /** Additional files to include (e.g., PRD, logs) */
   additionalFiles?: Array<{ absolutePath: string; relativePath: string }>;
+  /** Path to a custom project file (e.g., project-client-a.json) */
+  projectFile?: string;
 }
 
 /**
@@ -269,10 +271,11 @@ export async function resolveUseCaseDeployment(
     );
   }
 
-  // Resolve project ID: --project-id flag > project.json
+  // Resolve project ID: --project-id flag > --project-file > project.json
   const { projectId, source } = resolveProjectId({
     flagValue: options.projectId,
     useCasePath,
+    projectFile: options.projectFile,
   });
   const configuration = configModule.getConfiguration();
   const workflowFiles = configModule.WORKFLOW_FILES || [];

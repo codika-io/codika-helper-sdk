@@ -32,6 +32,8 @@ export interface DeployDataIngestionFromFolderOptions {
   versionStrategy?: DataIngestionVersionStrategy;
   /** Explicit version (required if versionStrategy is 'explicit') */
   explicitVersion?: string;
+  /** Path to a custom project file (e.g., project-client-a.json) */
+  projectFile?: string;
 }
 
 /**
@@ -123,10 +125,11 @@ export async function deployDataIngestionFromFolder(
     );
   }
 
-  // Resolve project ID: --project-id flag > project.json
+  // Resolve project ID: --project-id flag > --project-file > project.json
   const { projectId } = resolveProjectId({
     flagValue: options.projectId,
     useCasePath,
+    projectFile: options.projectFile,
   });
   const config = configModule.getDataIngestionConfig();
   const workflowFile = configModule.DATA_INGESTION_WORKFLOW_FILE;

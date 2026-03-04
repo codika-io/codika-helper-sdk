@@ -22,6 +22,7 @@ export const createProjectCommand = new Command('create')
   .option('--template-id <templateId>', 'Template ID (defaults to platform default)')
   .option('--organization-id <organizationId>', 'Organization ID (required for admin key, derived from org API key)')
   .option('--path <dir>', 'Write project.json into this directory after creation')
+  .option('--project-file <path>', 'Custom filename for project file (default: project.json)')
   .option('--api-url <url>', 'Codika API URL for project creation (env: CODIKA_PROJECT_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
   .option('--json', 'Output result as JSON')
@@ -49,6 +50,7 @@ interface CreateProjectCommandOptions {
   templateId?: string;
   organizationId?: string;
   path?: string;
+  projectFile?: string;
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
@@ -89,7 +91,7 @@ async function runCreateProject(options: CreateProjectCommandOptions): Promise<v
       projectData.organizationId = orgId;
     }
 
-    projectJsonPath = writeProjectJson(dirPath, projectData);
+    projectJsonPath = writeProjectJson(dirPath, projectData, options.projectFile);
   }
 
   if (options.json) {

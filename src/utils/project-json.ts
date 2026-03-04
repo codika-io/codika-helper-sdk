@@ -9,9 +9,19 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, isAbsolute, resolve } from 'path';
 
 const PROJECT_JSON_FILENAME = 'project.json';
+
+/**
+ * Resolve the path to the project file.
+ * When projectFile is provided, it can be absolute or relative to basePath.
+ * When omitted, defaults to `project.json` inside basePath.
+ */
+function resolveProjectFilePath(basePath: string, projectFile?: string): string {
+  if (!projectFile) return join(basePath, PROJECT_JSON_FILENAME);
+  return isAbsolute(projectFile) ? projectFile : resolve(basePath, projectFile);
+}
 
 export interface ProjectJson {
   projectId: string;
@@ -20,11 +30,14 @@ export interface ProjectJson {
 }
 
 /**
- * Read project.json from a use case folder.
+ * Read project.json (or a custom project file) from a use case folder.
  * Returns null if the file doesn't exist or is invalid.
+ *
+ * @param useCasePath - Path to the use case folder
+ * @param projectFile - Optional path to a custom project file (absolute or relative to useCasePath)
  */
-export function readProjectJson(useCasePath: string): ProjectJson | null {
-  const filePath = join(useCasePath, PROJECT_JSON_FILENAME);
+export function readProjectJson(useCasePath: string, projectFile?: string): ProjectJson | null {
+  const filePath = resolveProjectFilePath(useCasePath, projectFile);
   if (!existsSync(filePath)) {
     return null;
   }
@@ -48,20 +61,28 @@ export function readProjectJson(useCasePath: string): ProjectJson | null {
 }
 
 /**
- * Write project.json to a directory.
+ * Write project.json (or a custom project file) to a directory.
+ *
+ * @param dirPath - Directory to write into
+ * @param data - Project data to write
+ * @param projectFile - Optional custom filename (absolute or relative to dirPath)
  */
-export function writeProjectJson(dirPath: string, data: ProjectJson): string {
-  const filePath = join(dirPath, PROJECT_JSON_FILENAME);
+export function writeProjectJson(dirPath: string, data: ProjectJson, projectFile?: string): string {
+  const filePath = resolveProjectFilePath(dirPath, projectFile);
   writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
   return filePath;
 }
 
 /**
- * Update project.json by merging partial data into the existing file.
+ * Update project.json (or a custom project file) by merging partial data into the existing file.
  * Creates the file if it doesn't exist (requires at least projectId in that case).
+ *
+ * @param dirPath - Directory containing the project file
+ * @param update - Partial data to merge
+ * @param projectFile - Optional custom filename (absolute or relative to dirPath)
  */
-export function updateProjectJson(dirPath: string, update: Partial<ProjectJson>): string {
-  const filePath = join(dirPath, PROJECT_JSON_FILENAME);
+export function updateProjectJson(dirPath: string, update: Partial<ProjectJson>, projectFile?: string): string {
+  const filePath = resolveProjectFilePath(dirPath, projectFile);
   let existing: Record<string, unknown> = {};
   if (existsSync(filePath)) {
     try {
@@ -76,26 +97,33 @@ export function updateProjectJson(dirPath: string, update: Partial<ProjectJson>)
 }
 
 /**
- * Resolve project ID with priority: explicit flag value > project.json file.
+ * Resolve project ID with priority: explicit flag value > project file.
  * Returns the project ID and its source.
+ *
+ * @param options.flagValue - Explicit --project-id flag value (highest priority)
+ * @param options.useCasePath - Path to the use case folder
+ * @param options.projectFile - Optional path to a custom project file
  */
 export function resolveProjectId(options: {
   flagValue?: string;
   useCasePath: string;
+  projectFile?: string;
 }): { projectId: string; source: string } {
   if (options.flagValue) {
     return { projectId: options.flagValue, source: 'flag' };
   }
 
-  const projectJson = readProjectJson(options.useCasePath);
+  const projectJson = readProjectJson(options.useCasePath, options.projectFile);
   if (projectJson) {
-    return { projectId: projectJson.projectId, source: 'project.json' };
+    const source = options.projectFile || 'project.json';
+    return { projectId: projectJson.projectId, source };
   }
 
   throw new Error(
     `No project ID found. Either:\n` +
     `  1. Run 'codika-helper project create --name "..." --path ${options.useCasePath}' to create project.json\n` +
     `  2. Add project.json with {"projectId": "..."} to the use case folder\n` +
-    `  3. Pass --project-id flag`
+    `  3. Pass --project-id flag\n` +
+    `  4. Pass --project-file flag pointing to a custom project file`
   );
 }

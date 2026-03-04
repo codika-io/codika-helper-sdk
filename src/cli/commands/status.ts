@@ -71,6 +71,7 @@ export interface StatusResult {
 export async function gatherStatus(
   targetPath: string,
   runVerify: boolean,
+  projectFile?: string,
 ): Promise<StatusResult> {
   const absolutePath = resolve(targetPath);
 
@@ -100,7 +101,7 @@ export async function gatherStatus(
   let useCase: StatusResult['useCase'] = null;
 
   if (isUseCase) {
-    const projectJson = readProjectJson(absolutePath);
+    const projectJson = readProjectJson(absolutePath, projectFile);
     const versionJsonPath = join(absolutePath, 'version.json');
     const hasVersionJson = existsSync(versionJsonPath);
     const currentVersion = readVersion(absolutePath);
@@ -340,9 +341,10 @@ export const statusCommand = new Command('status')
   .argument('[path]', 'Path to check (default: current directory)', '.')
   .option('--json', 'Output as JSON')
   .option('--verify', 'Run quick validation on the use case')
-  .action(async (path: string, options: { json?: boolean; verify?: boolean }) => {
+  .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
+  .action(async (path: string, options: { json?: boolean; verify?: boolean; projectFile?: string }) => {
     try {
-      const result = await gatherStatus(path, !!options.verify);
+      const result = await gatherStatus(path, !!options.verify, options.projectFile);
 
       if (options.json) {
         console.log(JSON.stringify(result, null, 2));

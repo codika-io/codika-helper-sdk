@@ -45,6 +45,7 @@ interface InitOptions {
   project?: boolean; // Commander inverts --no-project to project: false
   projectId?: string;
   install?: boolean; // Commander inverts --no-install to install: false
+  projectFile?: string;
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
@@ -59,6 +60,7 @@ export const initCommand = new Command('init')
   .option('--no-project', 'Skip project creation on the platform')
   .option('--project-id <id>', 'Use existing project ID instead of creating one')
   .option('--no-install', 'Skip npm install after scaffolding')
+  .option('--project-file <path>', 'Custom filename for the project file (default: project.json)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output result as JSON')
@@ -148,11 +150,13 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
   let projectSkipped = false;
   let projectSkipReason: string | undefined;
 
+  const projectFileName = options.projectFile || 'project.json';
+
   if (options.projectId) {
     // Use existing project ID
     projectId = options.projectId;
-    writeProjectJson(targetPath, { projectId });
-    createdFiles.push('project.json');
+    writeProjectJson(targetPath, { projectId }, options.projectFile);
+    createdFiles.push(projectFileName);
   } else if (options.project !== false) {
     // Try to create project on the platform
     const apiKey = resolveApiKey(options.apiKey);
@@ -176,8 +180,8 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
         if (organizationId) {
           projectData.organizationId = organizationId;
         }
-        writeProjectJson(targetPath, projectData);
-        createdFiles.push('project.json');
+        writeProjectJson(targetPath, projectData, options.projectFile);
+        createdFiles.push(projectFileName);
       } else {
         projectSkipped = true;
         projectSkipReason = `Project creation failed: ${

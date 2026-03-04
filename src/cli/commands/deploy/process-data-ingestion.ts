@@ -25,6 +25,7 @@ interface DataIngestionCommandOptions {
   apiUrl?: string;
   apiKey?: string;
   projectId?: string;
+  projectFile?: string;
   versionStrategy: string;
   explicitVersion?: string;
   json?: boolean;
@@ -36,6 +37,7 @@ export const processDataIngestionCommand = new Command('process-data-ingestion')
   .option('--api-url <url>', 'Codika Data Ingestion API URL (env: CODIKA_DATA_INGESTION_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
   .option('--project-id <id>', 'Override project ID (skips project.json and config.ts)')
+  .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
   .option(
     '--version-strategy <strategy>',
     'Version strategy: major_bump, minor_bump, or explicit',
@@ -78,7 +80,7 @@ async function runDeployDataIngestion(
   const apiUrl = resolveEndpointUrl('deployDataIngestion', options.apiUrl);
 
   // Resolve API key with org-aware fallback: flag > env > matching org profile > active profile
-  const projectJson = readProjectJson(absolutePath);
+  const projectJson = readProjectJson(absolutePath, options.projectFile);
   const keyResult = resolveApiKeyForOrg({
     flagValue: options.apiKey,
     organizationId: projectJson?.organizationId,
@@ -112,6 +114,7 @@ async function runDeployDataIngestion(
     apiUrl,
     apiKey,
     projectId: options.projectId,
+    projectFile: options.projectFile,
     versionStrategy,
     explicitVersion: options.explicitVersion,
   });

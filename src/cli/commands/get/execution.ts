@@ -20,6 +20,7 @@ export const executionCommand = new Command('execution')
   .argument('<executionId>', 'Codika execution ID (from triggerWebhookPublic response)')
   .option('--process-instance-id <id>', 'Process instance ID')
   .option('--path <path>', 'Path to use case folder (to auto-resolve from project.json)')
+  .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
   .option('--deep', 'Recursively fetch sub-workflow executions')
   .option('--slim', 'Strip noise for readability')
   .option('-o, --output <path>', 'Save to file instead of stdout')
@@ -47,6 +48,7 @@ export const executionCommand = new Command('execution')
 interface ExecutionOptions {
   processInstanceId?: string;
   path?: string;
+  projectFile?: string;
   deep?: boolean;
   slim?: boolean;
   output?: string;
@@ -65,14 +67,14 @@ function resolveProcessInstanceId(options: ExecutionOptions): string | undefined
   // 1. Explicit flag
   if (options.processInstanceId) return options.processInstanceId;
 
-  // 2. project.json in --path directory
+  // 2. project.json (or custom project file) in --path directory
   if (options.path) {
-    const projectJson = readProjectJson(resolve(options.path));
+    const projectJson = readProjectJson(resolve(options.path), options.projectFile);
     if (projectJson?.devProcessInstanceId) return projectJson.devProcessInstanceId;
   }
 
-  // 3. project.json in current directory
-  const projectJson = readProjectJson(process.cwd());
+  // 3. project.json (or custom project file) in current directory
+  const projectJson = readProjectJson(process.cwd(), options.projectFile);
   if (projectJson?.devProcessInstanceId) return projectJson.devProcessInstanceId;
 
   return undefined;

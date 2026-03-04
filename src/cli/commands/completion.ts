@@ -77,11 +77,11 @@ _codika_helper_completions() {
       fi
       case "$subcmd" in
         use-case)
-          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --patch --minor --major --version --additional-file --json --dry-run" -- "$cur") )
+          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --project-file --patch --minor --major --version --additional-file --json --dry-run" -- "$cur") )
           return
           ;;
         process-data-ingestion)
-          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --version-strategy --explicit-version --json" -- "$cur") )
+          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --project-file --version-strategy --explicit-version --json" -- "$cur") )
           return
           ;;
       esac
@@ -93,7 +93,7 @@ _codika_helper_completions() {
       fi
       case "$subcmd" in
         execution)
-          COMPREPLY=( $(compgen -W "--api-key --process-instance-id --deep --slim --json" -- "$cur") )
+          COMPREPLY=( $(compgen -W "--api-key --process-instance-id --project-file --deep --slim --json" -- "$cur") )
           return
           ;;
         use-case)
@@ -109,7 +109,7 @@ _codika_helper_completions() {
       fi
       case "$subcmd" in
         create)
-          COMPREPLY=( $(compgen -W "--name --api-url --api-key --organization-id --path --json" -- "$cur") )
+          COMPREPLY=( $(compgen -W "--name --api-url --api-key --organization-id --path --project-file --json" -- "$cur") )
           return
           ;;
       esac
@@ -143,7 +143,7 @@ _codika_helper_completions() {
       esac
       ;;
     trigger)
-      COMPREPLY=( $(compgen -W "--api-key --process-instance-id --workflow-id --payload-file --json --poll --timeout --output --path" -- "$cur") )
+      COMPREPLY=( $(compgen -W "--api-key --process-instance-id --workflow-id --project-file --payload-file --json --poll --timeout --output --path" -- "$cur") )
       return
       ;;
     login)
@@ -151,7 +151,7 @@ _codika_helper_completions() {
       return
       ;;
     init)
-      COMPREPLY=( $(compgen -W "--name --description --icon --no-project --project-id --no-install --api-url --api-key --json" -- "$cur") )
+      COMPREPLY=( $(compgen -W "--name --description --icon --no-project --project-id --project-file --no-install --api-url --api-key --json" -- "$cur") )
       return
       ;;
     whoami)
@@ -159,7 +159,7 @@ _codika_helper_completions() {
       return
       ;;
     status)
-      COMPREPLY=( $(compgen -W "--json --verify" -- "$cur") )
+      COMPREPLY=( $(compgen -W "--json --verify --project-file" -- "$cur") )
       return
       ;;
     use)
@@ -246,6 +246,7 @@ _codika_helper() {
                     '--api-url[API base URL]:url:' \\
                     '--api-key[API key]:key:' \\
                     '--project-id[Project ID]:id:' \\
+                    '--project-file[Custom project file]:file:_files -g "*.json"' \\
                     '--patch[Bump patch version]' \\
                     '--minor[Bump minor version]' \\
                     '--major[Bump major version]' \\
@@ -260,6 +261,7 @@ _codika_helper() {
                     '--api-url[API base URL]:url:' \\
                     '--api-key[API key]:key:' \\
                     '--project-id[Project ID]:id:' \\
+                    '--project-file[Custom project file]:file:_files -g "*.json"' \\
                     '--version-strategy[Version strategy]:strategy:(patch minor major)' \\
                     '--explicit-version[Explicit version]:version:' \\
                     '--json[Output as JSON]' \\
@@ -288,6 +290,7 @@ _codika_helper() {
                   _arguments \\
                     '--api-key[API key]:key:' \\
                     '--process-instance-id[Process instance ID]:id:' \\
+                    '--project-file[Custom project file]:file:_files -g "*.json"' \\
                     '--deep[Include full details]' \\
                     '--slim[Minimal output]' \\
                     '--json[Output as JSON]'
@@ -325,6 +328,7 @@ _codika_helper() {
                     '--api-key[API key]:key:' \\
                     '--organization-id[Organization ID]:id:' \\
                     '--path[Path to write project.json]:path:_files -/' \\
+                    '--project-file[Custom project file name]:file:' \\
                     '--json[Output as JSON]'
                   ;;
               esac
@@ -399,6 +403,7 @@ _codika_helper() {
           _arguments \\
             '--api-key[API key]:key:' \\
             '--process-instance-id[Process instance ID]:id:' \\
+            '--project-file[Custom project file]:file:_files -g "*.json"' \\
             '--workflow-id[Workflow ID]:id:' \\
             '--payload-file[JSON file or - for stdin]:file:_files -g "*.json"' \\
             '--json[Output as JSON]' \\
@@ -421,6 +426,7 @@ _codika_helper() {
             '--icon[Use case icon]:icon:' \\
             '--no-project[Skip project creation]' \\
             '--project-id[Project ID]:id:' \\
+            '--project-file[Custom project file name]:file:' \\
             '--no-install[Skip npm install]' \\
             '--api-url[API base URL]:url:' \\
             '--api-key[API key]:key:' \\
@@ -435,7 +441,8 @@ _codika_helper() {
         status)
           _arguments \\
             '--json[Output as JSON]' \\
-            '--verify[Run verification]'
+            '--verify[Run verification]' \\
+            '--project-file[Custom project file]:file:_files -g "*.json"'
           ;;
         use)
           local -a profiles
@@ -497,6 +504,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_see
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l major -d 'Bump major version'
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l version -d 'Explicit version'
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l additional-file -d 'Additional file' -F
+complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l project-file -d 'Custom project file' -rF
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l dry-run -d 'Dry run'
 
@@ -506,6 +514,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_see
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-id -d 'Project ID'
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l version-strategy -d 'Version strategy'
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l explicit-version -d 'Explicit version'
+complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-file -d 'Custom project file' -rF
 complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l json -d 'Output as JSON'
 
 # get subcommands
@@ -515,6 +524,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from get; and not __fish_se
 # get execution options
 complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l api-key -d 'API key'
 complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l process-instance-id -d 'Process instance ID'
+complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l project-file -d 'Custom project file' -rF
 complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l deep -d 'Include full details'
 complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l slim -d 'Minimal output'
 complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l json -d 'Output as JSON'
@@ -535,6 +545,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_se
 complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l api-key -d 'API key'
 complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l organization-id -d 'Organization ID'
 complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l path -d 'Path to write project.json' -F
+complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l project-file -d 'Custom project file name'
 complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l json -d 'Output as JSON'
 
 # verify subcommands
@@ -569,6 +580,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from config; and __fish_see
 # trigger options
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l api-key -d 'API key'
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l process-instance-id -d 'Process instance ID'
+complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l project-file -d 'Custom project file' -rF
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l workflow-id -d 'Workflow ID'
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l payload-file -d 'JSON file or - for stdin' -rF
 complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l json -d 'Output as JSON'
@@ -589,6 +601,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from init' -l description -
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l icon -d 'Use case icon'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l no-project -d 'Skip project creation'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l project-id -d 'Project ID'
+complete -c codika-helper -n '__fish_seen_subcommand_from init' -l project-file -d 'Custom project file name'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l no-install -d 'Skip npm install'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l api-url -d 'API base URL'
 complete -c codika-helper -n '__fish_seen_subcommand_from init' -l api-key -d 'API key'
@@ -601,6 +614,7 @@ complete -c codika-helper -n '__fish_seen_subcommand_from whoami' -l fresh -d 'S
 # status options
 complete -c codika-helper -n '__fish_seen_subcommand_from status' -l json -d 'Output as JSON'
 complete -c codika-helper -n '__fish_seen_subcommand_from status' -l verify -d 'Run verification'
+complete -c codika-helper -n '__fish_seen_subcommand_from status' -l project-file -d 'Custom project file' -rF
 
 # use — dynamic profile names
 complete -c codika-helper -n '__fish_seen_subcommand_from use' -a '(codika-helper use --list-names 2>/dev/null)' -d 'Profile'

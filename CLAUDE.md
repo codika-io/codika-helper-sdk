@@ -104,19 +104,19 @@ codika-helper config clear              # clear everything
 codika-helper config clear --profile <name>  # clear one profile
 
 # Scaffold a new use case
-codika-helper init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--no-install] [--json]
+codika-helper init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--project-file <path>] [--no-install] [--json]
 
 # Deploy a use case
-codika-helper deploy use-case <path> [--project-id <id>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika-helper deploy use-case <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
 
 # Deploy process-level data ingestion
-codika-helper deploy process-data-ingestion <path> [--project-id <id>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika-helper deploy process-data-ingestion <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
 
 # Validate a use-case folder
 codika-helper verify use-case <path> [--json] [--fix] [--strict]
 
 # Create a project via API key (--path writes project.json with projectId + organizationId)
-codika-helper project create --name "My Project" [--path <dir>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
+codika-helper project create --name "My Project" [--path <dir>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
 
 # Validate a single workflow
 codika-helper verify workflow <path> [--json] [--fix]
@@ -140,9 +140,12 @@ Run `codika-helper login` to save credentials. Env-var workflows (CI/CD) are una
 The project ID (deployment target) is resolved with this priority chain:
 
 1. `--project-id` flag (highest)
-2. `project.json` file in the use case folder (`{"projectId": "...", "organizationId": "..."}`)
+2. `--project-file` flag — reads from the specified file instead of `project.json`
+3. `project.json` file in the use case folder (`{"projectId": "...", "organizationId": "..."}`)
 
-Use `codika-helper project create --name "..." --path ./my-use-case` to create a project and write `project.json` automatically (includes `organizationId` from active profile).
+Use `--project-file` to target different projects from the same use case folder (e.g., `--project-file project-client-a.json`).
+
+Use `codika-helper project create --name "..." --path ./my-use-case` to create a project and write `project.json` automatically (includes `organizationId` from active profile). Add `--project-file <name>` to write to a custom filename.
 
 ## Development Guidelines
 

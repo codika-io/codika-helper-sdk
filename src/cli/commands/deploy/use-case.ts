@@ -29,6 +29,7 @@ export const useCaseCommand = new Command('use-case')
   .option('--api-url <url>', 'Codika API URL (env: CODIKA_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
   .option('--project-id <id>', 'Override project ID (skips project.json and config.ts)')
+  .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
   .option('--patch', 'Patch version bump (default)')
   .option('--minor', 'Minor version bump')
   .option('--major', 'Major version bump')
@@ -64,6 +65,7 @@ interface UseCaseCommandOptions {
   apiUrl?: string;
   apiKey?: string;
   projectId?: string;
+  projectFile?: string;
   patch?: boolean;
   minor?: boolean;
   major?: boolean;
@@ -134,6 +136,7 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
       apiUrl,
       apiKey,
       projectId: options.projectId,
+      projectFile: options.projectFile,
       versionStrategy: apiStrategy,
       explicitVersion,
       additionalFiles,
@@ -192,6 +195,7 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     apiUrl,
     apiKey,
     projectId: options.projectId,
+    projectFile: options.projectFile,
     versionStrategy: apiStrategy,
     explicitVersion,
     additionalFiles,
@@ -203,7 +207,7 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     if (result.data.processInstanceId) {
       updateProjectJson(absolutePath, {
         devProcessInstanceId: result.data.processInstanceId,
-      });
+      }, options.projectFile);
     }
 
     // Write bumped version to version.json
