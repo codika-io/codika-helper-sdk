@@ -21,7 +21,6 @@ export interface PublishRequest {
 export interface PublishSuccessData {
   processDeploymentId: string;
   version: string;
-  webhookUrl?: string;
   processInstanceId?: string;
 }
 

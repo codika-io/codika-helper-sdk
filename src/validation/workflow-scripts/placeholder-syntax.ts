@@ -166,7 +166,7 @@ export function checkPlaceholderSyntax(content: string, path: string): Finding[]
 
     findings.push({
       rule: metadata.id,
-      severity: 'should',
+      severity: 'must',
       path,
       message: `Unknown placeholder pattern: ${fullMatch}`,
       raw_details: `This doesn't match any known Codika placeholder pattern. Valid prefixes are: ${VALID_PREFIXES.join(', ')}. Each placeholder must follow the pattern: {{PREFIX_NAME_SUFFIX}} with the correct suffix for each prefix.`,

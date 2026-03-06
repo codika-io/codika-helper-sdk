@@ -41,6 +41,10 @@ import { applyFixes } from './fixer.js';
  */
 export const DEFAULT_EXCLUDED_RULES: string[] = [
   'R3',  // Idempotency guard - false positive for parser nodes
+  'R5',  // No outgoing connections - false positive for Codika Submit/Report Error terminal nodes
+  'R7',  // Error path audit - replaced by custom ERROR-BRANCH-REQUIRED that recognizes Codika nodes
+  'R8',  // Data never reaches consumer - false positive for Codika Init/Submit/Report data sinks
+  'R11', // Deprecated node type - false positive for executeWorkflow v1.3 which is current
   'R12', // Replaced by custom ERROR-BRANCH-REQUIRED rule that excludes LangChain sub-nodes
 ];
 

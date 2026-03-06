@@ -354,7 +354,10 @@ export const statusCommand = new Command('status')
         console.log('');
       }
 
-      process.exit(result.readiness.ready ? 0 : 1);
+      // Exit 0 for informational results (including non-use-case dirs)
+      // Exit 1 only when a use case exists but has blocking issues
+      const hasUseCase = result.useCase?.configTs || result.useCase?.workflowsDir;
+      process.exit(hasUseCase && !result.readiness.ready ? 1 : 0);
     } catch (error) {
       console.error(`\n${RED}Error:${RESET} ${(error as Error).message}\n`);
       process.exit(2);

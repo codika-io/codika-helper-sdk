@@ -186,7 +186,11 @@ function formatDryRun(findings: Finding[]): string {
   const fixable = findings.filter(f => f.fixable && f.fix);
 
   if (fixable.length === 0) {
-    return `\n${colors.yellow}No auto-fixable issues found.${colors.reset}\n`;
+    const totalIssues = findings.length;
+    if (totalIssues > 0) {
+      return `\n${colors.yellow}No auto-fixable issues found${colors.reset} (${totalIssues} issue${totalIssues !== 1 ? 's' : ''} require manual attention).\n`;
+    }
+    return `\n${colors.green}No issues found.${colors.reset}\n`;
   }
 
   const lines: string[] = [];

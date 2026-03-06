@@ -262,7 +262,16 @@ export async function resolveUseCaseDeployment(
   const configUrl = pathToFileURL(configPath).href;
 
   // Dynamically import the config module
-  const configModule = (await import(configUrl)) as ConfigModule;
+  let configModule: ConfigModule;
+  try {
+    configModule = (await import(configUrl)) as ConfigModule;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to load config at ${configPath}: ${msg}\n` +
+      'Check your TypeScript syntax and ensure the file compiles correctly.'
+    );
+  }
 
   // Validate required exports
   if (typeof configModule.getConfiguration !== 'function') {

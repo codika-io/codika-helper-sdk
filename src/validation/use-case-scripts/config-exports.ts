@@ -70,9 +70,9 @@ export async function checkConfigExports(useCasePath: string): Promise<Finding[]
   if (!existsSync(join(useCasePath, 'project.json'))) {
     findings.push({
       rule: metadata.id,
-      severity: 'must',
+      severity: 'should',
       path: useCasePath,
-      message: 'Missing project.json',
+      message: 'Missing project.json — required before deployment',
       raw_details: 'Create project.json with {"projectId": "..."} in the use case folder, or run: codika-helper project create --name "..." --path .',
     });
   }

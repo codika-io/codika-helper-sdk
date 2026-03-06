@@ -154,9 +154,6 @@ async function runPublish(
       if (result.data.processInstanceId) {
         console.log(`  Prod Instance ID:     ${result.data.processInstanceId}`);
       }
-      if (result.data.webhookUrl) {
-        console.log(`  Webhook URL:          ${result.data.webhookUrl}`);
-      }
       console.log('');
     }
 
