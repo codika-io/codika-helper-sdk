@@ -73,7 +73,7 @@ export async function checkConfigExports(useCasePath: string): Promise<Finding[]
       severity: 'should',
       path: useCasePath,
       message: 'Missing project.json — required before deployment',
-      raw_details: 'Create project.json with {"projectId": "..."} in the use case folder, or run: codika-helper project create --name "..." --path .',
+      raw_details: 'Create project.json with {"projectId": "..."} in the use case folder, or run: codika project create --name "..." --path .',
     });
   }
 

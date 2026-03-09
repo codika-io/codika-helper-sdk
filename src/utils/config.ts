@@ -1,14 +1,14 @@
 /**
  * Configuration Module
  *
- * Manages persistent CLI configuration stored in ~/.config/codika-helper/config.json.
+ * Manages persistent CLI configuration stored in ~/.config/codika/config.json.
  * Supports multiple profiles (API keys with metadata) and active profile switching.
  *
  * Resolution chains for API key and base URL:
  *   --flag > environment variable > active profile > default
  */
 
-import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync, cpSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
@@ -57,7 +57,23 @@ export const ENDPOINTS = {
 function getConfigDir(): string {
   const xdg = process.env.XDG_CONFIG_HOME;
   const base = xdg || join(homedir(), '.config');
-  return join(base, 'codika-helper');
+  const newDir = join(base, 'codika');
+  const oldDir = join(base, 'codika-helper');
+
+  // Migrate from old config directory if needed
+  if (!existsSync(newDir) && existsSync(oldDir)) {
+    try {
+      cpSync(oldDir, newDir, { recursive: true });
+      process.stderr.write(
+        `\x1b[33mMigrated config from ${oldDir} → ${newDir}\x1b[0m\n`
+      );
+    } catch {
+      // Fall through to use old dir if migration fails
+      return oldDir;
+    }
+  }
+
+  return newDir;
 }
 
 function getConfigPath(): string {
@@ -300,7 +316,7 @@ export function maskApiKey(key: string): string {
  * Standard error message when API key is missing
  */
 export const API_KEY_MISSING_MESSAGE = `API key is required. Either:
-  1. Run 'codika-helper login' to save your key
+  1. Run 'codika login' to save your key
   2. Set CODIKA_API_KEY environment variable
   3. Pass --api-key flag`;
 

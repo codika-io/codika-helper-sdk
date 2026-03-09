@@ -158,7 +158,7 @@ export function resolveProjectId(options: {
 
   throw new Error(
     `No project ID found. Either:\n` +
-    `  1. Run 'codika-helper project create --name "..." --path ${options.useCasePath}' to create project.json\n` +
+    `  1. Run 'codika project create --name "..." --path ${options.useCasePath}' to create project.json\n` +
     `  2. Add project.json with {"projectId": "..."} to the use case folder\n` +
     `  3. Pass --project-id flag\n` +
     `  4. Pass --project-file flag pointing to a custom project file`

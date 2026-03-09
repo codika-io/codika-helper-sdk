@@ -195,7 +195,7 @@ export async function pollExecutionStatus(
       throw new Error(
         `Polling timed out after ${Math.round(timeoutMs / 1000)}s. ` +
         `Execution may still be running. Check status with:\n` +
-        `  codika-helper get execution ${options.executionId}`
+        `  codika get execution ${options.executionId}`
       );
     }
 

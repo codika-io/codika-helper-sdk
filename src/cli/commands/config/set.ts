@@ -5,10 +5,10 @@
  * Persists full profile metadata (org name, scopes, etc.) from verification.
  *
  * Usage:
- *   codika-helper config set
- *   codika-helper config set --api-key <key>
- *   codika-helper config set --api-key <key> --base-url <url>
- *   codika-helper config set --name my-profile
+ *   codika config set
+ *   codika config set --api-key <key>
+ *   codika config set --api-key <key> --base-url <url>
+ *   codika config set --name my-profile
  */
 
 import { Command } from 'commander';

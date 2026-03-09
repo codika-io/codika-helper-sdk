@@ -4,8 +4,8 @@
  * Remove a profile from the config. Without argument, removes the active profile.
  *
  * Usage:
- *   codika-helper logout            # remove active profile
- *   codika-helper logout <name>     # remove specific profile
+ *   codika logout            # remove active profile
+ *   codika logout <name>     # remove specific profile
  */
 
 import { Command, Option } from 'commander';
@@ -64,7 +64,7 @@ export const logoutCommand = new Command('logout')
     if (newActive) {
       console.log(`  Active profile is now "${newActive.name}"`);
     } else {
-      console.log("  No profiles remaining. Run 'codika-helper login' to add one.");
+      console.log("  No profiles remaining. Run 'codika login' to add one.");
     }
     console.log('');
   });

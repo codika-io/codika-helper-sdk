@@ -35,7 +35,7 @@ import {
 } from '../../src/utils/config.js';
 
 // Use a temp directory for all config tests to avoid touching real user config
-const TEST_CONFIG_DIR = join(tmpdir(), `codika-helper-test-${process.pid}`);
+const TEST_CONFIG_DIR = join(tmpdir(), `codika-test-${process.pid}`);
 
 // We need to override the config path for testing.
 // The module uses XDG_CONFIG_HOME, so we set that to our temp dir.
@@ -110,8 +110,8 @@ describe('readConfig', () => {
   });
 
   it('should return empty config when config file is invalid JSON', () => {
-    mkdirSync(join(TEST_CONFIG_DIR, 'codika-helper'), { recursive: true });
-    writeFileSync(join(TEST_CONFIG_DIR, 'codika-helper', 'config.json'), 'not json');
+    mkdirSync(join(TEST_CONFIG_DIR, 'codika'), { recursive: true });
+    writeFileSync(join(TEST_CONFIG_DIR, 'codika', 'config.json'), 'not json');
     const config = readConfig();
     expect(config.activeProfile).toBeNull();
     expect(config.profiles).toEqual({});
@@ -131,7 +131,7 @@ describe('writeConfig', () => {
   it('should create config directory and file', () => {
     const profile = makeProfile();
     writeV2Config({ activeProfile: 'test', profiles: { test: profile } });
-    const configPath = join(TEST_CONFIG_DIR, 'codika-helper', 'config.json');
+    const configPath = join(TEST_CONFIG_DIR, 'codika', 'config.json');
     expect(existsSync(configPath)).toBe(true);
     const content = JSON.parse(readFileSync(configPath, 'utf-8'));
     expect(content.activeProfile).toBe('test');
@@ -515,7 +515,7 @@ describe('constants', () => {
   });
 
   it('should have a helpful API_KEY_MISSING_MESSAGE', () => {
-    expect(API_KEY_MISSING_MESSAGE).toContain('codika-helper login');
+    expect(API_KEY_MISSING_MESSAGE).toContain('codika login');
     expect(API_KEY_MISSING_MESSAGE).toContain('CODIKA_API_KEY');
     expect(API_KEY_MISSING_MESSAGE).toContain('--api-key');
   });

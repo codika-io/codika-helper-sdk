@@ -178,7 +178,7 @@ async function runTrigger(
       console.log(`  Workflow:          ${workflowId}`);
       console.log('');
       console.log(`  Poll for status:`);
-      console.log(`    codika-helper get execution ${executionId}`);
+      console.log(`    codika get execution ${executionId}`);
       console.log('');
     }
     process.exit(0);

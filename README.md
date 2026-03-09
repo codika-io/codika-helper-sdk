@@ -1,6 +1,6 @@
 # @codika-io/helper-sdk
 
-Codika helper SDK - types and utilities for use case configuration.
+Codika SDK - types and utilities for use case configuration.
 
 ## Publishing to NPM
 

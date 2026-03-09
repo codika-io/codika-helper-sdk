@@ -5,8 +5,8 @@
  * Falls back to cached profile data if the network call fails.
  *
  * Usage:
- *   codika-helper whoami
- *   codika-helper whoami --json
+ *   codika whoami
+ *   codika whoami --json
  */
 
 import { Command } from 'commander';
@@ -31,7 +31,7 @@ export const whoamiCommand = new Command('whoami')
         console.log(JSON.stringify({ loggedIn: false }));
       } else {
         console.log('');
-        console.log("Not logged in. Run 'codika-helper login' to authenticate.");
+        console.log("Not logged in. Run 'codika login' to authenticate.");
         console.log('');
       }
       process.exit(1);
@@ -99,7 +99,7 @@ export const whoamiCommand = new Command('whoami')
       const isAdmin = activeProfile.profile.type === 'admin-api-key';
 
       console.log('');
-      console.log(`Logged in to Codika${isAdmin ? ' (admin)' : ''}  \x1b[33m(cached \u2014 run 'codika-helper login' to refresh)\x1b[0m`);
+      console.log(`Logged in to Codika${isAdmin ? ' (admin)' : ''}  \x1b[33m(cached \u2014 run 'codika login' to refresh)\x1b[0m`);
       console.log('');
 
       if (!isAdmin && activeProfile.profile.organizationName) {

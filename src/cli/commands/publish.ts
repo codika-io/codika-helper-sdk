@@ -5,7 +5,7 @@
  * for end users. Optionally creates a prod process instance.
  *
  * Usage:
- *   codika-helper publish <templateId> [options]
+ *   codika publish <templateId> [options]
  */
 
 import { Command } from 'commander';

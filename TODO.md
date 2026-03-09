@@ -1,6 +1,6 @@
-# codika-helper CLI — Future Improvements
+# codika CLI — Future Improvements
 
-## 1. `codika-helper status` — Context-aware overview command
+## 1. `codika status` — Context-aware overview command
 
 ### What it does
 
@@ -9,7 +9,7 @@ A single command that answers "where am I and what will happen if I deploy?" by 
 ### Example output
 
 ```
-Codika Helper Status
+Codika Status
 
   Identity:
     Profile:       propale-ai-3
@@ -23,7 +23,7 @@ Codika Helper Status
     Workflows:      3 files in workflows/
     Validation:     passing                (last verify: 2 min ago)
 
-  Ready to deploy: codika-helper deploy use-case .
+  Ready to deploy: codika deploy use-case .
 ```
 
 When there's a mismatch (e.g., project.json has a different org than the active profile), it should warn clearly:
@@ -61,7 +61,7 @@ When the active profile's API key is nearing expiration (< 7 days) or already ex
 ### Example output
 
 ```
-⚠ API key "propale-ai-3" expires in 3 days (2026-03-04). Run 'codika-helper login' to refresh.
+⚠ API key "propale-ai-3" expires in 3 days (2026-03-04). Run 'codika login' to refresh.
 
 Deploying use case...
 ✓ Deployment Successful
@@ -71,7 +71,7 @@ Deploying use case...
 For already-expired keys:
 
 ```
-⚠ API key "propale-ai-3" expired on 2026-02-28. Run 'codika-helper login' to replace it.
+⚠ API key "propale-ai-3" expired on 2026-02-28. Run 'codika login' to replace it.
 ```
 
 ### Analysis
@@ -104,10 +104,10 @@ Recommend **Option B** — single point of change, applies to all commands autom
 Enable shell tab completion for commands, subcommands, options, and dynamic values like profile names.
 
 ```bash
-codika-helper de<TAB>          → codika-helper deploy
-codika-helper deploy u<TAB>    → codika-helper deploy use-case
-codika-helper use <TAB>        → propale-ai-3  admin  other-org
-codika-helper deploy use-case ./use-cases/m<TAB>  → ./use-cases/marketplace/
+codika de<TAB>          → codika deploy
+codika deploy u<TAB>    → codika deploy use-case
+codika use <TAB>        → propale-ai-3  admin  other-org
+codika deploy use-case ./use-cases/m<TAB>  → ./use-cases/marketplace/
 ```
 
 ### Analysis
@@ -124,25 +124,25 @@ codika-helper deploy use-case ./use-cases/m<TAB>  → ./use-cases/marketplace/
 
 **Recommended approach:**
 
-Add a `codika-helper completion` command with two modes:
+Add a `codika completion` command with two modes:
 
 ```bash
 # Manual: output the completion script to stdout
-codika-helper completion bash >> ~/.bashrc
-codika-helper completion zsh >> ~/.zshrc
-codika-helper completion fish > ~/.config/fish/completions/codika-helper.fish
+codika completion bash >> ~/.bashrc
+codika completion zsh >> ~/.zshrc
+codika completion fish > ~/.config/fish/completions/codika.fish
 
 # Automatic: detect shell, check for duplicates, append, and report
-codika-helper completion --install
+codika completion --install
 ```
 
 **`--install` flag behavior:**
 
 1. Detect the user's shell from `$SHELL` (fallback: check if `.zshrc`/`.bashrc` exists)
-2. Determine the target file (`~/.zshrc` for zsh, `~/.bashrc` for bash, `~/.config/fish/completions/codika-helper.fish` for fish)
-3. Read the target file and check if the completion line is already present (grep for `codika-helper`)
+2. Determine the target file (`~/.zshrc` for zsh, `~/.bashrc` for bash, `~/.config/fish/completions/codika.fish` for fish)
+3. Read the target file and check if the completion line is already present (grep for `codika`)
 4. If already installed → print "Completions already installed in ~/.zshrc" and exit 0
-5. If not installed → append the completion script with a comment marker (`# codika-helper completion — added by codika-helper completion --install`)
+5. If not installed → append the completion script with a comment marker (`# codika completion — added by codika completion --install`)
 6. Print: "✓ Completions installed in ~/.zshrc. Restart your terminal or run: source ~/.zshrc"
 
 **`--uninstall` flag:** Remove the completion block (everything between the comment markers). Clean uninstall.
@@ -158,11 +158,11 @@ codika-helper completion --install
 
 **Alternative (simpler):** Generate a static completion script at build time from the Commander command tree, without a runtime dependency. Walk `program.commands` recursively and emit a bash/zsh completion function.
 
-**Complexity:** Medium. The static part is straightforward. Dynamic profile name completion requires the completion script to invoke `codika-helper use --list-names` (a hidden subcommand that prints profile names one per line).
+**Complexity:** Medium. The static part is straightforward. Dynamic profile name completion requires the completion script to invoke `codika use --list-names` (a hidden subcommand that prints profile names one per line).
 
 ---
 
-## 4. `codika-helper init` — Interactive use case scaffolding
+## 4. `codika init` — Interactive use case scaffolding
 
 ### What it does
 
@@ -171,7 +171,7 @@ Interactively creates a complete use case folder structure with config.ts, workf
 ### Interactive flow
 
 ```
-$ codika-helper init ./my-use-case
+$ codika init ./my-use-case
 
 Creating a new use case...
 
@@ -202,8 +202,8 @@ Creating a new use case...
 
   ✓ Done! Next steps:
     1. Edit the workflow JSON files with your business logic
-    2. Run: codika-helper verify use-case ./my-use-case
-    3. Run: codika-helper deploy use-case ./my-use-case
+    2. Run: codika verify use-case ./my-use-case
+    3. Run: codika deploy use-case ./my-use-case
 ```
 
 ### Default template: "Simple Translator" variant
@@ -262,11 +262,11 @@ The generated workflow JSONs must follow mandatory patterns:
 
 **Complexity:** Medium-high. The templates need to produce valid, deployable use cases. The interactive prompts are straightforward (Commander's `createInterface` or a library like `inquirer`). The main challenge is generating correct workflow JSON with proper node connections, positions, and placeholder usage.
 
-**Recommendation:** Start with a non-interactive version (`codika-helper init ./path --name "My Project"`) that always generates the full 3-workflow template. Add interactivity later.
+**Recommendation:** Start with a non-interactive version (`codika init ./path --name "My Project"`) that always generates the full 3-workflow template. Add interactivity later.
 
 ---
 
-## 5. `codika-helper deploy use-case --dry-run` — Deployment preview
+## 5. `codika deploy use-case --dry-run` — Deployment preview
 
 ### What it does
 
@@ -275,7 +275,7 @@ Validates, resolves everything, and shows exactly what *would* be deployed — w
 ### Example output
 
 ```
-$ codika-helper deploy use-case . --dry-run
+$ codika deploy use-case . --dry-run
 
 Dry Run — No changes will be made
 
@@ -329,7 +329,7 @@ For dry-run, either:
 
 Recommend the second approach — it's cleaner and the resolution logic is reusable.
 
-Also run `codika-helper verify use-case <path>` as part of the dry-run to include validation results.
+Also run `codika verify use-case <path>` as part of the dry-run to include validation results.
 
 **What to display:**
 - Resolved project ID + source (flag/project.json)

@@ -4,7 +4,7 @@
  * Shows identity, use case context, and deploy readiness — like `git status` for Codika.
  *
  * Usage:
- *   codika-helper status [path] [options]
+ *   codika status [path] [options]
  *
  * Options:
  *   --json      Output as JSON
@@ -154,7 +154,7 @@ export async function gatherStatus(
   const warnings: string[] = [];
 
   if (!apiKey) {
-    missing.push("No API key (run 'codika-helper login')");
+    missing.push("No API key (run 'codika login')");
   }
 
   if (isUseCase) {
@@ -165,7 +165,7 @@ export async function gatherStatus(
       missing.push('No workflow files in workflows/');
     }
     if (!useCase!.hasProjectJson) {
-      missing.push("Missing project.json (run 'codika-helper project create')");
+      missing.push("Missing project.json (run 'codika project create')");
     } else if (!useCase!.projectId) {
       missing.push('project.json has no projectId');
     }
@@ -174,7 +174,7 @@ export async function gatherStatus(
     if (useCase!.profileMatch.status === 'mismatch') {
       const pm = useCase!.profileMatch as Extract<ProfileMatchStatus, { status: 'mismatch' }>;
       const hint = pm.suggestedProfileName
-        ? ` (try: codika-helper use ${pm.suggestedProfileName})`
+        ? ` (try: codika use ${pm.suggestedProfileName})`
         : '';
       warnings.push(`Active profile org does not match project.json org${hint}`);
     }
@@ -283,7 +283,7 @@ function formatStatus(result: StatusResult): string {
       lines.push(`  Profile Match: ${GREEN}\u2713 ${pm.profileName}${RESET}`);
     } else if (pm.status === 'mismatch') {
       const hint = pm.suggestedProfileName
-        ? ` (try: codika-helper use ${pm.suggestedProfileName})`
+        ? ` (try: codika use ${pm.suggestedProfileName})`
         : '';
       lines.push(`  Profile Match: ${RED}\u2717 mismatch${RESET}${hint}`);
     } else if (pm.status === 'no-org-in-project') {

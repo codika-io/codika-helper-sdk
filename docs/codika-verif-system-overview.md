@@ -1,6 +1,6 @@
 # Codika Workflow Verification Rules
 
-This document describes all validation rules used by the Codika Helper SDK to verify workflow and use-case configurations.
+This document describes all validation rules used by the Codika SDK to verify workflow and use-case configurations.
 
 ## Overview
 

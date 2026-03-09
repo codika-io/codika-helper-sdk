@@ -5,7 +5,7 @@
  * Auto-discovers documents from the use case's documents/ folder.
  *
  * Usage:
- *   codika-helper deploy documents <path> [options]
+ *   codika deploy documents <path> [options]
  */
 
 import { Command } from 'commander';

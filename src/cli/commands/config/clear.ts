@@ -4,8 +4,8 @@
  * Deletes the entire config file or a single profile.
  *
  * Usage:
- *   codika-helper config clear                  # clear all
- *   codika-helper config clear --profile <name> # clear one profile
+ *   codika config clear                  # clear all
+ *   codika config clear --profile <name> # clear one profile
  */
 
 import { Command } from 'commander';

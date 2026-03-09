@@ -1,6 +1,6 @@
 # Testing Guide
 
-This document describes how to write and run tests for the Codika Helper SDK validation system.
+This document describes how to write and run tests for the Codika SDK validation system.
 
 ## Running Tests
 

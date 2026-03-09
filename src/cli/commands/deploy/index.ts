@@ -5,9 +5,9 @@
  * use cases, data ingestion configurations, and documents.
  *
  * Usage:
- *   codika-helper deploy use-case <path>
- *   codika-helper deploy process-data-ingestion <path>
- *   codika-helper deploy documents <path>
+ *   codika deploy use-case <path>
+ *   codika deploy process-data-ingestion <path>
+ *   codika deploy documents <path>
  */
 
 import { Command } from 'commander';

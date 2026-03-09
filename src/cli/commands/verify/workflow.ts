@@ -7,7 +7,7 @@
  * - Workflow scripts (content-based checks)
  *
  * Usage:
- *   codika-helper verify workflow <path> [options]
+ *   codika verify workflow <path> [options]
  *
  * Options:
  *   --json           Output result as JSON

@@ -4,7 +4,7 @@
  * Parent command for listing resources from the Codika platform.
  *
  * Usage:
- *   codika-helper list executions <processInstanceId> [options]
+ *   codika list executions <processInstanceId> [options]
  */
 
 import { Command } from 'commander';

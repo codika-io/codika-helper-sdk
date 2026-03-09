@@ -6,7 +6,7 @@
  * does NOT trigger "update available" notifications to users.
  *
  * Usage:
- *   codika-helper deploy process-data-ingestion <path> [options]
+ *   codika deploy process-data-ingestion <path> [options]
  */
 
 import { Command } from 'commander';

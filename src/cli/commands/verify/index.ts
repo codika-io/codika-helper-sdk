@@ -5,8 +5,8 @@
  * workflows and use-cases.
  *
  * Usage:
- *   codika-helper verify workflow <path>
- *   codika-helper verify use-case <path>
+ *   codika verify workflow <path>
+ *   codika verify use-case <path>
  */
 
 import { Command } from 'commander';

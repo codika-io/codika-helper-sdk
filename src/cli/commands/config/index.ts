@@ -4,9 +4,9 @@
  * Parent command for managing CLI configuration.
  *
  * Usage:
- *   codika-helper config set      Save API key and base URL
- *   codika-helper config show     Display current configuration
- *   codika-helper config clear    Remove saved configuration
+ *   codika config set      Save API key and base URL
+ *   codika config show     Display current configuration
+ *   codika config clear    Remove saved configuration
  */
 
 import { Command } from 'commander';

@@ -4,8 +4,8 @@
  * Switch the active profile or list all available profiles.
  *
  * Usage:
- *   codika-helper use              # list profiles
- *   codika-helper use <name>       # switch to profile
+ *   codika use              # list profiles
+ *   codika use <name>       # switch to profile
  */
 
 import { Command, Option } from 'commander';
@@ -33,7 +33,7 @@ export const useCommand = new Command('use')
 
     if (profiles.length === 0) {
       console.log('');
-      console.log("No profiles configured. Run 'codika-helper login' to add one.");
+      console.log("No profiles configured. Run 'codika login' to add one.");
       console.log('');
       process.exit(1);
     }
@@ -52,7 +52,7 @@ export const useCommand = new Command('use')
         console.log(`  ${marker} ${pName.padEnd(20)} ${orgLabel.padEnd(20)} ${keyDisplay}`);
       }
       console.log('');
-      console.log('Use: codika-helper use <name>');
+      console.log('Use: codika use <name>');
       console.log('');
       return;
     }

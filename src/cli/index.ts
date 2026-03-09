@@ -1,11 +1,11 @@
 #!/usr/bin/env -S node --experimental-strip-types --disable-warning=ExperimentalWarning
 /**
- * Codika Helper SDK CLI
+ * Codika SDK CLI
  *
  * Command-line interface for deploying and managing Codika use cases.
  *
  * Usage:
- *   codika-helper <command> [options]
+ *   codika <command> [options]
  *
  * Commands:
  *   login                                       Save API key (alias for config set)
@@ -43,8 +43,8 @@ const require = createRequire(import.meta.url);
 const { version: VERSION } = require('../../package.json');
 
 program
-  .name('codika-helper')
-  .description('Codika Helper SDK CLI - Deploy and manage use cases')
+  .name('codika')
+  .description('Codika CLI - Deploy and manage use cases')
   .version(VERSION, '-V, --cli-version');
 
 // Register commands
@@ -82,11 +82,11 @@ program.hook('preAction', () => {
 
   if (expiry.expired) {
     process.stderr.write(
-      `\x1b[33m\u26A0 API key "${expiry.profileName}" expired on ${new Date(expiry.expiresAt).toLocaleDateString()}. Run 'codika-helper login' to refresh.\x1b[0m\n`
+      `\x1b[33m\u26A0 API key "${expiry.profileName}" expired on ${new Date(expiry.expiresAt).toLocaleDateString()}. Run 'codika login' to refresh.\x1b[0m\n`
     );
   } else if (expiry.daysLeft <= 7) {
     process.stderr.write(
-      `\x1b[33m\u26A0 API key "${expiry.profileName}" expires in ${expiry.daysLeft} day${expiry.daysLeft !== 1 ? 's' : ''}. Run 'codika-helper login' to refresh.\x1b[0m\n`
+      `\x1b[33m\u26A0 API key "${expiry.profileName}" expires in ${expiry.daysLeft} day${expiry.daysLeft !== 1 ? 's' : ''}. Run 'codika login' to refresh.\x1b[0m\n`
     );
   }
 });

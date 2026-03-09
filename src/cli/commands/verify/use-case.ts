@@ -7,7 +7,7 @@
  * - Cross-file consistency checks
  *
  * Usage:
- *   codika-helper verify use-case <path> [options]
+ *   codika verify use-case <path> [options]
  *
  * Options:
  *   --json            Output result as JSON

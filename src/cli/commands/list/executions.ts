@@ -5,7 +5,7 @@
  * filtering by workflow ID and status.
  *
  * Usage:
- *   codika-helper list executions <processInstanceId> [options]
+ *   codika list executions <processInstanceId> [options]
  */
 
 import { Command } from 'commander';

@@ -4,11 +4,11 @@
  * Generate shell completion scripts for bash, zsh, and fish.
  *
  * Usage:
- *   codika-helper completion bash         # print bash completion script
- *   codika-helper completion zsh          # print zsh completion script
- *   codika-helper completion fish         # print fish completion script
- *   codika-helper completion --install    # auto-detect shell and install
- *   codika-helper completion --uninstall  # remove installed completion
+ *   codika completion bash         # print bash completion script
+ *   codika completion zsh          # print zsh completion script
+ *   codika completion fish         # print fish completion script
+ *   codika completion --install    # auto-detect shell and install
+ *   codika completion --uninstall  # remove installed completion
  */
 
 import { Command } from 'commander';
@@ -16,8 +16,8 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync, readFileSync, appendFileSync, writeFileSync, mkdirSync, unlinkSync } from 'fs';
 
-const BEGIN_MARKER = '# BEGIN codika-helper completion';
-const END_MARKER = '# END codika-helper completion';
+const BEGIN_MARKER = '# BEGIN codika completion';
+const END_MARKER = '# END codika completion';
 
 // ── Shell detection ──────────────────────────────────────
 
@@ -36,15 +36,15 @@ function getRcFile(shell: 'bash' | 'zsh' | 'fish'): string {
     case 'zsh':
       return join(homedir(), '.zshrc');
     case 'fish':
-      return join(homedir(), '.config', 'fish', 'completions', 'codika-helper.fish');
+      return join(homedir(), '.config', 'fish', 'completions', 'codika.fish');
   }
 }
 
 // ── Bash completion ──────────────────────────────────────
 
 function generateBashCompletion(): string {
-  return `# codika-helper bash completion
-_codika_helper_completions() {
+  return `# codika bash completion
+_codika_completions() {
   local cur prev words cword
   _init_completion || return
 
@@ -164,13 +164,13 @@ _codika_helper_completions() {
       ;;
     use)
       local profiles
-      profiles=$(codika-helper use --list-names 2>/dev/null)
+      profiles=$(codika use --list-names 2>/dev/null)
       COMPREPLY=( $(compgen -W "$profiles" -- "$cur") )
       return
       ;;
     logout)
       local profiles
-      profiles=$(codika-helper use --list-names 2>/dev/null)
+      profiles=$(codika use --list-names 2>/dev/null)
       COMPREPLY=( $(compgen -W "$profiles" -- "$cur") )
       return
       ;;
@@ -188,16 +188,16 @@ _codika_helper_completions() {
   fi
 }
 
-complete -o default -F _codika_helper_completions codika-helper`;
+complete -o default -F _codika_completions codika`;
 }
 
 // ── Zsh completion ───────────────────────────────────────
 
 function generateZshCompletion(): string {
-  return `#compdef codika-helper
-# codika-helper zsh completion
+  return `#compdef codika
+# codika zsh completion
 
-_codika_helper() {
+_codika() {
   local -a commands
   local curcontext="$curcontext" state line
 
@@ -446,12 +446,12 @@ _codika_helper() {
           ;;
         use)
           local -a profiles
-          profiles=(\${(f)"$(codika-helper use --list-names 2>/dev/null)"})
+          profiles=(\${(f)"$(codika use --list-names 2>/dev/null)"})
           _describe 'profile' profiles
           ;;
         logout)
           local -a profiles
-          profiles=(\${(f)"$(codika-helper use --list-names 2>/dev/null)"})
+          profiles=(\${(f)"$(codika use --list-names 2>/dev/null)"})
           _describe 'profile' profiles
           ;;
         completion)
@@ -465,167 +465,167 @@ _codika_helper() {
   esac
 }
 
-compdef _codika_helper codika-helper 2>/dev/null`;
+compdef _codika codika 2>/dev/null`;
 }
 
 // ── Fish completion ──────────────────────────────────────
 
 function generateFishCompletion(): string {
-  return `# codika-helper fish completion
+  return `# codika fish completion
 
 # Disable file completions by default
-complete -c codika-helper -f
+complete -c codika -f
 
 # Top-level commands
-complete -c codika-helper -n '__fish_use_subcommand' -a deploy -d 'Deploy use cases or data ingestion configurations'
-complete -c codika-helper -n '__fish_use_subcommand' -a get -d 'Fetch execution details or use case information'
-complete -c codika-helper -n '__fish_use_subcommand' -a project -d 'Manage projects'
-complete -c codika-helper -n '__fish_use_subcommand' -a verify -d 'Validate use cases and workflows'
-complete -c codika-helper -n '__fish_use_subcommand' -a config -d 'Manage CLI configuration'
-complete -c codika-helper -n '__fish_use_subcommand' -a trigger -d 'Trigger a workflow execution'
-complete -c codika-helper -n '__fish_use_subcommand' -a login -d 'Save API key'
-complete -c codika-helper -n '__fish_use_subcommand' -a init -d 'Scaffold a new use case folder'
-complete -c codika-helper -n '__fish_use_subcommand' -a whoami -d 'Show current authenticated identity'
-complete -c codika-helper -n '__fish_use_subcommand' -a use -d 'Switch active profile or list profiles'
-complete -c codika-helper -n '__fish_use_subcommand' -a logout -d 'Remove a profile'
-complete -c codika-helper -n '__fish_use_subcommand' -a status -d 'Show project status'
-complete -c codika-helper -n '__fish_use_subcommand' -a completion -d 'Generate shell completion scripts'
+complete -c codika -n '__fish_use_subcommand' -a deploy -d 'Deploy use cases or data ingestion configurations'
+complete -c codika -n '__fish_use_subcommand' -a get -d 'Fetch execution details or use case information'
+complete -c codika -n '__fish_use_subcommand' -a project -d 'Manage projects'
+complete -c codika -n '__fish_use_subcommand' -a verify -d 'Validate use cases and workflows'
+complete -c codika -n '__fish_use_subcommand' -a config -d 'Manage CLI configuration'
+complete -c codika -n '__fish_use_subcommand' -a trigger -d 'Trigger a workflow execution'
+complete -c codika -n '__fish_use_subcommand' -a login -d 'Save API key'
+complete -c codika -n '__fish_use_subcommand' -a init -d 'Scaffold a new use case folder'
+complete -c codika -n '__fish_use_subcommand' -a whoami -d 'Show current authenticated identity'
+complete -c codika -n '__fish_use_subcommand' -a use -d 'Switch active profile or list profiles'
+complete -c codika -n '__fish_use_subcommand' -a logout -d 'Remove a profile'
+complete -c codika -n '__fish_use_subcommand' -a status -d 'Show project status'
+complete -c codika -n '__fish_use_subcommand' -a completion -d 'Generate shell completion scripts'
 
 # deploy subcommands
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and not __fish_seen_subcommand_from use-case process-data-ingestion' -a use-case -d 'Deploy a use case'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and not __fish_seen_subcommand_from use-case process-data-ingestion' -a process-data-ingestion -d 'Deploy data ingestion'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and not __fish_seen_subcommand_from use-case process-data-ingestion' -a use-case -d 'Deploy a use case'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and not __fish_seen_subcommand_from use-case process-data-ingestion' -a process-data-ingestion -d 'Deploy data ingestion'
 
 # deploy use-case options
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l api-url -d 'API base URL'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l project-id -d 'Project ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l patch -d 'Bump patch version'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l minor -d 'Bump minor version'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l major -d 'Bump major version'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l version -d 'Explicit version'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l additional-file -d 'Additional file' -F
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l project-file -d 'Custom project file' -rF
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l dry-run -d 'Dry run'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l api-url -d 'API base URL'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l project-id -d 'Project ID'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l patch -d 'Bump patch version'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l minor -d 'Bump minor version'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l major -d 'Bump major version'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l version -d 'Explicit version'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l additional-file -d 'Additional file' -F
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l project-file -d 'Custom project file' -rF
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l dry-run -d 'Dry run'
 
 # deploy process-data-ingestion options
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l api-url -d 'API base URL'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-id -d 'Project ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l version-strategy -d 'Version strategy'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l explicit-version -d 'Explicit version'
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-file -d 'Custom project file' -rF
-complete -c codika-helper -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l api-url -d 'API base URL'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-id -d 'Project ID'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l version-strategy -d 'Version strategy'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l explicit-version -d 'Explicit version'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-file -d 'Custom project file' -rF
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l json -d 'Output as JSON'
 
 # get subcommands
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and not __fish_seen_subcommand_from execution use-case' -a execution -d 'Fetch execution details'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and not __fish_seen_subcommand_from execution use-case' -a use-case -d 'Fetch use case information'
+complete -c codika -n '__fish_seen_subcommand_from get; and not __fish_seen_subcommand_from execution use-case' -a execution -d 'Fetch execution details'
+complete -c codika -n '__fish_seen_subcommand_from get; and not __fish_seen_subcommand_from execution use-case' -a use-case -d 'Fetch use case information'
 
 # get execution options
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l process-instance-id -d 'Process instance ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l project-file -d 'Custom project file' -rF
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l deep -d 'Include full details'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l slim -d 'Minimal output'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l process-instance-id -d 'Process instance ID'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l project-file -d 'Custom project file' -rF
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l deep -d 'Include full details'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l slim -d 'Minimal output'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from execution' -l json -d 'Output as JSON'
 
 # get use-case options
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l project-id -d 'Project ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l version -d 'Version'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l include-content -d 'Include workflow content'
-complete -c codika-helper -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l project-id -d 'Project ID'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l version -d 'Version'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l include-content -d 'Include workflow content'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
 
 # project subcommands
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and not __fish_seen_subcommand_from create' -a create -d 'Create a new project'
+complete -c codika -n '__fish_seen_subcommand_from project; and not __fish_seen_subcommand_from create' -a create -d 'Create a new project'
 
 # project create options
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l name -d 'Project name'
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l api-url -d 'API base URL'
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l organization-id -d 'Organization ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l path -d 'Path to write project.json' -F
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l project-file -d 'Custom project file name'
-complete -c codika-helper -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l name -d 'Project name'
+complete -c codika -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l api-url -d 'API base URL'
+complete -c codika -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l organization-id -d 'Organization ID'
+complete -c codika -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l path -d 'Path to write project.json' -F
+complete -c codika -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l project-file -d 'Custom project file name'
+complete -c codika -n '__fish_seen_subcommand_from project; and __fish_seen_subcommand_from create' -l json -d 'Output as JSON'
 
 # verify subcommands
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and not __fish_seen_subcommand_from use-case workflow' -a use-case -d 'Validate a use-case folder'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and not __fish_seen_subcommand_from use-case workflow' -a workflow -d 'Validate a single workflow'
+complete -c codika -n '__fish_seen_subcommand_from verify; and not __fish_seen_subcommand_from use-case workflow' -a use-case -d 'Validate a use-case folder'
+complete -c codika -n '__fish_seen_subcommand_from verify; and not __fish_seen_subcommand_from use-case workflow' -a workflow -d 'Validate a single workflow'
 
 # verify use-case options
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l strict -d 'Strict mode'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l fix -d 'Auto-fix violations'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l dry-run -d 'Show fixes without applying'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l rules -d 'Include only specific rules'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l exclude-rules -d 'Exclude specific rules'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l skip-workflows -d 'Skip workflow validation'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l strict -d 'Strict mode'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l fix -d 'Auto-fix violations'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l dry-run -d 'Show fixes without applying'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l rules -d 'Include only specific rules'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l exclude-rules -d 'Exclude specific rules'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from use-case' -l skip-workflows -d 'Skip workflow validation'
 
 # verify workflow options
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l json -d 'Output as JSON'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l strict -d 'Strict mode'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l fix -d 'Auto-fix violations'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l dry-run -d 'Show fixes without applying'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l rules -d 'Include only specific rules'
-complete -c codika-helper -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l exclude-rules -d 'Exclude specific rules'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l strict -d 'Strict mode'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l fix -d 'Auto-fix violations'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l dry-run -d 'Show fixes without applying'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l rules -d 'Include only specific rules'
+complete -c codika -n '__fish_seen_subcommand_from verify; and __fish_seen_subcommand_from workflow' -l exclude-rules -d 'Exclude specific rules'
 
 # config subcommands
-complete -c codika-helper -n '__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from set show clear' -a set -d 'Save API key and base URL'
-complete -c codika-helper -n '__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from set show clear' -a show -d 'Display current configuration'
-complete -c codika-helper -n '__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from set show clear' -a clear -d 'Remove saved configuration'
+complete -c codika -n '__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from set show clear' -a set -d 'Save API key and base URL'
+complete -c codika -n '__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from set show clear' -a show -d 'Display current configuration'
+complete -c codika -n '__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from set show clear' -a clear -d 'Remove saved configuration'
 
 # config clear options
-complete -c codika-helper -n '__fish_seen_subcommand_from config; and __fish_seen_subcommand_from clear' -l profile -d 'Profile to clear'
+complete -c codika -n '__fish_seen_subcommand_from config; and __fish_seen_subcommand_from clear' -l profile -d 'Profile to clear'
 
 # trigger options
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l process-instance-id -d 'Process instance ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l project-file -d 'Custom project file' -rF
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l workflow-id -d 'Workflow ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l payload-file -d 'JSON file or - for stdin' -rF
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l json -d 'Output as JSON'
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l poll -d 'Poll for completion'
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l timeout -d 'Poll timeout in seconds'
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l output -s o -d 'Save result to file' -rF
-complete -c codika-helper -n '__fish_seen_subcommand_from trigger' -l path -d 'Use case folder path' -rF
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l process-instance-id -d 'Process instance ID'
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l project-file -d 'Custom project file' -rF
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l workflow-id -d 'Workflow ID'
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l payload-file -d 'JSON file or - for stdin' -rF
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l poll -d 'Poll for completion'
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l timeout -d 'Poll timeout in seconds'
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l output -s o -d 'Save result to file' -rF
+complete -c codika -n '__fish_seen_subcommand_from trigger' -l path -d 'Use case folder path' -rF
 
 # login options
-complete -c codika-helper -n '__fish_seen_subcommand_from login' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from login' -l base-url -d 'Base URL override'
-complete -c codika-helper -n '__fish_seen_subcommand_from login' -l name -d 'Custom profile name'
-complete -c codika-helper -n '__fish_seen_subcommand_from login' -l skip-verify -d 'Save without verifying'
+complete -c codika -n '__fish_seen_subcommand_from login' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from login' -l base-url -d 'Base URL override'
+complete -c codika -n '__fish_seen_subcommand_from login' -l name -d 'Custom profile name'
+complete -c codika -n '__fish_seen_subcommand_from login' -l skip-verify -d 'Save without verifying'
 
 # init options
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l name -d 'Use case name'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l description -d 'Use case description'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l icon -d 'Use case icon'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l no-project -d 'Skip project creation'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l project-id -d 'Project ID'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l project-file -d 'Custom project file name'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l no-install -d 'Skip npm install'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l api-url -d 'API base URL'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l api-key -d 'API key'
-complete -c codika-helper -n '__fish_seen_subcommand_from init' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from init' -l name -d 'Use case name'
+complete -c codika -n '__fish_seen_subcommand_from init' -l description -d 'Use case description'
+complete -c codika -n '__fish_seen_subcommand_from init' -l icon -d 'Use case icon'
+complete -c codika -n '__fish_seen_subcommand_from init' -l no-project -d 'Skip project creation'
+complete -c codika -n '__fish_seen_subcommand_from init' -l project-id -d 'Project ID'
+complete -c codika -n '__fish_seen_subcommand_from init' -l project-file -d 'Custom project file name'
+complete -c codika -n '__fish_seen_subcommand_from init' -l no-install -d 'Skip npm install'
+complete -c codika -n '__fish_seen_subcommand_from init' -l api-url -d 'API base URL'
+complete -c codika -n '__fish_seen_subcommand_from init' -l api-key -d 'API key'
+complete -c codika -n '__fish_seen_subcommand_from init' -l json -d 'Output as JSON'
 
 # whoami options
-complete -c codika-helper -n '__fish_seen_subcommand_from whoami' -l json -d 'Output as JSON'
-complete -c codika-helper -n '__fish_seen_subcommand_from whoami' -l fresh -d 'Skip cache'
+complete -c codika -n '__fish_seen_subcommand_from whoami' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from whoami' -l fresh -d 'Skip cache'
 
 # status options
-complete -c codika-helper -n '__fish_seen_subcommand_from status' -l json -d 'Output as JSON'
-complete -c codika-helper -n '__fish_seen_subcommand_from status' -l verify -d 'Run verification'
-complete -c codika-helper -n '__fish_seen_subcommand_from status' -l project-file -d 'Custom project file' -rF
+complete -c codika -n '__fish_seen_subcommand_from status' -l json -d 'Output as JSON'
+complete -c codika -n '__fish_seen_subcommand_from status' -l verify -d 'Run verification'
+complete -c codika -n '__fish_seen_subcommand_from status' -l project-file -d 'Custom project file' -rF
 
 # use — dynamic profile names
-complete -c codika-helper -n '__fish_seen_subcommand_from use' -a '(codika-helper use --list-names 2>/dev/null)' -d 'Profile'
+complete -c codika -n '__fish_seen_subcommand_from use' -a '(codika use --list-names 2>/dev/null)' -d 'Profile'
 
 # logout — dynamic profile names
-complete -c codika-helper -n '__fish_seen_subcommand_from logout' -a '(codika-helper use --list-names 2>/dev/null)' -d 'Profile'
+complete -c codika -n '__fish_seen_subcommand_from logout' -a '(codika use --list-names 2>/dev/null)' -d 'Profile'
 
 # completion subcommands and options
-complete -c codika-helper -n '__fish_seen_subcommand_from completion' -a 'bash zsh fish' -d 'Shell type'
-complete -c codika-helper -n '__fish_seen_subcommand_from completion' -l install -d 'Auto-detect shell and install'
-complete -c codika-helper -n '__fish_seen_subcommand_from completion' -l uninstall -d 'Remove installed completion'`;
+complete -c codika -n '__fish_seen_subcommand_from completion' -a 'bash zsh fish' -d 'Shell type'
+complete -c codika -n '__fish_seen_subcommand_from completion' -l install -d 'Auto-detect shell and install'
+complete -c codika -n '__fish_seen_subcommand_from completion' -l uninstall -d 'Remove installed completion'`;
 }
 
 // ── Install / Uninstall ──────────────────────────────────
@@ -635,9 +635,9 @@ function installCompletion(): void {
   if (!shell) {
     console.error('Could not detect shell from $SHELL environment variable.');
     console.error('Please run one of:');
-    console.error('  codika-helper completion bash');
-    console.error('  codika-helper completion zsh');
-    console.error('  codika-helper completion fish');
+    console.error('  codika completion bash');
+    console.error('  codika completion zsh');
+    console.error('  codika completion fish');
     process.exit(1);
   }
 
@@ -654,7 +654,7 @@ function installCompletion(): void {
   if (shell === 'zsh') {
     // Install as a file in ~/.zsh/completions (fpath-based)
     const completionsDir = join(homedir(), '.zsh', 'completions');
-    const completionFile = join(completionsDir, '_codika-helper');
+    const completionFile = join(completionsDir, '_codika');
     mkdirSync(completionsDir, { recursive: true });
     writeFileSync(completionFile, generateZshCompletion() + '\n');
 
@@ -701,7 +701,7 @@ function installCompletion(): void {
   const block = [
     '',
     BEGIN_MARKER,
-    `eval "$(codika-helper completion ${shell})"`,
+    `eval "$(codika completion ${shell})"`,
     END_MARKER,
     '',
   ].join('\n');
@@ -747,7 +747,7 @@ function uninstallCompletion(): void {
 
   if (shell === 'zsh') {
     // Remove fpath-based completion file
-    const completionFile = join(homedir(), '.zsh', 'completions', '_codika-helper');
+    const completionFile = join(homedir(), '.zsh', 'completions', '_codika');
     if (existsSync(completionFile)) {
       unlinkSync(completionFile);
       console.log(`Completion removed from ${completionFile}`);
@@ -783,7 +783,7 @@ function uninstallCompletion(): void {
   const endIdx = content.indexOf(END_MARKER);
 
   if (beginIdx === -1 || endIdx === -1) {
-    console.log(`No codika-helper completion block found in ${rcFile}`);
+    console.log(`No codika completion block found in ${rcFile}`);
     return;
   }
 
@@ -815,10 +815,10 @@ export const completionCommand = new Command('completion')
       console.error('Please specify a shell: bash, zsh, or fish');
       console.error('');
       console.error('Usage:');
-      console.error('  codika-helper completion bash       # print bash completion script');
-      console.error('  codika-helper completion zsh        # print zsh completion script');
-      console.error('  codika-helper completion fish       # print fish completion script');
-      console.error('  codika-helper completion --install  # auto-detect and install');
+      console.error('  codika completion bash       # print bash completion script');
+      console.error('  codika completion zsh        # print zsh completion script');
+      console.error('  codika completion fish       # print fish completion script');
+      console.error('  codika completion --install  # auto-detect and install');
       process.exit(1);
     }
 

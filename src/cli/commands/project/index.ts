@@ -5,7 +5,7 @@
  * projects on the Codika platform.
  *
  * Usage:
- *   codika-helper project create --name "My Project"
+ *   codika project create --name "My Project"
  */
 
 import { Command } from 'commander';

@@ -5,8 +5,8 @@
  * use cases and other resources from the Codika platform.
  *
  * Usage:
- *   codika-helper get use-case <projectId> [outputPath]
- *   codika-helper get execution <executionId> [options]
+ *   codika get use-case <projectId> [outputPath]
+ *   codika get execution <executionId> [options]
  */
 
 import { Command } from 'commander';

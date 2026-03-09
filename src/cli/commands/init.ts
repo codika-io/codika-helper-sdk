@@ -5,9 +5,9 @@
  * version.json, and optionally creates a project on the platform.
  *
  * Usage:
- *   codika-helper init <path> --name "My Use Case"
- *   codika-helper init <path> --name "My Use Case" --no-project
- *   codika-helper init <path> --name "My Use Case" --project-id abc123
+ *   codika init <path> --name "My Use Case"
+ *   codika init <path> --name "My Use Case" --no-project
+ *   codika init <path> --name "My Use Case" --project-id abc123
  */
 
 import { Command } from 'commander';
@@ -178,7 +178,7 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
 
     if (!apiKey) {
       projectSkipped = true;
-      projectSkipReason = 'No API key found. Run `codika-helper project create --name \'...\' --path .` later.';
+      projectSkipReason = 'No API key found. Run `codika project create --name \'...\' --path .` later.';
     } else {
       const apiUrl = resolveEndpointUrl('createProject', options.apiUrl);
 
@@ -201,7 +201,7 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
         projectSkipped = true;
         projectSkipReason = `Project creation failed: ${
           'error' in result ? result.error.message : 'Unknown error'
-        }. Run \`codika-helper project create --name '...' --path .\` later.`;
+        }. Run \`codika project create --name '...' --path .\` later.`;
       }
     }
   } else {
@@ -321,8 +321,8 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
     console.log('');
     console.log(`  1. Edit the workflow JSON files in ${pathArg}/workflows/`);
     console.log(`  2. Update config.ts with your schemas and metadata`);
-    console.log(`  3. Run: codika-helper verify use-case ${pathArg}`);
-    console.log(`  4. Run: codika-helper deploy use-case ${pathArg}`);
+    console.log(`  3. Run: codika verify use-case ${pathArg}`);
+    console.log(`  4. Run: codika deploy use-case ${pathArg}`);
     console.log('');
   }
 

@@ -43,7 +43,7 @@ is_local_mode() {
             LOCAL_MODULE="$project/node_modules/$PACKAGE_NAME"
             if [ -L "$LOCAL_MODULE" ]; then
                 LINK_TARGET=$(readlink "$LOCAL_MODULE" 2>/dev/null)
-                if [[ "$LINK_TARGET" == *"codika-helper-sdk"* ]]; then
+                if [[ "$LINK_TARGET" == *"codika-helper-sdk"* ]] || [[ "$LINK_TARGET" == *"helper-sdk"* ]]; then
                     return 0
                 fi
             fi
@@ -54,8 +54,8 @@ is_local_mode() {
 }
 
 show_status() {
-    echo -e "${BOLD}Current codika-helper location:${NC}"
-    LOCATION=$(which codika-helper 2>/dev/null)
+    echo -e "${BOLD}Current codika CLI location:${NC}"
+    LOCATION=$(which codika 2>/dev/null)
     if [ -n "$LOCATION" ]; then
         echo -e "  ${CYAN}$LOCATION${NC}"
     else
@@ -64,7 +64,7 @@ show_status() {
     echo ""
 
     echo -e "${BOLD}Version:${NC}"
-    VERSION=$(codika-helper --version 2>/dev/null)
+    VERSION=$(codika --version 2>/dev/null)
     if [ -n "$VERSION" ]; then
         echo -e "  ${CYAN}$VERSION${NC}"
     else

@@ -1,4 +1,4 @@
-# Codika Helper SDK
+# Codika SDK
 
 CLI tool for deploying and validating Codika use cases.
 
@@ -88,46 +88,46 @@ npm run build
 
 ```bash
 # Authentication — login saves a named profile with full metadata
-codika-helper login                                    # interactive prompt
-codika-helper login --api-key <key>                    # non-interactive / CI
-codika-helper login --api-key <key> --name my-profile  # custom profile name
+codika login                                    # interactive prompt
+codika login --api-key <key>                    # non-interactive / CI
+codika login --api-key <key> --name my-profile  # custom profile name
 
 # Identity & profile management
-codika-helper whoami                    # show current identity (org, key, scopes)
-codika-helper whoami --json             # machine-readable output
-codika-helper use                       # list all profiles
-codika-helper use <profile-name>        # switch active profile
-codika-helper logout                    # remove active profile
-codika-helper logout <profile-name>     # remove specific profile
+codika whoami                    # show current identity (org, key, scopes)
+codika whoami --json             # machine-readable output
+codika use                       # list all profiles
+codika use <profile-name>        # switch active profile
+codika logout                    # remove active profile
+codika logout <profile-name>     # remove specific profile
 
 # Configuration
-codika-helper config show               # show all profiles
-codika-helper config clear              # clear everything
-codika-helper config clear --profile <name>  # clear one profile
+codika config show               # show all profiles
+codika config clear              # clear everything
+codika config clear --profile <name>  # clear one profile
 
 # Scaffold a new use case
-codika-helper init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--project-file <path>] [--no-install] [--json]
+codika init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--project-file <path>] [--no-install] [--json]
 
 # Deploy a use case
-codika-helper deploy use-case <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika deploy use-case <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
 
 # Deploy process-level data ingestion
-codika-helper deploy process-data-ingestion <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika deploy process-data-ingestion <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
 
 # Deploy use case documents (stage markdown files)
-codika-helper deploy documents <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--json]
+codika deploy documents <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--json]
 
 # Fetch a deployed use case (includes data ingestion by default)
-codika-helper get use-case <projectId> [outputPath] [--version <X.Y>] [--di-version <X.Y>] [--no-data-ingestion] [--list] [--json]
+codika get use-case <projectId> [outputPath] [--version <X.Y>] [--di-version <X.Y>] [--no-data-ingestion] [--list] [--json]
 
 # Validate a use-case folder
-codika-helper verify use-case <path> [--json] [--fix] [--strict]
+codika verify use-case <path> [--json] [--fix] [--strict]
 
 # Create a project via API key (--path writes project.json with projectId + organizationId)
-codika-helper project create --name "My Project" [--path <dir>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
+codika project create --name "My Project" [--path <dir>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
 
 # Validate a single workflow
-codika-helper verify workflow <path> [--json] [--fix]
+codika verify workflow <path> [--json] [--fix]
 ```
 
 ### Authentication Resolution
@@ -136,12 +136,12 @@ API key and base URL are resolved with this priority chain:
 
 1. `--api-key` / `--api-url` flag (highest)
 2. Environment variable (`CODIKA_API_KEY`, `CODIKA_BASE_URL`, or per-endpoint vars like `CODIKA_API_URL`)
-3. Active profile in config file (`~/.config/codika-helper/config.json`)
+3. Active profile in config file (`~/.config/codika/config.json`)
 4. Production default (base URL only)
 
 For deploy commands, if `project.json` contains an `organizationId`, the CLI auto-selects the profile matching that organization — even if a different profile is active.
 
-Run `codika-helper login` to save credentials. Env-var workflows (CI/CD) are unaffected.
+Run `codika login` to save credentials. Env-var workflows (CI/CD) are unaffected.
 
 ### Project ID Resolution
 
@@ -153,7 +153,7 @@ The project ID (deployment target) is resolved with this priority chain:
 
 Use `--project-file` to target different projects from the same use case folder (e.g., `--project-file project-client-a.json`).
 
-Use `codika-helper project create --name "..." --path ./my-use-case` to create a project and write `project.json` automatically (includes `organizationId` from active profile). Add `--project-file <name>` to write to a custom filename.
+Use `codika project create --name "..." --path ./my-use-case` to create a project and write `project.json` automatically (includes `organizationId` from active profile). Add `--project-file <name>` to write to a custom filename.
 
 ## Development Guidelines
 
@@ -172,7 +172,7 @@ This approach ensures:
 
 ## Testing Notes
 
-When testing CLI commands via the Bash tool (Claude Code), commands that exit with a non-zero code will appear to print their output twice. This is a Bash tool display artifact — it shows stdout once in the main block and again in the error block. The actual command output is correct (single print). Verify by redirecting to a file: `codika-helper whoami > /tmp/out.txt 2>&1; cat /tmp/out.txt`.
+When testing CLI commands via the Bash tool (Claude Code), commands that exit with a non-zero code will appear to print their output twice. This is a Bash tool display artifact — it shows stdout once in the main block and again in the error block. The actual command output is correct (single print). Verify by redirecting to a file: `codika whoami > /tmp/out.txt 2>&1; cat /tmp/out.txt`.
 
 ## Key Files
 

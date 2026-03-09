@@ -5,7 +5,7 @@
  * Exit 0 if configured, exit 1 if no profiles set.
  *
  * Usage:
- *   codika-helper config show
+ *   codika config show
  */
 
 import { Command } from 'commander';
@@ -25,13 +25,13 @@ export const configShowCommand = new Command('show')
     const urlSource = describeBaseUrlSource();
 
     console.log('');
-    console.log('Codika Helper Configuration');
+    console.log('Codika Configuration');
     console.log('');
 
     if (profiles.length === 0) {
       console.log('  No profiles configured.');
       console.log('');
-      console.log("Run 'codika-helper login' to configure your API key.");
+      console.log("Run 'codika login' to configure your API key.");
       console.log('');
       process.exit(1);
     }
