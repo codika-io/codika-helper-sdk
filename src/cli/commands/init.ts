@@ -17,6 +17,7 @@ import { resolve, join, dirname, parse, relative } from 'path';
 import { createRequire } from 'module';
 import { createInterface } from 'readline';
 import { toSlug } from '../templates/slug.js';
+import { generateClaudeMd } from '../templates/claude-md-template.js';
 import { generateConfigTs } from '../templates/config-template.js';
 import {
   generateMainWorkflow,
@@ -120,6 +121,11 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
   const configContent = generateConfigTs({ name, slug, description, icon, withDataIngestion: options.withDataIngestion });
   writeFileSync(join(targetPath, 'config.ts'), configContent);
   createdFiles.push('config.ts');
+
+  // Generate and write CLAUDE.md
+  const claudeMdContent = generateClaudeMd({ name, slug });
+  writeFileSync(join(targetPath, 'CLAUDE.md'), claudeMdContent);
+  createdFiles.push('CLAUDE.md');
 
   // Generate and write workflow files
   const mainWorkflow = generateMainWorkflow(slug);
