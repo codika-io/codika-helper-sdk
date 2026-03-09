@@ -13,6 +13,10 @@ export interface FetchMetadataOptions {
   version?: string;
   /** Whether to include base64-encoded file content in the response */
   includeContent?: boolean;
+  /** Include data ingestion workflow in response (default: false) */
+  includeDataIngestion?: boolean;
+  /** Data ingestion version in "X.Y" format (latest if omitted) */
+  dataIngestionVersion?: string;
   /** API URL for the getMetadataDocumentsEndpoint */
   apiUrl: string;
   /** API key (organization API key or admin key) */
@@ -42,6 +46,8 @@ export interface FetchMetadataSuccessResponse {
     version: string;
     organizationId: string;
     documents: StoredMetadataDocument[];
+    /** Data ingestion version included in response (if any) */
+    dataIngestionVersion?: string;
   };
   requestId: string;
 }
@@ -96,6 +102,8 @@ export async function fetchMetadata(
     projectId,
     version,
     includeContent,
+    includeDataIngestion,
+    dataIngestionVersion,
     apiKey,
     apiUrl,
   } = options;
@@ -110,6 +118,14 @@ export async function fetchMetadata(
 
   if (includeContent !== undefined) {
     requestBody.includeContent = includeContent;
+  }
+
+  if (includeDataIngestion !== undefined) {
+    requestBody.includeDataIngestion = includeDataIngestion;
+  }
+
+  if (dataIngestionVersion) {
+    requestBody.dataIngestionVersion = dataIngestionVersion;
   }
 
   const response = await fetch(apiUrl, {

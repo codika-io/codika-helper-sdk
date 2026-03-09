@@ -17,6 +17,7 @@ src/
         index.ts          # Parent deploy command
         use-case.ts       # Deploy use cases (org-aware key selection)
         process-data-ingestion.ts  # Deploy process-level data ingestion
+        documents.ts      # Deploy use case documents (stage markdown files)
       project/
         index.ts          # Parent project command
         create.ts         # Create projects via API key (saves organizationId)
@@ -37,9 +38,10 @@ src/
     deploy-client.ts              # Low-level process deployment HTTP client
     use-case-deployer.ts          # High-level use case deployer
     data-ingestion-deploy-client.ts  # Low-level data ingestion deployment HTTP client
-    data-ingestion-deployer.ts    # High-level data ingestion deployer
+    data-ingestion-deployer.ts    # High-level data ingestion deployer (auto-discovers from data-ingestion/ folder)
+    document-deploy-client.ts     # Low-level document deployment HTTP client
     project-client.ts             # Low-level project creation HTTP client
-    project-json.ts               # Read/write project.json (projectId, organizationId)
+    project-json.ts               # Read/write project.json (projectId, organizationId, dataIngestionDeployments)
   validation/             # Validation rules and runner
 scripts/
   toggle-cli.sh           # Toggle between local dev and npm versions
@@ -111,6 +113,12 @@ codika-helper deploy use-case <path> [--project-id <id>] [--project-file <path>]
 
 # Deploy process-level data ingestion
 codika-helper deploy process-data-ingestion <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+
+# Deploy use case documents (stage markdown files)
+codika-helper deploy documents <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--json]
+
+# Fetch a deployed use case (includes data ingestion by default)
+codika-helper get use-case <projectId> [outputPath] [--version <X.Y>] [--di-version <X.Y>] [--no-data-ingestion] [--list] [--json]
 
 # Validate a use-case folder
 codika-helper verify use-case <path> [--json] [--fix] [--strict]

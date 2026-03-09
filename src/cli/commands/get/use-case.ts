@@ -20,6 +20,9 @@ export const useCaseCommand = new Command('use-case')
   .argument('<projectId>', 'Project ID to fetch')
   .argument('[outputPath]', 'Output directory (defaults to ./<projectId>)')
   .option('--version <version>', 'Version to fetch in "X.Y" format (fetches latest if omitted)')
+  .option('--with-data-ingestion', 'Include data ingestion workflow (default: true)', true)
+  .option('--no-data-ingestion', 'Exclude data ingestion workflow')
+  .option('--di-version <version>', 'Data ingestion version in "X.Y" format (latest if omitted)')
   .option('--list', 'List documents without downloading')
   .option('--api-url <url>', 'Codika API URL (env: CODIKA_BASE_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
@@ -44,6 +47,8 @@ export const useCaseCommand = new Command('use-case')
 
 interface GetUseCaseCommandOptions {
   version?: string;
+  dataIngestion?: boolean;
+  diVersion?: string;
   list?: boolean;
   apiUrl?: string;
   apiKey?: string;
@@ -58,6 +63,10 @@ async function runGetUseCase(
   // Validate version format if provided
   if (options.version && !/^\d+\.\d+$/.test(options.version)) {
     exitWithError(`Version must be "X.Y" format (e.g., "1.0"). Provided: ${options.version}`);
+  }
+
+  if (options.diVersion && !/^\d+\.\d+$/.test(options.diVersion)) {
+    exitWithError(`DI version must be "X.Y" format (e.g., "1.0"). Provided: ${options.diVersion}`);
   }
 
   // Resolve API URL: --api-url > env > config baseUrl + path > production default
@@ -86,15 +95,18 @@ async function runGetUseCase(
   }
 
   // Fetch metadata documents from the API
+  const includeDataIngestion = options.dataIngestion !== false;
   const result = await fetchMetadataOrThrow({
     projectId,
     version: options.version,
     includeContent,
+    includeDataIngestion,
+    dataIngestionVersion: options.diVersion,
     apiUrl,
     apiKey,
   });
 
-  const { documents, version, organizationId } = result.data;
+  const { documents, version, organizationId, dataIngestionVersion } = result.data;
 
   // --list mode: display document listing and exit
   if (options.list) {
@@ -105,6 +117,9 @@ async function runGetUseCase(
       console.log('');
       console.log(`  Project:      ${projectId}`);
       console.log(`  Version:      ${version}`);
+      if (dataIngestionVersion) {
+        console.log(`  DI Version:   ${dataIngestionVersion}`);
+      }
       console.log(`  Organization: ${organizationId}`);
       console.log('');
       if (documents.length > 0) {
@@ -163,6 +178,7 @@ async function runGetUseCase(
         projectId,
         version,
         organizationId,
+        ...(dataIngestionVersion ? { dataIngestionVersion } : {}),
         filesDownloaded,
         outputPath,
         documents: documents.map((d) => ({
@@ -178,6 +194,9 @@ async function runGetUseCase(
     console.log('');
     console.log(`  Project:  ${projectId}`);
     console.log(`  Version:  ${version}`);
+    if (dataIngestionVersion) {
+      console.log(`  DI Ver:   ${dataIngestionVersion}`);
+    }
     console.log(`  Output:   ${outputPath}`);
     console.log(`  Files:    ${filesDownloaded} file(s) downloaded`);
     console.log('');

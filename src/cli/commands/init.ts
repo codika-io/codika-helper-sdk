@@ -22,6 +22,7 @@ import {
   generateMainWorkflow,
   generateScheduledWorkflow,
   generateSubWorkflow,
+  generateDataIngestionWorkflow,
 } from '../templates/workflow-templates.js';
 import { writeVersion } from '../../utils/version-manager.js';
 import { writeProjectJson } from '../../utils/project-json.js';
@@ -45,6 +46,7 @@ interface InitOptions {
   project?: boolean; // Commander inverts --no-project to project: false
   projectId?: string;
   install?: boolean; // Commander inverts --no-install to install: false
+  withDataIngestion?: boolean;
   projectFile?: string;
   apiUrl?: string;
   apiKey?: string;
@@ -60,6 +62,7 @@ export const initCommand = new Command('init')
   .option('--no-project', 'Skip project creation on the platform')
   .option('--project-id <id>', 'Use existing project ID instead of creating one')
   .option('--no-install', 'Skip npm install after scaffolding')
+  .option('--with-data-ingestion', 'Scaffold a data-ingestion/ folder with a template embedding workflow')
   .option('--project-file <path>', 'Custom filename for the project file (default: project.json)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
@@ -114,7 +117,7 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
   const createdFiles: string[] = [];
 
   // Generate and write config.ts
-  const configContent = generateConfigTs({ name, slug, description, icon });
+  const configContent = generateConfigTs({ name, slug, description, icon, withDataIngestion: options.withDataIngestion });
   writeFileSync(join(targetPath, 'config.ts'), configContent);
   createdFiles.push('config.ts');
 
@@ -139,6 +142,18 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
     JSON.stringify(subWorkflow, null, 2) + '\n'
   );
   createdFiles.push('workflows/text-processor.json');
+
+  // Optionally create data-ingestion/ folder
+  if (options.withDataIngestion) {
+    mkdirSync(join(targetPath, 'data-ingestion'), { recursive: true });
+    const diWorkflow = generateDataIngestionWorkflow(slug);
+    const diFilename = `${slug}-embedding-ingestion.json`;
+    writeFileSync(
+      join(targetPath, 'data-ingestion', diFilename),
+      JSON.stringify(diWorkflow, null, 2) + '\n'
+    );
+    createdFiles.push(`data-ingestion/${diFilename}`);
+  }
 
   // Write version.json
   writeVersion(targetPath, '1.0.0');

@@ -1,11 +1,14 @@
 /**
  * Data Ingestion Deployer
- * High-level function to deploy data ingestion from a use case folder
+ * High-level function to deploy data ingestion from a use case folder.
+ *
+ * Auto-discovers the workflow JSON file from the `data-ingestion/` folder
+ * (expects exactly one .json file).
  */
 
 import { join } from 'path';
 import { pathToFileURL } from 'url';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { resolveProjectId } from './project-json.js';
 import type {
   ProcessDataIngestionConfigInput,
@@ -41,7 +44,6 @@ export interface DeployDataIngestionFromFolderOptions {
  */
 interface DataIngestionConfigModule {
   getDataIngestionConfig: () => ProcessDataIngestionConfigInput;
-  DATA_INGESTION_WORKFLOW_FILE: string;
 }
 
 /**
@@ -57,14 +59,61 @@ export type DeployDataIngestionFromFolderResult = DeployDataIngestionResult & {
   workflowFile: string;
 };
 
+const DATA_INGESTION_DIR = 'data-ingestion';
+
+/**
+ * Auto-discover the data ingestion workflow JSON file.
+ * Expects exactly one .json file in the `data-ingestion/` folder.
+ *
+ * @param useCasePath - Absolute path to the use case folder
+ * @returns Absolute path to the discovered workflow JSON file
+ * @throws Error if the folder doesn't exist, has no JSON files, or has multiple
+ */
+export function discoverDataIngestionWorkflow(useCasePath: string): string {
+  const diDir = join(useCasePath, DATA_INGESTION_DIR);
+
+  if (!existsSync(diDir)) {
+    throw new Error(
+      `No ${DATA_INGESTION_DIR}/ folder found at ${useCasePath}\n\n` +
+        'Expected structure:\n' +
+        '  use-case-folder/\n' +
+        '  ├── config.ts              (must export getDataIngestionConfig)\n' +
+        `  └── ${DATA_INGESTION_DIR}/\n` +
+        '      └── <workflow>.json    (exactly one JSON file)'
+    );
+  }
+
+  const jsonFiles = readdirSync(diDir).filter(f => f.endsWith('.json'));
+
+  if (jsonFiles.length === 0) {
+    throw new Error(
+      `No workflow JSON file found in ${DATA_INGESTION_DIR}/\n` +
+      `  Path: ${diDir}\n\n` +
+      'Add exactly one .json workflow file to this folder.'
+    );
+  }
+
+  if (jsonFiles.length > 1) {
+    throw new Error(
+      `Multiple JSON files found in ${DATA_INGESTION_DIR}/ — expected exactly one.\n` +
+      `  Path: ${diDir}\n` +
+      `  Found: ${jsonFiles.join(', ')}\n\n` +
+      'The data-ingestion/ folder must contain exactly one workflow JSON file.'
+    );
+  }
+
+  return join(diDir, jsonFiles[0]);
+}
+
 /**
  * Deploy data ingestion by pointing at a use case folder
  *
  * This function:
  * 1. Dynamically imports config.ts from the use case folder
  * 2. Calls getDataIngestionConfig() and resolves the project ID from project.json
- * 3. Deploys the data ingestion configuration to the Codika platform
- * 4. Returns the result along with context needed for archiving
+ * 3. Auto-discovers the workflow file from data-ingestion/ folder
+ * 4. Deploys the data ingestion configuration to the Codika platform
+ * 5. Returns the result along with context needed for archiving
  *
  * @param options - Deployment options including the use case path
  * @returns Deployment result with additional context
@@ -101,9 +150,9 @@ export async function deployDataIngestionFromFolder(
       `Missing config.ts at ${configPath}\n\n` +
         'Expected structure:\n' +
         '  use-case-folder/\n' +
-        '  ├── config.ts           (must export getDataIngestionConfig, DATA_INGESTION_WORKFLOW_FILE)\n' +
-        '  └── workflows/\n' +
-        '      └── *-ingestion.json'
+        '  ├── config.ts              (must export getDataIngestionConfig)\n' +
+        `  └── ${DATA_INGESTION_DIR}/\n` +
+        '      └── <workflow>.json    (exactly one JSON file)'
     );
   }
 
@@ -112,18 +161,15 @@ export async function deployDataIngestionFromFolder(
   // Dynamically import the config module
   const configModule = (await import(configUrl)) as DataIngestionConfigModule;
 
-  // Validate required exports
+  // Validate required export
   if (typeof configModule.getDataIngestionConfig !== 'function') {
     throw new Error(
       `config.ts at ${useCasePath} must export getDataIngestionConfig function`
     );
   }
 
-  if (!configModule.DATA_INGESTION_WORKFLOW_FILE) {
-    throw new Error(
-      `config.ts at ${useCasePath} must export DATA_INGESTION_WORKFLOW_FILE`
-    );
-  }
+  // Auto-discover workflow file from data-ingestion/ folder
+  const workflowFile = discoverDataIngestionWorkflow(useCasePath);
 
   // Resolve project ID: --project-id flag > --project-file > project.json
   const { projectId } = resolveProjectId({
@@ -132,7 +178,6 @@ export async function deployDataIngestionFromFolder(
     projectFile: options.projectFile,
   });
   const config = configModule.getDataIngestionConfig();
-  const workflowFile = configModule.DATA_INGESTION_WORKFLOW_FILE;
 
   // Deploy to the platform
   const result = await deployDataIngestion({

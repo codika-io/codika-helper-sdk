@@ -10,15 +10,16 @@
  */
 
 import { Command } from 'commander';
-import { resolve } from 'path';
-import { existsSync } from 'fs';
+import { resolve, join } from 'path';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import {
   deployDataIngestionFromFolder,
   isDataIngestionDeploySuccess,
 } from '../../../utils/data-ingestion-deployer.js';
 import { exitWithError } from '../../utils/output.js';
 import { resolveApiKeyForOrg, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
-import { readProjectJson } from '../../../utils/project-json.js';
+import { readProjectJson, updateProjectJson } from '../../../utils/project-json.js';
+import { archiveDataIngestionDeployment, updateProjectInfoDataIngestion } from '../../../utils/deployment-archiver.js';
 import type { DataIngestionVersionStrategy } from '../../../types/process-types.js';
 
 interface DataIngestionCommandOptions {
@@ -29,6 +30,43 @@ interface DataIngestionCommandOptions {
   versionStrategy: string;
   explicitVersion?: string;
   json?: boolean;
+}
+
+// ── Version JSON helpers ─────────────────────────────────
+
+function readDataIngestionVersion(useCasePath: string): string {
+  const versionPath = join(useCasePath, 'version.json');
+  if (!existsSync(versionPath)) return '1.0.0';
+  try {
+    const data = JSON.parse(readFileSync(versionPath, 'utf-8'));
+    return data.dataIngestionVersion || '1.0.0';
+  } catch {
+    return '1.0.0';
+  }
+}
+
+function writeDataIngestionVersion(useCasePath: string, version: string): void {
+  const versionPath = join(useCasePath, 'version.json');
+  let data: Record<string, string> = {};
+  if (existsSync(versionPath)) {
+    try {
+      data = JSON.parse(readFileSync(versionPath, 'utf-8'));
+    } catch {
+      // Start fresh if corrupt
+    }
+  }
+  data.dataIngestionVersion = version;
+  writeFileSync(versionPath, JSON.stringify(data, null, 2) + '\n');
+}
+
+function incrementVersion(version: string, strategy: string): string {
+  const parts = version.split('.').map(Number);
+  const [major = 1, minor = 0, patch = 0] = parts;
+  switch (strategy) {
+    case 'major_bump': return `${major + 1}.0.0`;
+    case 'minor_bump': return `${major}.${minor + 1}.0`;
+    default: return `${major}.${minor}.${patch + 1}`;
+  }
 }
 
 export const processDataIngestionCommand = new Command('process-data-ingestion')
@@ -119,44 +157,98 @@ async function runDeployDataIngestion(
     explicitVersion: options.explicitVersion,
   });
 
-  // Output result
-  if (options.json) {
-    console.log(JSON.stringify({
-      success: result.success,
-      dataIngestionId: result.dataIngestionId,
-      version: result.version,
-      status: result.status,
-      webhookUrls: result.webhookUrls,
-      projectId: result.projectId,
-      error: result.error,
-      requestId: result.requestId,
-    }, null, 2));
-  } else if (isDataIngestionDeploySuccess(result)) {
-    console.log('');
-    console.log('\x1b[32m\u2713 Data Ingestion Deployment Successful\x1b[0m');
-    console.log('');
-    console.log(`  Data Ingestion ID:  ${result.dataIngestionId}`);
-    console.log(`  API Version:        ${result.version}`);
-    console.log(`  Project ID:         ${result.projectId}`);
-    console.log(`  Status:             ${result.status}`);
-    if (result.webhookUrls) {
-      console.log(`  Webhook (embed):    ${result.webhookUrls.embed}`);
-      console.log(`  Webhook (delete):   ${result.webhookUrls.delete}`);
+  // Handle success: post-deploy tracking
+  if (isDataIngestionDeploySuccess(result)) {
+    // 1. Update version.json
+    const currentVersion = readDataIngestionVersion(absolutePath);
+    const newVersion = incrementVersion(currentVersion, options.versionStrategy);
+    writeDataIngestionVersion(absolutePath, newVersion);
+
+    // 2. Archive deployment
+    try {
+      await archiveDataIngestionDeployment({
+        useCasePath: absolutePath,
+        projectId: result.projectId,
+        version: result.version,
+        useCaseVersion: newVersion,
+        workflowFile: result.workflowFile,
+        config: result.config,
+        result,
+      });
+    } catch {
+      // Non-blocking: archiving failure shouldn't fail the deploy
     }
-    if (result.requestId) {
-      console.log(`  Request ID:         ${result.requestId}`);
+
+    // 3. Update project-info.json
+    try {
+      await updateProjectInfoDataIngestion(absolutePath, result.projectId, result.version, newVersion);
+    } catch {
+      // Non-blocking
     }
-    console.log('');
+
+    // 4. Update project.json with data ingestion deployment entry
+    try {
+      const dataIngestionDeployments: Record<string, { dataIngestionId: string; createdAt: string; webhookUrls?: { embed: string; delete: string } }> = {};
+      dataIngestionDeployments[result.version] = {
+        dataIngestionId: result.dataIngestionId,
+        createdAt: new Date().toISOString(),
+        ...(result.webhookUrls ? { webhookUrls: result.webhookUrls } : {}),
+      };
+      updateProjectJson(absolutePath, { dataIngestionDeployments } as any, options.projectFile);
+    } catch {
+      // Non-blocking
+    }
+
+    // Output
+    if (options.json) {
+      console.log(JSON.stringify({
+        success: true,
+        dataIngestionId: result.dataIngestionId,
+        version: result.version,
+        localVersion: newVersion,
+        status: result.status,
+        webhookUrls: result.webhookUrls,
+        projectId: result.projectId,
+        requestId: result.requestId,
+      }, null, 2));
+    } else {
+      console.log('');
+      console.log('\x1b[32m\u2713 Data Ingestion Deployment Successful\x1b[0m');
+      console.log('');
+      console.log(`  Data Ingestion ID:  ${result.dataIngestionId}`);
+      console.log(`  API Version:        ${result.version}`);
+      console.log(`  Local Version:      ${currentVersion} → ${newVersion}`);
+      console.log(`  Project ID:         ${result.projectId}`);
+      console.log(`  Status:             ${result.status}`);
+      if (result.webhookUrls) {
+        console.log(`  Webhook (embed):    ${result.webhookUrls.embed}`);
+        console.log(`  Webhook (delete):   ${result.webhookUrls.delete}`);
+      }
+      if (result.requestId) {
+        console.log(`  Request ID:         ${result.requestId}`);
+      }
+      console.log('');
+    }
   } else {
-    console.log('');
-    console.log('\x1b[31m\u2717 Data Ingestion Deployment Failed\x1b[0m');
-    console.log('');
-    console.log(`  Error:      ${result.error}`);
-    console.log(`  Status:     ${result.status}`);
-    if (result.requestId) {
-      console.log(`  Request ID: ${result.requestId}`);
+    // Output failure
+    if (options.json) {
+      console.log(JSON.stringify({
+        success: false,
+        error: result.error,
+        status: result.status,
+        requestId: result.requestId,
+      }, null, 2));
+    } else {
+      console.log('');
+      console.log('\x1b[31m\u2717 Data Ingestion Deployment Failed\x1b[0m');
+      console.log('');
+      console.log(`  Error:      ${result.error}`);
+      console.log(`  Status:     ${result.status}`);
+      if (result.requestId) {
+        console.log(`  Request ID: ${result.requestId}`);
+      }
+      console.log('');
     }
-    console.log('');
   }
 
   // Exit with appropriate code

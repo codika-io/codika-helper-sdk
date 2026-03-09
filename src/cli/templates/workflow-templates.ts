@@ -448,3 +448,73 @@ export function generateSubWorkflow() {
     settings: SETTINGS,
   };
 }
+
+/**
+ * Generate a minimal data ingestion workflow template.
+ *
+ * Flow: Webhook Trigger (/embed) → Codika Init Data Ingestion → TODO: Add embedding logic → Codika Ingestion Callback
+ */
+export function generateDataIngestionWorkflow(slug: string) {
+  return {
+    name: 'Embedding Ingestion',
+    nodes: [
+      {
+        id: 'webhook-trigger-001',
+        name: 'Webhook Trigger',
+        type: 'n8n-nodes-base.webhook',
+        position: [0, 0],
+        parameters: {
+          httpMethod: 'POST',
+          path: `={{$json.webhook_path || '${slug}/embed'}}`,
+          responseMode: 'lastNode',
+        },
+        typeVersion: 2,
+        webhookId: crypto.randomUUID(),
+      },
+      {
+        id: 'init-di-001',
+        name: 'Codika Init Data Ingestion',
+        type: 'n8n-nodes-codika.codikaInitDataIngestion',
+        position: [250, 0],
+        parameters: {},
+        typeVersion: 1,
+      },
+      {
+        id: 'todo-001',
+        name: 'TODO: Add Embedding Logic',
+        type: 'n8n-nodes-base.noOp',
+        position: [500, 0],
+        parameters: {},
+        typeVersion: 1,
+      },
+      {
+        id: 'callback-001',
+        name: 'Codika Ingestion Callback',
+        type: 'n8n-nodes-codika.codikaIngestionCallback',
+        position: [750, 0],
+        parameters: {
+          status: 'success',
+        },
+        typeVersion: 1,
+      },
+    ],
+    connections: {
+      'Webhook Trigger': {
+        main: [
+          [{ node: 'Codika Init Data Ingestion', type: 'main', index: 0 }],
+        ],
+      },
+      'Codika Init Data Ingestion': {
+        main: [
+          [{ node: 'TODO: Add Embedding Logic', type: 'main', index: 0 }],
+        ],
+      },
+      'TODO: Add Embedding Logic': {
+        main: [
+          [{ node: 'Codika Ingestion Callback', type: 'main', index: 0 }],
+        ],
+      },
+    },
+    settings: SETTINGS,
+  };
+}

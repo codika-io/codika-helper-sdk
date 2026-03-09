@@ -28,12 +28,22 @@ export interface DeploymentEntry {
   createdAt: string;
 }
 
+export interface DataIngestionDeploymentEntry {
+  dataIngestionId: string;
+  createdAt: string;
+  webhookUrls?: {
+    embed: string;
+    delete: string;
+  };
+}
+
 export interface ProjectJson {
   projectId: string;
   devProcessInstanceId?: string;
   prodProcessInstanceId?: string;
   organizationId?: string;
   deployments?: Record<string, DeploymentEntry>;
+  dataIngestionDeployments?: Record<string, DataIngestionDeploymentEntry>;
 }
 
 /**
@@ -64,6 +74,9 @@ export function readProjectJson(useCasePath: string, projectFile?: string): Proj
       }
       if (parsed.deployments && typeof parsed.deployments === 'object' && !Array.isArray(parsed.deployments)) {
         result.deployments = parsed.deployments as Record<string, DeploymentEntry>;
+      }
+      if (parsed.dataIngestionDeployments && typeof parsed.dataIngestionDeployments === 'object' && !Array.isArray(parsed.dataIngestionDeployments)) {
+        result.dataIngestionDeployments = parsed.dataIngestionDeployments as Record<string, DataIngestionDeploymentEntry>;
       }
       return result;
     }
@@ -109,6 +122,11 @@ export function updateProjectJson(dirPath: string, update: Partial<ProjectJson>,
   // Deep merge deployments: preserve existing entries when adding new ones
   if (update.deployments && existing.deployments && typeof existing.deployments === 'object') {
     merged.deployments = { ...existing.deployments, ...update.deployments };
+  }
+
+  // Deep merge data ingestion deployments
+  if (update.dataIngestionDeployments && existing.dataIngestionDeployments && typeof existing.dataIngestionDeployments === 'object') {
+    merged.dataIngestionDeployments = { ...existing.dataIngestionDeployments, ...update.dataIngestionDeployments };
   }
 
   writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');

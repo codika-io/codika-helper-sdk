@@ -84,6 +84,16 @@ export { workflowScripts } from './validation/workflow-scripts/index.js';
 export { useCaseScripts } from './validation/use-case-scripts/index.js';
 export { applyFixes } from './validation/fixer.js';
 
+// Document deployment client
+export {
+  deployDocuments,
+  isDeployDocumentsSuccess,
+  type DocumentInput,
+  type DeployDocumentsResult,
+  type DeployDocumentsSuccessResult,
+  type DeployDocumentsErrorResult,
+} from './utils/document-deploy-client.js';
+
 // Project JSON (project ID management)
 export {
   readProjectJson,
@@ -91,6 +101,7 @@ export {
   updateProjectJson,
   resolveProjectId,
   type ProjectJson,
+  type DataIngestionDeploymentEntry,
 } from './utils/project-json.js';
 
 // Configuration

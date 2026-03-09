@@ -10,13 +10,18 @@ export interface ConfigTemplateParams {
   slug: string;
   description: string;
   icon: string;
+  withDataIngestion?: boolean;
 }
 
 /**
  * Generate a complete config.ts file as a string.
  */
 export function generateConfigTs(params: ConfigTemplateParams): string {
-  const { name, slug, description, icon } = params;
+  const { name, slug, description, icon, withDataIngestion } = params;
+
+  const dataIngestionImport = withDataIngestion
+    ? `\n  type ProcessDataIngestionConfigInput,`
+    : '';
 
   return `/**
  * ${name} - Configuration
@@ -34,7 +39,7 @@ import {
   type HttpTrigger,
   type ScheduleTrigger,
   type SubworkflowTrigger,
-  type ProcessDeploymentConfigurationInput,
+  type ProcessDeploymentConfigurationInput,${dataIngestionImport}
 } from '@codika-io/helper-sdk';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -317,6 +322,40 @@ ${description.replace(/`/g, "'")}
 2. Update the schemas in this file to match your input/output
 3. Run: \\\`codika-helper verify use-case .\\\`
 4. Run: \\\`codika-helper deploy use-case .\\\`\`;
+}
+${withDataIngestion ? generateDataIngestionSection(slug) : ''}`;
+}
+
+function generateDataIngestionSection(slug: string): string {
+  return `
+// ============================================================================
+// Data Ingestion Configuration (Process-Level)
+// ============================================================================
+
+/**
+ * Get the data ingestion configuration for this use case.
+ *
+ * This is deployed separately via:
+ *   codika-helper deploy process-data-ingestion <path>
+ *
+ * The workflow file is auto-discovered from the data-ingestion/ folder.
+ */
+export function getDataIngestionConfig(): ProcessDataIngestionConfigInput {
+  const workflowBase64 = loadAndEncodeWorkflow(
+    join(__dirname, 'data-ingestion/${slug}-embedding-ingestion.json')
+  );
+
+  return {
+    workflowTemplateId: '${slug}-embedding-ingestion',
+    workflowName: 'Embedding Ingestion',
+    n8nWorkflowJsonBase64: workflowBase64,
+    webhooks: {
+      embed: \\\`{{PROCDATA_PROCESS_ID_ATADCORP}}/embed\\\`,
+      delete: \\\`{{PROCDATA_PROCESS_ID_ATADCORP}}/embed-delete\\\`,
+    },
+    purpose: 'Embed KB documents into Pinecone for RAG retrieval',
+    cost: 2,
+  };
 }
 `;
 }
