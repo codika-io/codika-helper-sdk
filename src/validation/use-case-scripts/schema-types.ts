@@ -1,7 +1,9 @@
 /**
  * Script: SCHEMA-TYPES
  *
- * Validates that input and output schema field types are valid.
+ * Validates that field types inside input/output schema definitions are valid.
+ * Only checks `type:` values within schema contexts (inputSchema, outputSchema,
+ * DeploymentInputSchema, FormInputSchema, FormOutputSchema functions).
  *
  * Valid field types:
  * - string, text, number, boolean, date
@@ -42,26 +44,57 @@ const VALID_FIELD_TYPES = new Set([
 ]);
 
 /**
- * Extract type references from config content
+ * Find schema function/block ranges in the config content.
+ * Returns line ranges (1-based) where schema definitions occur.
  */
-function findTypeReferences(content: string): { type: string; line: number }[] {
-  const results: { type: string; line: number }[] = [];
+function findSchemaRanges(content: string): { start: number; end: number }[] {
+  const ranges: { start: number; end: number }[] = [];
   const lines = content.split('\n');
+
+  // Patterns that indicate a schema context
+  const schemaStartPatterns = [
+    /function\s+get\w*(?:Input|Output|Deployment)Schema/,
+    /(?:input|output)Schema\s*:\s*\[/,
+    /(?:Input|Output|Deployment)Schema\s*(?:=|:)\s*\[/,
+  ];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    const isSchemaStart = schemaStartPatterns.some(p => p.test(line));
 
-    // Match type: 'value' or type: "value" patterns
-    const typeMatch = line.match(/type\s*:\s*['"]([^'"]+)['"]/);
-    if (typeMatch) {
-      results.push({
-        type: typeMatch[1],
-        line: i + 1,
-      });
+    if (isSchemaStart) {
+      // Find the end of this schema block by tracking bracket depth
+      let depth = 0;
+      let foundOpen = false;
+      let end = i;
+
+      for (let j = i; j < lines.length; j++) {
+        for (const ch of lines[j]) {
+          if (ch === '[' || ch === '{') {
+            depth++;
+            foundOpen = true;
+          } else if (ch === ']' || ch === '}') {
+            depth--;
+          }
+        }
+        if (foundOpen && depth <= 0) {
+          end = j;
+          break;
+        }
+      }
+
+      ranges.push({ start: i + 1, end: end + 1 }); // 1-based
     }
   }
 
-  return results;
+  return ranges;
+}
+
+/**
+ * Check if a line number falls within any schema range
+ */
+function isInSchemaContext(line: number, ranges: { start: number; end: number }[]): boolean {
+  return ranges.some(r => line >= r.start && line <= r.end);
 }
 
 /**
@@ -72,7 +105,6 @@ export async function checkSchemaTypes(useCasePath: string): Promise<Finding[]> 
   const configPath = join(useCasePath, 'config.ts');
 
   if (!existsSync(configPath)) {
-    // Config file missing is handled by other checks
     return findings;
   }
 
@@ -83,28 +115,36 @@ export async function checkSchemaTypes(useCasePath: string): Promise<Finding[]> 
     return findings;
   }
 
-  // Find all type references
-  const typeRefs = findTypeReferences(content);
+  const schemaRanges = findSchemaRanges(content);
+  if (schemaRanges.length === 0) {
+    return findings;
+  }
 
-  for (const ref of typeRefs) {
-    // Skip 'const' which is TypeScript assertion, not a field type
-    if (ref.type === 'const') continue;
+  const lines = content.split('\n');
 
-    // Skip trigger types
-    if (['http', 'schedule', 'subworkflow', 'third-party'].includes(ref.type)) continue;
+  for (let i = 0; i < lines.length; i++) {
+    const lineNum = i + 1;
+    const line = lines[i];
 
-    // Skip workflow category types
-    if (['user_facing', 'data_ingestion'].includes(ref.type)) continue;
+    // Only check type: references inside schema contexts
+    if (!isInSchemaContext(lineNum, schemaRanges)) continue;
 
-    // Check if it's a valid field type
-    if (!VALID_FIELD_TYPES.has(ref.type)) {
+    const typeMatch = line.match(/type\s*:\s*['"]([^'"]+)['"]/);
+    if (!typeMatch) continue;
+
+    const typeValue = typeMatch[1];
+
+    // Skip TypeScript 'as const' assertions
+    if (typeValue === 'const') continue;
+
+    if (!VALID_FIELD_TYPES.has(typeValue)) {
       findings.push({
         rule: metadata.id,
-        severity: 'should',
+        severity: 'must',
         path: configPath,
-        message: `Unknown schema field type: "${ref.type}" (line ${ref.line})`,
+        message: `Unknown schema field type: "${typeValue}" (line ${lineNum})`,
         raw_details: `Valid types are: ${Array.from(VALID_FIELD_TYPES).join(', ')}`,
-        line: ref.line,
+        line: lineNum,
       });
     }
   }

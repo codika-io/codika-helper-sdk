@@ -303,6 +303,70 @@ describe('WORKFLOW-SETTINGS Script', () => {
   });
 
   // ============================================================================
+  // SUB-WORKFLOWS (errorWorkflow not required)
+  // ============================================================================
+  describe('sub-workflows', () => {
+    it('should PASS for sub-workflow without errorWorkflow', () => {
+      const content = JSON.stringify({
+        name: 'Sub Workflow',
+        nodes: [
+          { id: '1', name: 'When Executed by Another Workflow', type: 'n8n-nodes-base.executeWorkflowTrigger', position: [0, 0], parameters: {} },
+          { id: '2', name: 'Do Something', type: 'n8n-nodes-base.code', position: [200, 0], parameters: {} },
+        ],
+        settings: {
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
+
+    it('should still FAIL for parent workflow without errorWorkflow', () => {
+      const content = JSON.stringify({
+        name: 'Parent Workflow',
+        nodes: [
+          { id: '1', name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [0, 0], parameters: {} },
+          { id: '2', name: 'Do Something', type: 'n8n-nodes-base.code', position: [200, 0], parameters: {} },
+        ],
+        settings: {
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(1);
+      expect(findings[0].message).toContain('errorWorkflow');
+    });
+
+    it('should still require executionOrder for sub-workflows', () => {
+      const content = JSON.stringify({
+        name: 'Sub Workflow',
+        nodes: [
+          { id: '1', name: 'When Executed by Another Workflow', type: 'n8n-nodes-base.executeWorkflowTrigger', position: [0, 0], parameters: {} },
+        ],
+        settings: {},
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(1);
+      expect(findings[0].message).toContain('executionOrder');
+    });
+
+    it('should PASS for sub-workflow with all required settings', () => {
+      const content = JSON.stringify({
+        name: 'Sub Workflow',
+        nodes: [
+          { id: '1', name: 'When Executed by Another Workflow', type: 'n8n-nodes-base.executeWorkflowTrigger', position: [0, 0], parameters: {} },
+        ],
+        settings: {
+          errorWorkflow: '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}',
+          executionOrder: 'v1',
+        },
+      });
+      const findings = checkWorkflowSettings(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
+  });
+
+  // ============================================================================
   // EDGE CASES
   // ============================================================================
   describe('edge cases', () => {

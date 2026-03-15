@@ -22,6 +22,58 @@ export const metadata: RuleMetadata = {
 };
 
 /**
+ * Quote bare INSTPARM placeholders (outside JSON strings) so the file parses as valid JSON.
+ * INSTPARM values like {{INSTPARM_PHONE_MRAPTSNI}} are intentionally unquoted in workflow
+ * templates — the deployer replaces them with typed values. But the validator needs valid JSON.
+ *
+ * Placeholders inside JSON string values (e.g., jsCode) are left untouched.
+ */
+function quoteBarePlaceholders(content: string): string {
+  const placeholder = /\{\{INSTPARM_[A-Z0-9_]+_MRAPTSNI\}\}/g;
+  let result = '';
+  let inString = false;
+  let i = 0;
+
+  while (i < content.length) {
+    const ch = content[i];
+
+    if (inString) {
+      result += ch;
+      if (ch === '\\') {
+        // Skip escaped character
+        i++;
+        if (i < content.length) result += content[i];
+      } else if (ch === '"') {
+        inString = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      result += ch;
+      i++;
+      continue;
+    }
+
+    // Outside a string — check for bare placeholder
+    placeholder.lastIndex = i;
+    const match = placeholder.exec(content);
+    if (match && match.index === i) {
+      result += `"${match[0]}"`;
+      i += match[0].length;
+      continue;
+    }
+
+    result += ch;
+    i++;
+  }
+
+  return result;
+}
+
+/**
  * Extract WORKFLOW_FILES array from config content (simplified parser)
  */
 function extractWorkflowFiles(content: string): string[] | null {
@@ -80,10 +132,15 @@ export async function checkWorkflowImports(useCasePath: string): Promise<Finding
         if (statSync(fullPath).isFile()) {
           actualFiles.add(entry);
 
-          // Validate JSON
+          // Validate JSON (temporarily quote bare INSTPARM placeholders which are
+          // intentionally unquoted in templates — they get replaced at deploy time).
+          // Only replace placeholders that appear as bare JSON values, not those
+          // inside JSON strings (e.g., inside jsCode). We track string context
+          // character by character to avoid breaking valid strings.
           try {
             const content = readFileSync(fullPath, 'utf-8');
-            JSON.parse(content);
+            const normalized = quoteBarePlaceholders(content);
+            JSON.parse(normalized);
           } catch (error) {
             findings.push({
               rule: 'JSON-VALID',

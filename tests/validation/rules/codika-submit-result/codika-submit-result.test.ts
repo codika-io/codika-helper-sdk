@@ -1,7 +1,8 @@
 /**
  * Tests for CODIKA-SUBMIT Rule
  *
- * Rule: Parent workflows must end with Codika Submit Result or Report Error
+ * Rule: Terminal nodes reachable from Codika Init must be Submit Result or Report Error.
+ * Terminals NOT reachable from Init are ignored (e.g., early-exit guards in routers).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -49,7 +50,6 @@ describe('CODIKA-SUBMIT Rule', () => {
       const { graph } = loadLocalFixture('valid-parent-workflow.json');
       const findings = codikaSubmitResult(graph, ctx);
 
-      // Filter out non-CODIKA-SUBMIT findings
       const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
       expect(submitFindings).toHaveLength(0);
     });
@@ -71,10 +71,56 @@ describe('CODIKA-SUBMIT Rule', () => {
 
       expect(findings).toHaveLength(0);
     });
+
+    it('should PASS for router pattern where early-exit is NOT reachable from Init', () => {
+      // Router: Trigger → Process Input → IF
+      //   IF true → Codika Init → ... → Codika Submit
+      //   IF false → Stop (early exit, not tracked)
+      const workflowJson = JSON.stringify({
+        name: 'Router Workflow',
+        nodes: [
+          { id: '1', name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [0, 0], parameters: {} },
+          { id: '2', name: 'Process Input', type: 'n8n-nodes-base.code', position: [220, 0], parameters: {} },
+          { id: '3', name: 'Is Valid?', type: 'n8n-nodes-base.if', position: [440, 0], parameters: {} },
+          {
+            id: '4',
+            name: 'Codika Init',
+            type: 'n8n-nodes-codika.codika',
+            position: [660, -100],
+            parameters: { operation: 'initWorkflow' },
+          },
+          {
+            id: '5',
+            name: 'Codika Submit',
+            type: 'n8n-nodes-codika.codika',
+            position: [880, -100],
+            parameters: { operation: 'submitResult' },
+          },
+          { id: '6', name: 'Stop (Not Valid)', type: 'n8n-nodes-base.noOp', position: [660, 100], parameters: {} },
+        ],
+        connections: {
+          'Webhook': { main: [[{ node: 'Process Input', type: 'main', index: 0 }]] },
+          'Process Input': { main: [[{ node: 'Is Valid?', type: 'main', index: 0 }]] },
+          'Is Valid?': {
+            main: [
+              [{ node: 'Codika Init', type: 'main', index: 0 }],
+              [{ node: 'Stop (Not Valid)', type: 'main', index: 0 }],
+            ],
+          },
+          'Codika Init': { main: [[{ node: 'Codika Submit', type: 'main', index: 0 }]] },
+        },
+        settings: { executionOrder: 'v1' },
+      });
+      const graph = parseN8n(workflowJson);
+      const findings = codikaSubmitResult(graph, ctx);
+
+      // "Stop (Not Valid)" is NOT reachable from Init, so it should pass
+      expect(findings).toHaveLength(0);
+    });
   });
 
   describe('invalid workflows', () => {
-    it('should FAIL when workflow ends without Codika result node', () => {
+    it('should FAIL when workflow ends without Codika result node after Init', () => {
       const workflowJson = createMinimalWorkflow({
         hasCodikaInit: true,
         hasSubmitResult: false,
@@ -95,46 +141,62 @@ describe('CODIKA-SUBMIT Rule', () => {
       const graph = parseN8n(workflowJson);
       const findings = codikaSubmitResult(graph, ctx);
 
-      expect(findings[0].raw_details).toContain('Add a Codika Submit Result node');
+      expect(findings[0].raw_details).toContain('Codika Submit Result');
+    });
+
+    it('should FAIL when one branch after Init ends without Submit', () => {
+      const workflowJson = JSON.stringify({
+        name: 'Branching After Init',
+        nodes: [
+          { id: '1', name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [0, 0], parameters: {} },
+          {
+            id: '2',
+            name: 'Codika Init',
+            type: 'n8n-nodes-codika.codika',
+            position: [220, 0],
+            parameters: { operation: 'initWorkflow' },
+          },
+          { id: '3', name: 'IF', type: 'n8n-nodes-base.if', position: [440, 0], parameters: {} },
+          {
+            id: '4',
+            name: 'Codika Submit',
+            type: 'n8n-nodes-codika.codika',
+            position: [660, -100],
+            parameters: { operation: 'submitResult' },
+          },
+          { id: '5', name: 'Dead End', type: 'n8n-nodes-base.code', position: [660, 100], parameters: {} },
+        ],
+        connections: {
+          'Webhook': { main: [[{ node: 'Codika Init', type: 'main', index: 0 }]] },
+          'Codika Init': { main: [[{ node: 'IF', type: 'main', index: 0 }]] },
+          'IF': {
+            main: [
+              [{ node: 'Codika Submit', type: 'main', index: 0 }],
+              [{ node: 'Dead End', type: 'main', index: 0 }],
+            ],
+          },
+        },
+        settings: { executionOrder: 'v1' },
+      });
+      const graph = parseN8n(workflowJson);
+      const findings = codikaSubmitResult(graph, ctx);
+
+      expect(findings).toHaveLength(1);
+      expect(findings[0].message).toContain('Dead End');
     });
   });
 
-  describe('invalid terminal nodes (BUG FIX: these should FAIL)', () => {
-    it('should FAIL when workflow ends with Respond to Webhook', () => {
-      const { graph } = loadLocalFixture('invalid-responds-to-webhook.json');
+  describe('workflows without Init (no findings)', () => {
+    it('should return no findings when workflow has no Codika Init', () => {
+      const workflowJson = createMinimalWorkflow({
+        hasCodikaInit: false,
+        hasSubmitResult: false,
+      });
+      const graph = parseN8n(workflowJson);
       const findings = codikaSubmitResult(graph, ctx);
 
-      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
-      expect(submitFindings).toHaveLength(1);
-      expect(submitFindings[0].severity).toBe('must');
-    });
-
-    it('should FAIL when workflow ends with Stop and Output', () => {
-      const { graph } = loadLocalFixture('invalid-stop-and-output.json');
-      const findings = codikaSubmitResult(graph, ctx);
-
-      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
-      expect(submitFindings).toHaveLength(1);
-      expect(submitFindings[0].severity).toBe('must');
-    });
-
-    it('should FAIL when workflow ends with No Operation', () => {
-      const { graph } = loadLocalFixture('invalid-no-operation.json');
-      const findings = codikaSubmitResult(graph, ctx);
-
-      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
-      expect(submitFindings).toHaveLength(1);
-      expect(submitFindings[0].severity).toBe('must');
-    });
-
-    it('should FAIL when one branch ends with invalid terminal node', () => {
-      const { graph } = loadLocalFixture('invalid-mixed-endpoints.json');
-      const findings = codikaSubmitResult(graph, ctx);
-
-      // Should detect the Respond to Webhook branch as invalid
-      const submitFindings = findings.filter(f => f.rule === 'CODIKA-SUBMIT');
-      expect(submitFindings).toHaveLength(1);
-      expect(submitFindings[0].severity).toBe('must');
+      // CODIKA-INIT rule handles the "no Init" case
+      expect(findings).toHaveLength(0);
     });
   });
 
@@ -171,7 +233,7 @@ describe('CODIKA-SUBMIT Rule', () => {
       expect(findings).toHaveLength(0);
     });
 
-    it('should handle workflow with multiple terminal nodes', () => {
+    it('should handle workflow with multiple terminal nodes all valid', () => {
       const workflowJson = JSON.stringify({
         name: 'Branching Workflow',
         nodes: [
@@ -214,6 +276,17 @@ describe('CODIKA-SUBMIT Rule', () => {
       const graph = parseN8n(workflowJson);
       const findings = codikaSubmitResult(graph, ctx);
 
+      expect(findings).toHaveLength(0);
+    });
+
+    it('should handle empty workflow', () => {
+      const graph = parseN8n(JSON.stringify({
+        name: 'Empty',
+        nodes: [],
+        connections: {},
+        settings: { executionOrder: 'v1' },
+      }));
+      const findings = codikaSubmitResult(graph, ctx);
       expect(findings).toHaveLength(0);
     });
   });

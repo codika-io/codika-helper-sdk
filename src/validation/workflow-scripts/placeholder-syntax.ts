@@ -161,12 +161,13 @@ export function checkPlaceholderSyntax(content: string, path: string): Finding[]
       continue;
     }
 
-    // This is an UNKNOWN placeholder - report as warning
+    // This is an UNKNOWN placeholder - report as warning (not error)
+    // It might be intentional or a typo in the prefix — flag it but don't block
     const lineNumber = getLineNumber(content, match.index);
 
     findings.push({
       rule: metadata.id,
-      severity: 'must',
+      severity: 'should',
       path,
       message: `Unknown placeholder pattern: ${fullMatch}`,
       raw_details: `This doesn't match any known Codika placeholder pattern. Valid prefixes are: ${VALID_PREFIXES.join(', ')}. Each placeholder must follow the pattern: {{PREFIX_NAME_SUFFIX}} with the correct suffix for each prefix.`,

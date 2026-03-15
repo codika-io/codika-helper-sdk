@@ -90,6 +90,57 @@ describe('LLM-MODEL-ID Script', () => {
       expect(findings).toHaveLength(0);
     });
 
+    it('should PASS for claude-sonnet-4-6 alias', () => {
+      const content = JSON.stringify({
+        name: 'Test',
+        nodes: [{
+          id: 'n1',
+          name: 'Claude',
+          type: '@n8n/n8n-nodes-langchain.lmChatAnthropic',
+          typeVersion: 1.3,
+          position: [0, 0],
+          parameters: { model: { __rl: true, value: 'claude-sonnet-4-6', mode: 'list' } },
+        }],
+        connections: {},
+      });
+      const findings = checkLlmModelId(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
+
+    it('should PASS for claude-opus-4-6 alias', () => {
+      const content = JSON.stringify({
+        name: 'Test',
+        nodes: [{
+          id: 'n1',
+          name: 'Claude',
+          type: '@n8n/n8n-nodes-langchain.lmChatAnthropic',
+          typeVersion: 1.3,
+          position: [0, 0],
+          parameters: { model: { __rl: true, value: 'claude-opus-4-6', mode: 'list' } },
+        }],
+        connections: {},
+      });
+      const findings = checkLlmModelId(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
+
+    it('should PASS for claude-haiku-4-5 alias', () => {
+      const content = JSON.stringify({
+        name: 'Test',
+        nodes: [{
+          id: 'n1',
+          name: 'Claude',
+          type: '@n8n/n8n-nodes-langchain.lmChatAnthropic',
+          typeVersion: 1.3,
+          position: [0, 0],
+          parameters: { model: { __rl: true, value: 'claude-haiku-4-5', mode: 'list' } },
+        }],
+        connections: {},
+      });
+      const findings = checkLlmModelId(content, testPath);
+      expect(findings).toHaveLength(0);
+    });
+
     it('should PASS for non-Anthropic node types', () => {
       const content = JSON.stringify({
         name: 'Test',

@@ -1,12 +1,16 @@
 /**
  * Rule: CODIKA-SUBMIT
  *
- * Every parent workflow must end with either:
- * - Codika Submit Result (on success paths)
- * - Codika Report Error (on error paths)
+ * In parent workflows that have a Codika Init node, every terminal node
+ * (node with no outgoing edges) that is reachable from the Init node
+ * must be a Codika Submit Result or Codika Report Error.
  *
- * This ensures that workflow execution results are properly reported
- * back to the Codika platform.
+ * This ensures that every execution path that begins tracking (Init)
+ * also ends tracking (Submit/Report Error).
+ *
+ * Terminal nodes NOT reachable from a Codika Init are ignored — they
+ * belong to branches that don't participate in execution tracking
+ * (e.g., early-exit guard branches in routers).
  *
  * Exception: Sub-workflows (starting with Execute Workflow Trigger) are exempt
  * as they return data to the parent workflow instead.
@@ -19,13 +23,16 @@ export const metadata: RuleMetadata = {
   id: 'CODIKA-SUBMIT',
   name: 'codika_submit_result',
   severity: 'must',
-  description: 'Parent workflows must end with Codika Submit Result or Report Error',
+  description: 'Terminal nodes reachable from Codika Init must be Submit Result or Report Error',
   details: 'Add Codika Submit Result node at the end of success paths, and Codika Report Error at the end of error paths',
   category: 'codika',
 };
 
 // Valid result operations
 const VALID_RESULT_OPERATIONS = ['submitResult', 'reportError', 'ingestionCallback'];
+
+// Valid init operations
+const VALID_INIT_OPERATIONS = ['initWorkflow', 'initDataIngestion'];
 
 /**
  * Check if a node is a sub-workflow trigger (exempt from rule)
@@ -49,21 +56,39 @@ function isCodikaResultNode(node: NodeRef): boolean {
 }
 
 /**
- * Find the trigger node
+ * Check if a node is a Codika Init node
  */
-function findTriggerNode(graph: Graph): NodeRef | null {
-  const nodesWithIncoming = new Set<string>();
-  for (const edge of graph.edges) {
-    nodesWithIncoming.add(edge.to);
+function isCodikaInitNode(node: NodeRef): boolean {
+  if (!node.type.toLowerCase().includes('codika')) {
+    return false;
   }
 
-  const triggerCandidates = graph.nodes.filter(n => !nodesWithIncoming.has(n.id));
+  const params = node.params || {};
+  const operation = params.operation as string | undefined;
 
-  return triggerCandidates.find(n =>
-    n.type.toLowerCase().includes('trigger') ||
-    n.type.toLowerCase().includes('webhook') ||
-    n.type.toLowerCase().includes('start')
-  ) || triggerCandidates[0] || null;
+  return VALID_INIT_OPERATIONS.includes(operation || '');
+}
+
+/**
+ * Find all nodes reachable from a given node via BFS
+ */
+function findReachableNodes(graph: Graph, startId: string): Set<string> {
+  const reachable = new Set<string>();
+  const queue = [startId];
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (reachable.has(current)) continue;
+    reachable.add(current);
+
+    for (const edge of graph.edges) {
+      if (edge.from === current && !reachable.has(edge.to)) {
+        queue.push(edge.to);
+      }
+    }
+  }
+
+  return reachable;
 }
 
 /**
@@ -84,32 +109,42 @@ function findTerminalNodes(graph: Graph): NodeRef[] {
 export const codikaSubmitResult: RuleRunner = (graph: Graph, ctx: RuleContext): Finding[] => {
   const findings: Finding[] = [];
 
-  // Find the trigger node
-  const triggerNode = findTriggerNode(graph);
-
-  if (!triggerNode) {
-    return [];
-  }
-
   // Check if this is a sub-workflow (exempt from this rule)
-  if (isSubWorkflowTrigger(triggerNode)) {
+  if (graph.nodes.some(n => isSubWorkflowTrigger(n))) {
     return [];
   }
 
-  // Find all terminal nodes (end of workflow paths)
+  // Find all Codika Init nodes
+  const initNodes = graph.nodes.filter(n => isCodikaInitNode(n));
+
+  // No Init nodes — CODIKA-INIT rule handles that; nothing for us to check
+  if (initNodes.length === 0) {
+    return [];
+  }
+
+  // Find all nodes reachable from any Init node
+  const reachableFromInit = new Set<string>();
+  for (const initNode of initNodes) {
+    const reachable = findReachableNodes(graph, initNode.id);
+    for (const id of reachable) {
+      reachableFromInit.add(id);
+    }
+  }
+
+  // Find all terminal nodes
   const terminalNodes = findTerminalNodes(graph);
 
-  if (terminalNodes.length === 0) {
-    // No terminal nodes - workflow might be empty or circular
-    return [];
-  }
-
-  // Check each terminal node
+  // Check terminal nodes that are reachable from Init
   const nonCompliantTerminals: NodeRef[] = [];
 
   for (const terminal of terminalNodes) {
-    // Skip the trigger itself (might be disconnected)
-    if (terminal.id === triggerNode.id) {
+    // Skip terminals not reachable from Init (e.g., early-exit guards)
+    if (!reachableFromInit.has(terminal.id)) {
+      continue;
+    }
+
+    // Skip Init nodes themselves (if Init is terminal, that's a different issue)
+    if (isCodikaInitNode(terminal)) {
       continue;
     }
 
@@ -118,7 +153,6 @@ export const codikaSubmitResult: RuleRunner = (graph: Graph, ctx: RuleContext): 
       continue;
     }
 
-    // This terminal node doesn't end with Codika result
     nonCompliantTerminals.push(terminal);
   }
 
@@ -132,8 +166,8 @@ export const codikaSubmitResult: RuleRunner = (graph: Graph, ctx: RuleContext): 
       rule: metadata.id,
       severity: metadata.severity,
       path: ctx.path,
-      message: `Workflow paths end without Codika Submit Result or Report Error: ${terminalNames}`,
-      raw_details: `Add a Codika Submit Result node (operation: submitResult) at the end of success paths, and Codika Report Error (operation: reportError) at the end of error paths. This is required for proper execution tracking on the Codika platform.`,
+      message: `Workflow paths reachable from Codika Init end without Submit Result or Report Error: ${terminalNames}`,
+      raw_details: `Add a Codika Submit Result node (operation: submitResult) at the end of success paths, and Codika Report Error (operation: reportError) at the end of error paths. This is required for proper execution tracking on the Codika platform. Terminal nodes not reachable from Codika Init are not checked.`,
       nodeId: nonCompliantTerminals[0]?.id,
       line: ctx.nodeLines?.[nonCompliantTerminals[0]?.id || ''],
     });

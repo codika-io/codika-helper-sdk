@@ -10,7 +10,6 @@ import { codikaInitRequired } from './codika-init-required.js';
 import { codikaSubmitResult } from './codika-submit-result.js';
 import { subworkflowMinParams } from './subworkflow-min-params.js';
 import { scheduleWebhookConvergence } from './schedule-webhook-convergence.js';
-import { errorBranchRequired } from './error-branch-required.js';
 
 /**
  * All custom Flowlint rules for Codika workflows
@@ -22,7 +21,6 @@ export const customRules: RuleRunner[] = [
   codikaSubmitResult,
   subworkflowMinParams,
   scheduleWebhookConvergence,
-  errorBranchRequired,
   // Add more custom rules here as they are implemented
 ];
 
@@ -31,4 +29,3 @@ export { codikaInitRequired } from './codika-init-required.js';
 export { codikaSubmitResult } from './codika-submit-result.js';
 export { subworkflowMinParams } from './subworkflow-min-params.js';
 export { scheduleWebhookConvergence } from './schedule-webhook-convergence.js';
-export { errorBranchRequired } from './error-branch-required.js';

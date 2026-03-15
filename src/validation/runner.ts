@@ -26,7 +26,7 @@ import type {
 import { customRules } from './rules/index.js';
 import { workflowScripts } from './workflow-scripts/index.js';
 import { useCaseScripts } from './use-case-scripts/index.js';
-import { applyFixes } from './fixer.js';
+import { applyFixes, groupFindingsByFile } from './fixer.js';
 
 /**
  * Default rules to exclude from validation.
@@ -39,13 +39,25 @@ import { applyFixes } from './fixer.js';
  * R5 - No outgoing connections: Expected for terminal nodes (Submit/Error)
  * R8 - Data never reaches consumer: False positive for LangChain sub-nodes
  */
+/**
+ * Override severity for specific rules.
+ * Flowlint-core rules have hardcoded severity we can't change at source.
+ */
+export const SEVERITY_OVERRIDES: Record<string, 'must' | 'should' | 'nit'> = {
+  // Add severity overrides here as needed
+};
+
 export const DEFAULT_EXCLUDED_RULES: string[] = [
+  'R1',  // Retry/backoff - replaced by custom RETRY-BACKOFF script with auto-fix
+  'R2',  // continueOnFail - legitimate pattern for non-critical nodes (logging, analytics)
   'R3',  // Idempotency guard - false positive for parser nodes
+  'R4',  // Hardcoded secrets - false positives on param names; CRED-PLACEHOLDER handles this properly
   'R5',  // No outgoing connections - false positive for Codika Submit/Report Error terminal nodes
-  'R7',  // Error path audit - replaced by custom ERROR-BRANCH-REQUIRED that recognizes Codika nodes
+  'R7',  // Error path audit - global errorWorkflow handles this
+  'R9',  // Env-specific literals - false positives on JS comments, workflow names; CRED-PLACEHOLDER + PLACEHOLDER-SYNTAX cover real cases
   'R8',  // Data never reaches consumer - false positive for Codika Init/Submit/Report data sinks
   'R11', // Deprecated node type - false positive for executeWorkflow v1.3 which is current
-  'R12', // Replaced by custom ERROR-BRANCH-REQUIRED rule that excludes LangChain sub-nodes
+  'R12', // Unhandled error path - Codika workflows use a global errorWorkflow for error handling
 ];
 
 /**
@@ -200,6 +212,12 @@ export async function validateWorkflow(
   // Exclude rules if specified (exclude list)
   filteredFindings = excludeByRules(filteredFindings, options.excludeRules);
 
+  // Apply severity overrides (before strict mode so --strict can re-promote)
+  filteredFindings = filteredFindings.map(f => {
+    const override = SEVERITY_OVERRIDES[f.rule.toUpperCase()];
+    return override ? { ...f, severity: override } : f;
+  });
+
   // Apply strict mode
   if (options.strict) {
     filteredFindings = filteredFindings.map(f =>
@@ -277,6 +295,30 @@ export async function validateUseCase(
     }
   }
 
+  // Apply fixes to use-case-level findings (e.g., INTEGRATION-INHERITANCE modifies config.ts)
+  if (options.fix) {
+    const useCaseFixable = findings.filter(f => f.fixable && f.fix);
+    if (useCaseFixable.length > 0) {
+      const grouped = groupFindingsByFile(useCaseFixable);
+      for (const [filePath, fileFindings] of grouped) {
+        const fixResult = applyFixes(filePath, fileFindings, {
+          dryRun: options.dryRun,
+        });
+        if (fixResult.applied > 0) {
+          // Remove fixed findings from the list
+          const fixedRules = new Set(fileFindings.filter(f => f.fixable).map(f => `${f.rule}:${f.path}:${f.message}`));
+          const before = findings.length;
+          for (let i = findings.length - 1; i >= 0; i--) {
+            const key = `${findings[i].rule}:${findings[i].path}:${findings[i].message}`;
+            if (fixedRules.has(key)) {
+              findings.splice(i, 1);
+            }
+          }
+        }
+      }
+    }
+  }
+
   // Validate individual workflows unless skipped
   if (!options.skipWorkflows) {
     const workflowsPath = join(absolutePath, 'workflows');
@@ -315,6 +357,12 @@ export async function validateUseCase(
   // Exclude rules if specified (exclude list)
   filteredFindings = excludeByRules(filteredFindings, options.excludeRules);
 
+  // Apply severity overrides (before strict mode so --strict can re-promote)
+  filteredFindings = filteredFindings.map(f => {
+    const override = SEVERITY_OVERRIDES[f.rule.toUpperCase()];
+    return override ? { ...f, severity: override } : f;
+  });
+
   // Apply strict mode
   if (options.strict) {
     filteredFindings = filteredFindings.map(f =>
@@ -341,9 +389,7 @@ export function getAvailableRules(): { id: string; description: string }[] {
   return [
     { id: 'CODIKA-INIT', description: 'Parent workflows must have Codika Init node' },
     { id: 'CODIKA-SUBMIT', description: 'Workflows must end with Submit Result or Report Error' },
-    { id: 'R1', description: 'API nodes require retry configuration' },
-    { id: 'R2', description: 'Error handling - avoid continueOnFail' },
-    { id: 'R4', description: 'No hardcoded secrets' },
+    { id: 'RETRY-BACKOFF', description: 'API/HTTP nodes should have retry configuration (fixable)' },
     // Add more as rules are implemented
   ];
 }

@@ -1,7 +1,8 @@
 /**
  * Tests for CODIKA-INIT Rule
  *
- * Rule: Parent workflows must have Codika Init as the second node (after trigger)
+ * Rule: Parent workflows must contain at least one Codika Init node.
+ * Sub-workflows are exempt.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -46,7 +47,7 @@ describe('CODIKA-INIT Rule', () => {
   });
 
   describe('valid workflows', () => {
-    it('should PASS when Codika Init is the second node (after webhook)', () => {
+    it('should PASS when Codika Init exists in workflow', () => {
       const { graph } = loadLocalFixture('valid-parent-workflow.json');
       const findings = codikaInitRequired(graph, ctx);
 
@@ -81,6 +82,34 @@ describe('CODIKA-INIT Rule', () => {
 
       expect(findings).toHaveLength(0);
     });
+
+    it('should PASS when Codika Init is not the second node (e.g. router pattern)', () => {
+      const workflowJson = JSON.stringify({
+        name: 'Router Workflow',
+        nodes: [
+          { id: '1', name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [0, 0], parameters: {} },
+          { id: '2', name: 'Process Input', type: 'n8n-nodes-base.code', position: [220, 0], parameters: {} },
+          { id: '3', name: 'Route', type: 'n8n-nodes-base.if', position: [440, 0], parameters: {} },
+          {
+            id: '4',
+            name: 'Codika Init',
+            type: 'n8n-nodes-codika.codika',
+            position: [660, 0],
+            parameters: { operation: 'initWorkflow' },
+          },
+        ],
+        connections: {
+          'Webhook': { main: [[{ node: 'Process Input', type: 'main', index: 0 }]] },
+          'Process Input': { main: [[{ node: 'Route', type: 'main', index: 0 }]] },
+          'Route': { main: [[{ node: 'Codika Init', type: 'main', index: 0 }]] },
+        },
+        settings: { executionOrder: 'v1' },
+      });
+      const graph = parseN8n(workflowJson);
+      const findings = codikaInitRequired(graph, ctx);
+
+      expect(findings).toHaveLength(0);
+    });
   });
 
   describe('invalid workflows', () => {
@@ -91,10 +120,10 @@ describe('CODIKA-INIT Rule', () => {
       expect(findings).toHaveLength(1);
       const finding = expectFindingWithRule(findings, 'CODIKA-INIT');
       expect(finding.severity).toBe('must');
-      expect(finding.message).toContain('must have Codika Init');
+      expect(finding.message).toContain('missing');
     });
 
-    it('should FAIL when second node is not Codika Init', () => {
+    it('should FAIL when no Codika Init node exists', () => {
       const workflowJson = createMinimalWorkflow({
         hasCodikaInit: false,
         hasSubmitResult: true,
@@ -106,11 +135,11 @@ describe('CODIKA-INIT Rule', () => {
       expectFindingWithRule(findings, 'CODIKA-INIT');
     });
 
-    it('should include helpful details about what was found', () => {
+    it('should include helpful details', () => {
       const { graph } = loadLocalFixture('missing-codika-init.json');
       const findings = codikaInitRequired(graph, ctx);
 
-      expect(findings[0].raw_details).toContain('Add a Codika Init node');
+      expect(findings[0].raw_details).toContain('Codika Init');
       expect(findings[0].raw_details).toContain('initWorkflow');
     });
   });
@@ -125,7 +154,6 @@ describe('CODIKA-INIT Rule', () => {
       }));
       const findings = codikaInitRequired(graph, ctx);
 
-      // Should not crash, just return empty
       expect(findings).toHaveLength(0);
     });
 
@@ -140,8 +168,8 @@ describe('CODIKA-INIT Rule', () => {
       }));
       const findings = codikaInitRequired(graph, ctx);
 
-      // Trigger with no connections - should return empty (dead end is a different rule)
-      expect(findings).toHaveLength(0);
+      // No Codika Init — should fail
+      expect(findings).toHaveLength(1);
     });
 
     it('should detect Codika Init with initDataIngestion operation', () => {
@@ -221,7 +249,7 @@ describe('CODIKA-INIT Rule', () => {
       expect(findings).toHaveLength(0);
     });
 
-    it('should work with Gmail trigger', () => {
+    it('should FAIL for Gmail trigger without Codika Init', () => {
       const workflowJson = JSON.stringify({
         name: 'Gmail Workflow',
         nodes: [

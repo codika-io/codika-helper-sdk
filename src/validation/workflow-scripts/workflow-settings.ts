@@ -28,6 +28,15 @@ const REQUIRED_ERROR_WORKFLOW = '{{ORGSECRET_ERROR_WORKFLOW_ID_TERCESORG}}';
 const REQUIRED_EXECUTION_ORDER = 'v1';
 
 /**
+ * Detect if a workflow is a sub-workflow (triggered by another workflow).
+ * Sub-workflows don't need errorWorkflow because errors propagate to the parent.
+ */
+function isSubWorkflow(parsed: any): boolean {
+  const nodes = parsed.nodes || [];
+  return nodes.some((n: any) => n.type === 'n8n-nodes-base.executeWorkflowTrigger');
+}
+
+/**
  * Check that workflow has required settings
  */
 export function checkWorkflowSettings(content: string, path: string): Finding[] {
@@ -44,44 +53,46 @@ export function checkWorkflowSettings(content: string, path: string): Finding[] 
 
   const settings = parsed.settings || {};
 
-  // Check errorWorkflow
-  if (!settings.errorWorkflow) {
-    findings.push({
-      rule: metadata.id,
-      severity: metadata.severity,
-      path,
-      message: 'Missing required setting: errorWorkflow',
-      raw_details: `Add "errorWorkflow": "${REQUIRED_ERROR_WORKFLOW}" to the settings object`,
-      fixable: true,
-      fix: {
-        description: 'Add errorWorkflow setting',
-        apply: (fileContent: string) => {
-          const data = JSON.parse(fileContent);
-          if (!data.settings) {
-            data.settings = {};
-          }
-          data.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
-          return JSON.stringify(data, null, 2);
+  // Check errorWorkflow (only for parent workflows — sub-workflows propagate errors to caller)
+  if (!isSubWorkflow(parsed)) {
+    if (!settings.errorWorkflow) {
+      findings.push({
+        rule: metadata.id,
+        severity: metadata.severity,
+        path,
+        message: 'Missing required setting: errorWorkflow',
+        raw_details: `Add "errorWorkflow": "${REQUIRED_ERROR_WORKFLOW}" to the settings object`,
+        fixable: true,
+        fix: {
+          description: 'Add errorWorkflow setting',
+          apply: (fileContent: string) => {
+            const data = JSON.parse(fileContent);
+            if (!data.settings) {
+              data.settings = {};
+            }
+            data.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
+            return JSON.stringify(data, null, 2);
+          },
         },
-      },
-    });
-  } else if (settings.errorWorkflow !== REQUIRED_ERROR_WORKFLOW) {
-    findings.push({
-      rule: metadata.id,
-      severity: metadata.severity,
-      path,
-      message: `Setting errorWorkflow has wrong value: "${settings.errorWorkflow}"`,
-      raw_details: `Change to: "${REQUIRED_ERROR_WORKFLOW}"`,
-      fixable: true,
-      fix: {
-        description: 'Fix errorWorkflow setting',
-        apply: (fileContent: string) => {
-          const data = JSON.parse(fileContent);
-          data.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
-          return JSON.stringify(data, null, 2);
+      });
+    } else if (settings.errorWorkflow !== REQUIRED_ERROR_WORKFLOW) {
+      findings.push({
+        rule: metadata.id,
+        severity: metadata.severity,
+        path,
+        message: `Setting errorWorkflow has wrong value: "${settings.errorWorkflow}"`,
+        raw_details: `Change to: "${REQUIRED_ERROR_WORKFLOW}"`,
+        fixable: true,
+        fix: {
+          description: 'Fix errorWorkflow setting',
+          apply: (fileContent: string) => {
+            const data = JSON.parse(fileContent);
+            data.settings.errorWorkflow = REQUIRED_ERROR_WORKFLOW;
+            return JSON.stringify(data, null, 2);
+          },
         },
-      },
-    });
+      });
+    }
   }
 
   // Check executionOrder
