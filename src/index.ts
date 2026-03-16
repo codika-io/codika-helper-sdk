@@ -84,6 +84,13 @@ export { workflowScripts } from './validation/workflow-scripts/index.js';
 export { useCaseScripts } from './validation/use-case-scripts/index.js';
 export { applyFixes } from './validation/fixer.js';
 
+// Skill utilities
+export {
+  readSkillFiles,
+  validateSkill,
+  parseSkillFrontmatter,
+} from './utils/skill-parser.js';
+
 // Document deployment client
 export {
   deployDocuments,

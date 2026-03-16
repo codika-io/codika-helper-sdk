@@ -11,6 +11,7 @@ import type {
   DeployProcessUseCaseSuccessResponse,
   DeployProcessUseCaseErrorResponse,
   MetadataDocument,
+  SkillDocument,
 } from '../types/process-types.js';
 
 /**
@@ -31,6 +32,8 @@ export interface DeployOptions {
   explicitVersion?: string;
   /** Optional metadata documents to upload alongside the deployment */
   metadataDocuments?: MetadataDocument[];
+  /** Optional skill documents describing workflow endpoints */
+  skills?: SkillDocument[];
 }
 
 /**
@@ -73,6 +76,7 @@ export async function deployProcess(
     versionStrategy,
     explicitVersion,
     metadataDocuments,
+    skills,
   } = options;
 
   // Build request body
@@ -91,6 +95,10 @@ export async function deployProcess(
 
   if (metadataDocuments && metadataDocuments.length > 0) {
     requestBody.metadataDocuments = metadataDocuments;
+  }
+
+  if (skills && skills.length > 0) {
+    requestBody.skills = skills;
   }
 
   // Make API request

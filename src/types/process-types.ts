@@ -688,6 +688,32 @@ export interface MetadataDocumentUploadResult {
   error?: string;
 }
 
+// ============================================================================
+// Skill Document Types
+// ============================================================================
+
+/**
+ * A skill document describing how to interact with a specific workflow.
+ * Follows the Claude Agent Skills format: directory with SKILL.md + frontmatter.
+ * See: https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview
+ */
+export interface SkillDocument {
+  /** Must match a workflowTemplateId from the workflows array */
+  workflowTemplateId: string;
+  /** Skill name — max 64 chars, lowercase letters/numbers/hyphens only (Claude spec) */
+  name: string;
+  /** Short description, third person — max 1024 chars (Claude spec) */
+  description: string;
+  /** Full SKILL.md content including frontmatter */
+  contentMarkdown: string;
+  /** Relative path from use case root (e.g., "skills/main-workflow/SKILL.md") */
+  relativePath: string;
+}
+
+// ============================================================================
+// API Request/Response Types (Deploy)
+// ============================================================================
+
 export interface DeployProcessUseCaseRequest {
   projectId: string;
   versionStrategy?: VersionStrategy;
@@ -695,6 +721,8 @@ export interface DeployProcessUseCaseRequest {
   configuration: ProcessDeploymentConfigurationInput;
   /** Optional metadata documents to store alongside the deployment */
   metadataDocuments?: MetadataDocument[];
+  /** Skill documents describing how to interact with workflows */
+  skills?: SkillDocument[];
 }
 
 export interface DeployedWorkflowInfo {

@@ -50,6 +50,7 @@ export const ENDPOINTS = {
   verifyApiKey: '/verifyApiKey',
   publishUseCase: '/publishProcessDeploymentPublic',
   listExecutions: '/listExecutionsPublic',
+  getProcessSkills: '/getProcessSkillsPublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────

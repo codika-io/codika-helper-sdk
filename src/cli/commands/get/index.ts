@@ -12,8 +12,10 @@
 import { Command } from 'commander';
 import { useCaseCommand } from './use-case.js';
 import { executionCommand } from './execution.js';
+import { skillsCommand } from './skills.js';
 
 export const getCommand = new Command('get')
   .description('Fetch use cases and resources from the Codika platform')
   .addCommand(useCaseCommand)
-  .addCommand(executionCommand);
+  .addCommand(executionCommand)
+  .addCommand(skillsCommand);

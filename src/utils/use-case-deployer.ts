@@ -7,7 +7,8 @@ import { createHash } from 'crypto';
 import { join, extname, basename, dirname } from 'path';
 import { pathToFileURL } from 'url';
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
-import type { ProcessDeploymentConfigurationInput, VersionStrategy, MetadataDocument } from '../types/process-types.js';
+import type { ProcessDeploymentConfigurationInput, VersionStrategy, MetadataDocument, SkillDocument } from '../types/process-types.js';
+import { readSkillFiles } from './skill-parser.js';
 import {
   deployProcess,
   isDeploySuccess,
@@ -48,6 +49,7 @@ export interface ResolvedUseCaseDeployment {
   configuration: ProcessDeploymentConfigurationInput;
   workflowFiles: string[];
   metadataDocuments: MetadataDocument[];
+  skills: SkillDocument[];
   apiUrl: string;
   apiKey: string;
   versionStrategy?: VersionStrategy;
@@ -306,6 +308,18 @@ export async function resolveUseCaseDeployment(
     }
   }
 
+  // 3. Read skill files from skills/*/SKILL.md
+  const skills = readSkillFiles(useCasePath);
+
+  // Also add skill files as metadata documents for archival
+  for (const skill of skills) {
+    const skillPath = join(useCasePath, skill.relativePath);
+    const doc = readFileAsDocument(skillPath, skill.relativePath, `Skill: ${skill.name}`);
+    if (doc) {
+      documents.push(doc);
+    }
+  }
+
   return {
     useCasePath,
     projectId,
@@ -313,6 +327,7 @@ export async function resolveUseCaseDeployment(
     configuration,
     workflowFiles,
     metadataDocuments: documents,
+    skills,
     apiUrl,
     apiKey,
     versionStrategy,
@@ -359,6 +374,7 @@ export async function deployUseCaseFromFolder(
     versionStrategy: resolved.versionStrategy,
     explicitVersion: resolved.explicitVersion,
     metadataDocuments: resolved.metadataDocuments.length > 0 ? resolved.metadataDocuments : undefined,
+    skills: resolved.skills.length > 0 ? resolved.skills : undefined,
   });
 
   // Return result with additional context for archiving

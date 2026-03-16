@@ -16,6 +16,7 @@ import { checkWebhookPathConsistency } from './webhook-path-consistency.js';
 import { checkTriggersRequired } from './triggers-required.js';
 import { checkTriggerTypeConsistency } from './trigger-type-consistency.js';
 import { checkTriggerTypes } from './trigger-types.js';
+import { checkSkillConsistency } from './skill-consistency.js';
 
 /**
  * All use-case scripts to run during validation
@@ -34,6 +35,7 @@ export const useCaseScripts: UseCaseScript[] = [
   checkTriggersRequired,
   checkTriggerTypeConsistency,
   checkTriggerTypes,
+  checkSkillConsistency,
 ];
 
 // Re-export individual scripts
@@ -47,3 +49,4 @@ export { checkWebhookPathConsistency } from './webhook-path-consistency.js';
 export { checkTriggersRequired } from './triggers-required.js';
 export { checkTriggerTypeConsistency } from './trigger-type-consistency.js';
 export { checkTriggerTypes } from './trigger-types.js';
+export { checkSkillConsistency } from './skill-consistency.js';

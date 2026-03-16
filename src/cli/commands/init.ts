@@ -25,6 +25,10 @@ import {
   generateSubWorkflow,
   generateDataIngestionWorkflow,
 } from '../templates/workflow-templates.js';
+import {
+  generateMainWorkflowSkill,
+  generateScheduledReportSkill,
+} from '../templates/skill-templates.js';
 import { writeVersion } from '../../utils/version-manager.js';
 import { writeProjectJson } from '../../utils/project-json.js';
 import {
@@ -148,6 +152,18 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
     JSON.stringify(subWorkflow, null, 2) + '\n'
   );
   createdFiles.push('workflows/text-processor.json');
+
+  // Generate and write skill files (Claude Agent Skills format)
+  mkdirSync(join(targetPath, 'skills/main-workflow'), { recursive: true });
+  mkdirSync(join(targetPath, 'skills/scheduled-report'), { recursive: true });
+
+  const mainSkill = generateMainWorkflowSkill({ slug, name });
+  writeFileSync(join(targetPath, 'skills/main-workflow/SKILL.md'), mainSkill);
+  createdFiles.push('skills/main-workflow/SKILL.md');
+
+  const reportSkill = generateScheduledReportSkill({ slug, name });
+  writeFileSync(join(targetPath, 'skills/scheduled-report/SKILL.md'), reportSkill);
+  createdFiles.push('skills/scheduled-report/SKILL.md');
 
   // Optionally create data-ingestion/ folder
   if (options.withDataIngestion) {
@@ -326,9 +342,10 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
     console.log('\x1b[32m✓ Done!\x1b[0m Next steps:');
     console.log('');
     console.log(`  1. Edit the workflow JSON files in ${pathArg}/workflows/`);
-    console.log(`  2. Update config.ts with your schemas and metadata`);
-    console.log(`  3. Run: codika verify use-case ${pathArg}`);
-    console.log(`  4. Run: codika deploy use-case ${pathArg}`);
+    console.log(`  2. Edit the skill files in ${pathArg}/skills/*/SKILL.md`);
+    console.log(`  3. Update config.ts with your schemas and metadata`);
+    console.log(`  4. Run: codika verify use-case ${pathArg}`);
+    console.log(`  5. Run: codika deploy use-case ${pathArg}`);
     console.log('');
   }
 
