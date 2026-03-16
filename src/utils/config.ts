@@ -218,22 +218,38 @@ function slugify(str: string): string {
 /**
  * Resolve API key with priority: flag > CODIKA_API_KEY env > active profile
  */
-export function resolveApiKey(flagValue?: string): string | undefined {
+export function resolveApiKey(flagValue?: string, profileName?: string): string | undefined {
   if (flagValue) return flagValue;
   if (process.env.CODIKA_API_KEY) return process.env.CODIKA_API_KEY;
+  if (profileName) {
+    const profile = getProfileByName(profileName);
+    return profile?.apiKey;
+  }
   const active = getActiveProfile();
   return active?.profile.apiKey;
 }
 
 /**
- * Resolve base URL with priority: flag > CODIKA_BASE_URL env > active profile > production default
+ * Resolve base URL with priority: flag > CODIKA_BASE_URL env > --profile > active profile > production default
  */
-export function resolveBaseUrl(flagValue?: string): string {
+export function resolveBaseUrl(flagValue?: string, profileName?: string): string {
   if (flagValue) return flagValue;
   if (process.env.CODIKA_BASE_URL) return process.env.CODIKA_BASE_URL;
+  if (profileName) {
+    const profile = getProfileByName(profileName);
+    if (profile?.baseUrl) return profile.baseUrl;
+  }
   const active = getActiveProfile();
   if (active?.profile.baseUrl) return active.profile.baseUrl;
   return PRODUCTION_BASE_URL;
+}
+
+/**
+ * Get a profile by name. Returns the ProfileData or null if not found.
+ */
+export function getProfileByName(name: string): ProfileData | null {
+  const config = readConfig();
+  return config.profiles[name] || null;
 }
 
 /**
@@ -246,7 +262,7 @@ export function resolveBaseUrl(flagValue?: string): string {
  *   - deployDataIngestion: CODIKA_DATA_INGESTION_API_URL
  *   - createProject:      CODIKA_PROJECT_API_URL
  */
-export function resolveEndpointUrl(endpoint: EndpointName, flagOverride?: string): string {
+export function resolveEndpointUrl(endpoint: EndpointName, flagOverride?: string, profileName?: string): string {
   if (flagOverride) return flagOverride;
 
   // Legacy per-endpoint env vars for backward compatibility
@@ -261,7 +277,7 @@ export function resolveEndpointUrl(endpoint: EndpointName, flagOverride?: string
     return process.env[envVar]!;
   }
 
-  return resolveBaseUrl() + ENDPOINTS[endpoint];
+  return resolveBaseUrl(undefined, profileName) + ENDPOINTS[endpoint];
 }
 
 /**

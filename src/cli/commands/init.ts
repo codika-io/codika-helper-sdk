@@ -56,6 +56,7 @@ interface InitOptions {
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
+  profile?: string;
 }
 
 export const initCommand = new Command('init')
@@ -72,6 +73,7 @@ export const initCommand = new Command('init')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (pathArg: string, options: InitOptions) => {
     try {
       await runInit(pathArg, options);
@@ -196,13 +198,13 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
     createdFiles.push(projectFileName);
   } else if (options.project !== false) {
     // Try to create project on the platform
-    const apiKey = resolveApiKey(options.apiKey);
+    const apiKey = resolveApiKey(options.apiKey, options.profile);
 
     if (!apiKey) {
       projectSkipped = true;
       projectSkipReason = 'No API key found. Run `codika project create --name \'...\' --path .` later.';
     } else {
-      const apiUrl = resolveEndpointUrl('createProject', options.apiUrl);
+      const apiUrl = resolveEndpointUrl('createProject', options.apiUrl, options.profile);
 
       const result = await createProject({
         name,

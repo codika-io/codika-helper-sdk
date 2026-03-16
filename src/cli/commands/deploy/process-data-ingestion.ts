@@ -30,6 +30,7 @@ interface DataIngestionCommandOptions {
   versionStrategy: string;
   explicitVersion?: string;
   json?: boolean;
+  profile?: string;
 }
 
 // ── Version JSON helpers ─────────────────────────────────
@@ -83,6 +84,7 @@ export const processDataIngestionCommand = new Command('process-data-ingestion')
   )
   .option('--explicit-version <version>', 'Explicit version (required if strategy is explicit)')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (path: string, options: DataIngestionCommandOptions) => {
     try {
       await runDeployDataIngestion(path, options);

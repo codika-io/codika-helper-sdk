@@ -27,6 +27,7 @@ interface SkillsOptions {
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
+  profile?: string;
 }
 
 export const skillsCommand = new Command('skills')
@@ -40,6 +41,7 @@ export const skillsCommand = new Command('skills')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (processInstanceIdArg: string | undefined, options: SkillsOptions) => {
     try {
       await runGetSkills(processInstanceIdArg, options);
@@ -89,12 +91,12 @@ async function runGetSkills(processInstanceIdArg: string | undefined, options: S
     );
   }
 
-  const apiKey = resolveApiKey(options.apiKey);
+  const apiKey = resolveApiKey(options.apiKey, options.profile);
   if (!apiKey) {
     throw new Error(API_KEY_MISSING_MESSAGE);
   }
 
-  const apiUrl = resolveEndpointUrl('getProcessSkills', options.apiUrl);
+  const apiUrl = resolveEndpointUrl('getProcessSkills', options.apiUrl, options.profile);
 
   const response = await fetchSkills({
     processInstanceId,

@@ -26,6 +26,7 @@ export const createProjectCommand = new Command('create')
   .option('--api-url <url>', 'Codika API URL for project creation (env: CODIKA_PROJECT_API_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (options: CreateProjectCommandOptions) => {
     try {
       await runCreateProject(options);
@@ -54,14 +55,15 @@ interface CreateProjectCommandOptions {
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
+  profile?: string;
 }
 
 async function runCreateProject(options: CreateProjectCommandOptions): Promise<void> {
   // Resolve API URL: --api-url > CODIKA_PROJECT_API_URL env > config baseUrl + path > production default
-  const apiUrl = resolveEndpointUrl('createProject', options.apiUrl);
+  const apiUrl = resolveEndpointUrl('createProject', options.apiUrl, options.profile);
 
   // Resolve API key: --api-key > CODIKA_API_KEY env > config file
-  const apiKey = resolveApiKey(options.apiKey);
+  const apiKey = resolveApiKey(options.apiKey, options.profile);
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
   }

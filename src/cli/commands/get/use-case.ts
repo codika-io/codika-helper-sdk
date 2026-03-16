@@ -27,6 +27,7 @@ export const useCaseCommand = new Command('use-case')
   .option('--api-url <url>', 'Codika API URL (env: CODIKA_BASE_URL)')
   .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (projectId: string, outputPath: string | undefined, options: GetUseCaseCommandOptions) => {
     try {
       await runGetUseCase(projectId, outputPath, options);
@@ -53,6 +54,7 @@ interface GetUseCaseCommandOptions {
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
+  profile?: string;
 }
 
 async function runGetUseCase(
@@ -70,10 +72,10 @@ async function runGetUseCase(
   }
 
   // Resolve API URL: --api-url > env > config baseUrl + path > production default
-  const apiUrl = resolveEndpointUrl('getMetadata', options.apiUrl);
+  const apiUrl = resolveEndpointUrl('getMetadata', options.apiUrl, options.profile);
 
   // Resolve API key: --api-key > CODIKA_API_KEY env > config file
-  const apiKey = resolveApiKey(options.apiKey);
+  const apiKey = resolveApiKey(options.apiKey, options.profile);
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
   }

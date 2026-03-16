@@ -42,6 +42,7 @@ export const useCaseCommand = new Command('use-case')
   )
   .option('--json', 'Output result as JSON')
   .option('--dry-run', 'Preview what would be deployed without calling the API')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (path: string, options: UseCaseCommandOptions) => {
     try {
       await runDeployUseCase(path, options);
@@ -73,6 +74,7 @@ interface UseCaseCommandOptions {
   additionalFile?: string[];
   json?: boolean;
   dryRun?: boolean;
+  profile?: string;
 }
 
 async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOptions): Promise<void> {
@@ -85,10 +87,10 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
   }
 
   // Resolve API URL: --api-url > CODIKA_API_URL env > config baseUrl + path > production default
-  const apiUrl = resolveEndpointUrl('deployUseCase', options.apiUrl);
+  const apiUrl = resolveEndpointUrl('deployUseCase', options.apiUrl, options.profile);
 
   // Resolve API key: --api-key > CODIKA_API_KEY env > config file
-  const apiKey = resolveApiKey(options.apiKey);
+  const apiKey = resolveApiKey(options.apiKey, options.profile);
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
   }

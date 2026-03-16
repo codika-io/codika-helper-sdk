@@ -27,6 +27,7 @@ export const executionCommand = new Command('execution')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (executionId: string, options: ExecutionOptions) => {
     try {
       await runGetExecution(executionId, options);
@@ -55,6 +56,7 @@ interface ExecutionOptions {
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
+  profile?: string;
 }
 
 /**
@@ -96,13 +98,13 @@ async function runGetExecution(
   }
 
   // Resolve API key: --api-key > CODIKA_API_KEY env > config file
-  const apiKey = resolveApiKey(options.apiKey);
+  const apiKey = resolveApiKey(options.apiKey, options.profile);
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
   }
 
   // Resolve API URL: --api-url > env > config baseUrl + path > production default
-  const apiUrl = resolveEndpointUrl('getExecutionDetails', options.apiUrl);
+  const apiUrl = resolveEndpointUrl('getExecutionDetails', options.apiUrl, options.profile);
 
   if (!options.json) {
     console.log(`\nFetching execution "${executionId}"...`);

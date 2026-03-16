@@ -26,6 +26,7 @@ interface DocumentsCommandOptions {
   projectId?: string;
   projectFile?: string;
   json?: boolean;
+  profile?: string;
 }
 
 // ── Helpers ──────────────────────────────────────────────
@@ -93,6 +94,7 @@ export const documentsCommand = new Command('documents')
   .option('--project-id <id>', 'Override project ID')
   .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (path: string, options: DocumentsCommandOptions) => {
     try {
       await runDeployDocuments(path, options);

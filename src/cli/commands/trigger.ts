@@ -26,6 +26,7 @@ interface TriggerOptions {
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
+  profile?: string;
 }
 
 export const triggerCommand = new Command('trigger')
@@ -41,6 +42,7 @@ export const triggerCommand = new Command('trigger')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output result as JSON')
+  .option('--profile <name>', 'Use a specific profile instead of the active one')
   .action(async (workflowId: string, options: TriggerOptions) => {
     try {
       await runTrigger(workflowId, options);
@@ -128,14 +130,14 @@ async function runTrigger(
   }
 
   // Resolve API key
-  const apiKey = resolveApiKey(options.apiKey);
+  const apiKey = resolveApiKey(options.apiKey, options.profile);
   if (!apiKey) {
     exitWithError(API_KEY_MISSING_MESSAGE);
   }
 
   // Resolve API URLs
-  const triggerApiUrl = resolveEndpointUrl('triggerWorkflow', options.apiUrl);
-  const statusApiUrl = resolveEndpointUrl('getExecutionStatus', options.apiUrl);
+  const triggerApiUrl = resolveEndpointUrl('triggerWorkflow', options.apiUrl, options.profile);
+  const statusApiUrl = resolveEndpointUrl('getExecutionStatus', options.apiUrl, options.profile);
 
   // Parse payload
   const payload = resolvePayload(options);
