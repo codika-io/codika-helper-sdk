@@ -273,6 +273,27 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
     }, null, 2) + '\n');
     createdFiles.push('tsconfig.json');
 
+    // Create .editorconfig for consistent editor formatting
+    writeFileSync(join(targetPath, '.editorconfig'),
+      'root = true\n' +
+      '\n' +
+      '[*.json]\n' +
+      'indent_style = space\n' +
+      'indent_size = 2\n' +
+      'end_of_line = lf\n' +
+      'charset = utf-8\n' +
+      'trim_trailing_whitespace = true\n' +
+      'insert_final_newline = true\n'
+    );
+    createdFiles.push('.editorconfig');
+
+    // Create .prettierignore to prevent Prettier from fighting with codika verify --fix
+    writeFileSync(join(targetPath, '.prettierignore'),
+      '# Workflow JSON files use codika verify --fix for formatting\n' +
+      '**/workflows/*.json\n'
+    );
+    createdFiles.push('.prettierignore');
+
     workspaceCreated = true;
 
     // Run npm install

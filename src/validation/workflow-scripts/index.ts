@@ -15,12 +15,19 @@ import { checkLlmOutputAccess } from './llm-output-access.js';
 import { checkWebhookId } from './webhook-id.js';
 import { checkLlmModelId } from './llm-model-id.js';
 import { checkRetryBackoff } from './retry-backoff.js';
+import { checkMergeBeforeTerminal } from './merge-before-terminal.js';
+import { checkExecWorkflowWait } from './exec-workflow-wait.js';
+import { checkDbAlwaysOutput } from './db-always-output.js';
+import { checkWorkflowFormat } from './workflow-format.js';
 
 /**
  * All workflow scripts to run during validation
  *
  * Each script receives the raw file content and path,
  * and returns an array of findings.
+ *
+ * IMPORTANT: checkWorkflowFormat MUST be last — it normalizes
+ * formatting after all other fixes have been applied.
  */
 export const workflowScripts: WorkflowScript[] = [
   checkInstparmQuoting,
@@ -32,6 +39,10 @@ export const workflowScripts: WorkflowScript[] = [
   checkWebhookId,
   checkLlmModelId,
   checkRetryBackoff,
+  checkMergeBeforeTerminal,
+  checkExecWorkflowWait,
+  checkDbAlwaysOutput,
+  checkWorkflowFormat,
 ];
 
 // Re-export individual scripts
@@ -44,3 +55,7 @@ export { checkLlmOutputAccess } from './llm-output-access.js';
 export { checkWebhookId } from './webhook-id.js';
 export { checkLlmModelId } from './llm-model-id.js';
 export { checkRetryBackoff } from './retry-backoff.js';
+export { checkMergeBeforeTerminal } from './merge-before-terminal.js';
+export { checkExecWorkflowWait } from './exec-workflow-wait.js';
+export { checkDbAlwaysOutput } from './db-always-output.js';
+export { checkWorkflowFormat } from './workflow-format.js';
