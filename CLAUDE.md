@@ -26,6 +26,7 @@ src/
         use-case.ts       # Validate entire use-case folders
         workflow.ts       # Validate single workflow files
       init.ts             # Scaffold a new use case folder
+      redeploy.ts         # Redeploy a deployment instance with parameter overrides
       whoami.ts           # Show current authenticated identity
       use.ts              # Switch active profile or list profiles
       logout.ts           # Remove a profile
@@ -41,6 +42,7 @@ src/
     data-ingestion-deployer.ts    # High-level data ingestion deployer (auto-discovers from data-ingestion/ folder)
     document-deploy-client.ts     # Low-level document deployment HTTP client
     project-client.ts             # Low-level project creation HTTP client
+    redeploy-client.ts              # Low-level redeploy HTTP client
     project-json.ts               # Read/write project.json (projectId, organizationId, dataIngestionDeployments)
   validation/             # Validation rules and runner
 scripts/
@@ -125,6 +127,9 @@ codika verify use-case <path> [--json] [--fix] [--strict]
 
 # Create a project via API key (--path writes project.json with projectId + organizationId)
 codika project create --name "My Project" [--path <dir>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
+
+# Redeploy a deployment instance with parameter overrides
+codika redeploy [--process-instance-id <id>] [--path <path>] [--project-file <path>] [--environment <dev|prod>] [--param <KEY=VALUE>]... [--params <json>] [--params-file <path>] [--force] [--api-url <url>] [--api-key <key>] [--json]
 
 # Validate a single workflow
 codika verify workflow <path> [--json] [--fix]

@@ -51,6 +51,7 @@ export const ENDPOINTS = {
   publishUseCase: '/publishProcessDeploymentPublic',
   listExecutions: '/listExecutionsPublic',
   getProcessSkills: '/getProcessSkillsPublic',
+  redeployDeploymentInstance: '/redeployDeploymentInstancePublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────
