@@ -17,6 +17,7 @@ import { checkTriggersRequired } from './triggers-required.js';
 import { checkTriggerTypeConsistency } from './trigger-type-consistency.js';
 import { checkTriggerTypes } from './trigger-types.js';
 import { checkSkillConsistency } from './skill-consistency.js';
+import { checkCustomIntegrationSchema } from './custom-integration-schema.js';
 
 /**
  * All use-case scripts to run during validation
@@ -36,6 +37,7 @@ export const useCaseScripts: UseCaseScript[] = [
   checkTriggerTypeConsistency,
   checkTriggerTypes,
   checkSkillConsistency,
+  checkCustomIntegrationSchema,
 ];
 
 // Re-export individual scripts
@@ -50,3 +52,4 @@ export { checkTriggersRequired } from './triggers-required.js';
 export { checkTriggerTypeConsistency } from './trigger-type-consistency.js';
 export { checkTriggerTypes } from './trigger-types.js';
 export { checkSkillConsistency } from './skill-consistency.js';
+export { checkCustomIntegrationSchema } from './custom-integration-schema.js';

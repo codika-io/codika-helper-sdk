@@ -626,6 +626,71 @@ export type DeploymentParameterValue = string | number | boolean | string[] | (s
 export type DeploymentParameterValues = Record<string, DeploymentParameterValue>;
 
 // ============================================================================
+// Custom Integration Types
+// ============================================================================
+
+/**
+ * Field schema for a custom integration's secret or metadata field.
+ */
+export interface CustomIntegrationFieldSchema {
+  /** Field key, UPPER_SNAKE_CASE (e.g., 'API_KEY', 'BASE_URL') */
+  key: string;
+  /** Human-readable label */
+  label: string;
+  /** Field input type */
+  type: 'password' | 'string' | 'url' | 'number';
+  /** Help text for the field */
+  description?: string;
+  /** Placeholder text for the input */
+  placeholder?: string;
+  /** Whether the field is required (default: true for secrets, false for metadata) */
+  required?: boolean;
+}
+
+/**
+ * Schema for a custom integration defined by a use case.
+ * Allows use cases to declare arbitrary integration requirements
+ * without needing hardcoded handler files.
+ *
+ * Custom integration IDs MUST start with 'cstm_' to prevent collisions
+ * with built-in integration IDs.
+ */
+export interface CustomIntegrationSchema {
+  /** Unique ID, snake_case. Must start with 'cstm_' (e.g., 'cstm_acme_crm') */
+  id: string;
+  /** Display name shown in dashboard (e.g., 'Acme CRM') */
+  name: string;
+  /** Help text for users */
+  description?: string;
+  /** Where this integration is stored */
+  contextType: 'organization' | 'member' | 'process_instance';
+  /**
+   * n8n credential type to create. Maps to n8n's generic credential types:
+   * - 'httpHeaderAuth': API key in HTTP header (covers Bearer, X-API-Key, etc.)
+   * - 'httpBasicAuth': Username + password (HTTP Basic)
+   * - 'httpQueryAuth': API key as query parameter
+   * - 'none': No n8n credential (integration data used differently)
+   */
+  n8nCredentialType: 'httpHeaderAuth' | 'httpBasicAuth' | 'httpQueryAuth' | 'none';
+  /**
+   * Maps secret/metadata field keys to n8n credential data field names.
+   * Example for httpHeaderAuth: { 'API_KEY': 'value', 'HEADER_NAME': 'name' }
+   * Required when n8nCredentialType !== 'none'.
+   */
+  n8nCredentialMapping?: Record<string, string>;
+  /** Secret fields (encrypted, stored securely) */
+  secretFields: CustomIntegrationFieldSchema[];
+  /** Non-secret metadata fields (optional, for display/config) */
+  metadataFields?: CustomIntegrationFieldSchema[];
+  /** Lucide icon name for dashboard display (e.g., 'Building2') */
+  icon?: string;
+  /** URL to a custom logo image. Takes precedence over icon when provided. */
+  logoUrl?: string;
+  /** Primary color (hex) for dashboard display (e.g., '#4F46E5') */
+  color?: string;
+}
+
+// ============================================================================
 // Process Deployment Configuration
 // ============================================================================
 
@@ -647,6 +712,17 @@ export interface ProcessDeploymentConfigurationInput {
   defaultDeploymentParameters?: DeploymentParameterValues;
   agent?: AgentConfig;
   processType?: ProcessType;
+
+  /**
+   * Custom integration schemas defined by this use case.
+   * Allows declaring arbitrary integration requirements that the platform
+   * handles dynamically — rendering forms, creating n8n credentials,
+   * and resolving placeholders.
+   *
+   * Custom integration IDs MUST start with 'cstm_'.
+   * IDs are automatically merged into integrationUids during deployment.
+   */
+  customIntegrations?: CustomIntegrationSchema[];
 }
 
 // ============================================================================
