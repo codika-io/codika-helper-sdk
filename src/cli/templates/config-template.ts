@@ -40,7 +40,7 @@ import {
   type ScheduleTrigger,
   type SubworkflowTrigger,
   type ProcessDeploymentConfigurationInput,${dataIngestionImport}
-} from '@codika-io/helper-sdk';
+} from 'codika';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

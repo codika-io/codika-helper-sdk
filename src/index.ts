@@ -1,5 +1,5 @@
 /**
- * @codika-io/helper-sdk
+ * codika
  * Types and utilities for use case configuration, validation, and deployment
  */
 

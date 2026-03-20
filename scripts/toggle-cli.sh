@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-PACKAGE_NAME="@codika-io/helper-sdk"
+PACKAGE_NAME="codika"
 LINKED_PROJECTS_FILE="$PROJECT_DIR/.linked-projects"
 
 # Colors

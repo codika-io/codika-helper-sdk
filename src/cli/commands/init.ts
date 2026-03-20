@@ -251,7 +251,7 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
       private: true,
       type: 'module',
       dependencies: {
-        '@codika-io/helper-sdk': `^${majorMinor}`,
+        'codika': `^${majorMinor}`,
       },
     }, null, 2) + '\n');
     createdFiles.push('package.json');
@@ -398,7 +398,7 @@ function exitWithError(message: string): never {
 
 /**
  * Walk up the directory tree looking for a package.json that
- * includes @codika-io/helper-sdk as a dependency or devDependency.
+ * includes codika as a dependency or devDependency.
  * Returns the directory path if found, null otherwise.
  */
 function findExistingWorkspace(startPath: string): string | null {
@@ -415,7 +415,7 @@ function findExistingWorkspace(startPath: string): string | null {
       try {
         const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
         const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-        if (deps['@codika-io/helper-sdk']) return dir;
+        if (deps['codika']) return dir;
       } catch {
         // Ignore malformed package.json
       }

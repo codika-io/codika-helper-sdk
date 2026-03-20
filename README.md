@@ -1,4 +1,4 @@
-# @codika-io/helper-sdk
+# codika
 
 Codika SDK - types and utilities for use case configuration.
 
@@ -7,7 +7,7 @@ Codika SDK - types and utilities for use case configuration.
 ```bash
 npm login
 npm version patch  # or minor / major
-npm publish --access=public
+npm publish
 
 $HOME/.codika/.claude/scripts/update-helper-sdk-version.sh x.y.z
 ```
@@ -15,7 +15,7 @@ $HOME/.codika/.claude/scripts/update-helper-sdk-version.sh x.y.z
 ## Installation
 
 ```bash
-npm install @codika-io/helper-sdk
+npm install codika
 ```
 
 ## Usage
@@ -27,7 +27,7 @@ import {
   type FormOutputSchema,
   type HttpTrigger,
   type ProcessDeploymentConfigurationInput,
-} from '@codika-io/helper-sdk';
+} from 'codika';
 
 // Load and encode a workflow JSON file
 const workflowBase64 = loadAndEncodeWorkflow('/path/to/workflow.json');

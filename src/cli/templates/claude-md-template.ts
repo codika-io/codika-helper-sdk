@@ -13,7 +13,7 @@ export interface ClaudeMdTemplateParams {
 export function generateClaudeMd(params: ClaudeMdTemplateParams): string {
   return `# ${params.name} — Codika Use Case
 
-This folder is a **Codika use case**: a set of n8n workflow templates and deployment configuration managed by the \`codika\` CLI (\`@codika-io/helper-sdk\`). Codika is a multi-tenant SaaS platform that orchestrates n8n workflows — you design workflow templates with placeholders, deploy them, and the platform creates personalized copies for each user with their own credentials and parameters.
+This folder is a **Codika use case**: a set of n8n workflow templates and deployment configuration managed by the \`codika\` CLI (npm package \`codika\`). Codika is a multi-tenant SaaS platform that orchestrates n8n workflows — you design workflow templates with placeholders, deploy them, and the platform creates personalized copies for each user with their own credentials and parameters.
 
 ## Folder Structure
 
