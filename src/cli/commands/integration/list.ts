@@ -64,18 +64,20 @@ export const listSubCommand = new Command('list')
   });
 
 async function runList(options: ListCommandOptions): Promise<void> {
-  // ── Resolve process instance ID (optional) ───────────
+  // ── Resolve process instance ID and organizationId (optional) ──
   let processInstanceId = options.processInstanceId;
+  let organizationId: string | undefined;
 
-  if (!processInstanceId && options.path) {
-    const useCasePath = resolve(options.path);
-    const projectJson = readProjectJson(useCasePath, options.projectFile);
+  const useCasePath = resolve(options.path || process.cwd());
+  const projectJson = readProjectJson(useCasePath, options.projectFile);
 
-    if (projectJson) {
+  if (projectJson) {
+    if (!processInstanceId) {
       processInstanceId = options.environment === 'prod'
         ? projectJson.prodProcessInstanceId
         : projectJson.devProcessInstanceId;
     }
+    organizationId = projectJson.organizationId;
   }
 
   // ── Resolve API key ──────────────────────────────────
@@ -91,6 +93,7 @@ async function runList(options: ListCommandOptions): Promise<void> {
     apiUrl,
     apiKey,
     body: {
+      organizationId,
       processInstanceId,
     },
   });

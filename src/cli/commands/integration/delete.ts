@@ -81,20 +81,24 @@ async function runDelete(integrationId: string, options: DeleteCommandOptions): 
     }
   }
 
-  // ── Resolve process instance ID ──────────────────────
+  // ── Resolve process instance ID + organizationId ────
   let processInstanceId = options.processInstanceId;
+  let organizationId: string | undefined;
 
-  if (contextType === 'process_instance' && !processInstanceId) {
+  {
     const useCasePath = resolve(options.path || process.cwd());
     const projectJson = readProjectJson(useCasePath, options.projectFile);
 
     if (projectJson) {
-      processInstanceId = options.environment === 'prod'
-        ? projectJson.prodProcessInstanceId
-        : projectJson.devProcessInstanceId;
+      organizationId = projectJson.organizationId;
+      if (contextType === 'process_instance' && !processInstanceId) {
+        processInstanceId = options.environment === 'prod'
+          ? projectJson.prodProcessInstanceId
+          : projectJson.devProcessInstanceId;
+      }
     }
 
-    if (!processInstanceId) {
+    if (contextType === 'process_instance' && !processInstanceId) {
       exitWithError(
         `processInstanceId is required for process_instance context. Either:\n` +
         `  1. Pass --process-instance-id flag\n` +
@@ -120,6 +124,7 @@ async function runDelete(integrationId: string, options: DeleteCommandOptions): 
     apiUrl,
     apiKey,
     body: {
+      organizationId,
       integrationId,
       contextType,
       processInstanceId,

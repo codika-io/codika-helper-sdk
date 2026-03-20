@@ -23,7 +23,7 @@ const subtle = webcrypto.subtle;
 // CONSTANTS
 // ========================================
 
-const DEFAULT_PUBLIC_KEY_URL = 'https://codika-app.web.app/encryption/public.pem';
+const DEFAULT_PUBLIC_KEY_URL = 'https://app.codika.io/encryption/public.pem';
 
 // ========================================
 // TYPES
