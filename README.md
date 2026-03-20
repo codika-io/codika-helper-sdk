@@ -9,7 +9,7 @@ npm login
 npm version patch  # or minor / major
 npm publish
 
-$HOME/.codika/.claude/scripts/update-helper-sdk-version.sh x.y.z
+$HOME/.codika/agents/codika-agents-org/plugins/devops/skills/update-codika-sdk/update-version.sh
 ```
 
 ## Installation

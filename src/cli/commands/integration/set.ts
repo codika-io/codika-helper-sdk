@@ -260,7 +260,14 @@ async function runSet(integrationId: string, options: SetCommandOptions): Promis
 
   // ── Load custom schema for cstm_* integrations ──────
   let customIntegrationSchema: Record<string, any> | undefined;
-  if (integrationId.startsWith('cstm_') && options.customSchemaFile) {
+  if (integrationId.startsWith('cstm_')) {
+    if (!options.customSchemaFile) {
+      exitWithError(
+        `Custom integration ${integrationId} requires --custom-schema-file.\n` +
+        `  This JSON file should contain the CustomIntegrationSchema (id, name, contextType, n8nCredentialType, secretFields, etc.).\n` +
+        `  Example: codika integration set ${integrationId} --secret API_KEY=xxx --custom-schema-file ./schema.json`
+      );
+    }
     const schemaContent = readFileSync(resolve(options.customSchemaFile), 'utf-8');
     customIntegrationSchema = JSON.parse(schemaContent);
   }

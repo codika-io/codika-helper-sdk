@@ -1,12 +1,14 @@
 /**
  * Integration List Command
  *
- * Lists integrations for an organization or process instance.
+ * Lists connected integrations across all context levels.
+ * Returns org + member integrations by default.
+ * If a process instance is provided, also includes instance-level integrations.
  *
  * Usage:
  *   codika integration list
- *   codika integration list --context-type process_instance --path .
- *   codika integration list --json
+ *   codika integration list --path .
+ *   codika integration list --process-instance-id <id> --json
  */
 
 import { Command } from 'commander';
@@ -14,6 +16,7 @@ import { resolve } from 'path';
 import {
   listIntegrationsRemote,
   isListIntegrationsSuccess,
+  type IntegrationSummaryEntry,
 } from '../../../utils/integration-client.js';
 import {
   resolveApiKey,
@@ -24,7 +27,6 @@ import { readProjectJson } from '../../../utils/project-json.js';
 import { getIntegrationDef } from '../../../data/integration-fields.js';
 
 interface ListCommandOptions {
-  contextType?: string;
   processInstanceId?: string;
   path?: string;
   projectFile?: string;
@@ -36,10 +38,9 @@ interface ListCommandOptions {
 }
 
 export const listSubCommand = new Command('list')
-  .description('List integrations and their connection status')
-  .option('--context-type <type>', 'Context type: organization or process_instance', 'organization')
-  .option('--process-instance-id <id>', 'Process instance ID')
-  .option('--path <path>', 'Path to use case folder (for project.json resolution)')
+  .description('List connected integrations (org + member, optionally process instance)')
+  .option('--process-instance-id <id>', 'Process instance ID (includes instance-level integrations)')
+  .option('--path <path>', 'Path to use case folder (resolves process instance from project.json)')
   .option('--project-file <path>', 'Custom project file')
   .option('--environment <env>', 'Environment: dev or prod', 'dev')
   .option('--profile <name>', 'Use a specific profile')
@@ -63,27 +64,17 @@ export const listSubCommand = new Command('list')
   });
 
 async function runList(options: ListCommandOptions): Promise<void> {
-  const contextType = (options.contextType || 'organization') as 'organization' | 'member' | 'process_instance';
-
-  // ── Resolve process instance ID ──────────────────────
+  // ── Resolve process instance ID (optional) ───────────
   let processInstanceId = options.processInstanceId;
 
-  if (contextType === 'process_instance' && !processInstanceId) {
-    const useCasePath = resolve(options.path || process.cwd());
+  if (!processInstanceId && options.path) {
+    const useCasePath = resolve(options.path);
     const projectJson = readProjectJson(useCasePath, options.projectFile);
 
     if (projectJson) {
       processInstanceId = options.environment === 'prod'
         ? projectJson.prodProcessInstanceId
         : projectJson.devProcessInstanceId;
-    }
-
-    if (!processInstanceId) {
-      exitWithError(
-        `processInstanceId is required for process_instance context. Either:\n` +
-        `  1. Pass --process-instance-id flag\n` +
-        `  2. Ensure project.json exists with devProcessInstanceId (use --path to specify location)`
-      );
     }
   }
 
@@ -100,7 +91,6 @@ async function runList(options: ListCommandOptions): Promise<void> {
     apiUrl,
     apiKey,
     body: {
-      contextType,
       processInstanceId,
     },
   });
@@ -112,44 +102,39 @@ async function runList(options: ListCommandOptions): Promise<void> {
       const integrations = result.data.integrations;
 
       if (integrations.length === 0) {
-        console.log(`\nNo integrations found for ${contextType} context.`);
+        console.log(`\nNo connected integrations found.`);
+        if (!processInstanceId) {
+          console.log(`  Tip: Use --path <use-case-folder> to also show process instance integrations.`);
+        }
         console.log('');
         process.exit(0);
       }
 
-      console.log(`\n  Integrations (${contextType}):\n`);
+      // Group by context type
+      const orgIntegrations = integrations.filter(i => i.contextType === 'organization');
+      const memberIntegrations = integrations.filter(i => i.contextType === 'member');
+      const instanceIntegrations = integrations.filter(i => i.contextType === 'process_instance');
 
-      // Table header
-      const nameWidth = 28;
-      const idWidth = 28;
-      const statusWidth = 14;
-      const dateWidth = 20;
+      console.log('');
 
-      console.log(
-        `  ${'Name'.padEnd(nameWidth)}${'ID'.padEnd(idWidth)}${'Status'.padEnd(statusWidth)}${'Connected'.padEnd(dateWidth)}`
-      );
-      console.log(
-        `  ${'─'.repeat(nameWidth)}${'─'.repeat(idWidth)}${'─'.repeat(statusWidth)}${'─'.repeat(dateWidth)}`
-      );
-
-      for (const integration of integrations) {
-        const def = getIntegrationDef(integration.integrationId);
-        const name = def?.name || integration.integrationId;
-        const status = integration.connected
-          ? '\x1b[32mconnected\x1b[0m'
-          : '\x1b[90mnot connected\x1b[0m';
-        const statusRaw = integration.connected ? 'connected' : 'not connected';
-        const connectedAt = integration.connectedAt
-          ? new Date(integration.connectedAt).toLocaleDateString()
-          : '—';
-
-        // Use raw status for padding calculation
-        const statusPad = statusWidth - statusRaw.length;
-        console.log(
-          `  ${name.padEnd(nameWidth)}${integration.integrationId.padEnd(idWidth)}${status}${' '.repeat(Math.max(0, statusPad))}${connectedAt}`
-        );
+      if (orgIntegrations.length > 0) {
+        printSection('Organization Integrations', orgIntegrations);
       }
 
+      if (memberIntegrations.length > 0) {
+        printSection('Member Integrations', memberIntegrations);
+      }
+
+      if (instanceIntegrations.length > 0) {
+        printSection('Process Instance Integrations', instanceIntegrations);
+      }
+
+      // Summary
+      const total = integrations.length;
+      console.log(`  Total: ${total} connected integration(s)`);
+      if (!processInstanceId) {
+        console.log(`  Tip: Use --path <use-case-folder> to also show process instance integrations.`);
+      }
       console.log('');
     }
     process.exit(0);
@@ -163,6 +148,34 @@ async function runList(options: ListCommandOptions): Promise<void> {
     console.error(`\x1b[31m✗ Failed to list integrations:\x1b[0m ${err?.code || 'UNKNOWN'} — ${err?.message || 'Unknown error'}`);
   }
   process.exit(1);
+}
+
+function printSection(title: string, integrations: IntegrationSummaryEntry[]): void {
+  const nameWidth = 24;
+  const idWidth = 28;
+  const dateWidth = 12;
+
+  console.log(`  ${title}:\n`);
+  console.log(
+    `  ${'Name'.padEnd(nameWidth)}${'ID'.padEnd(idWidth)}${'Connected'.padEnd(dateWidth)}`
+  );
+  console.log(
+    `  ${'─'.repeat(nameWidth)}${'─'.repeat(idWidth)}${'─'.repeat(dateWidth)}`
+  );
+
+  for (const integration of integrations) {
+    const def = getIntegrationDef(integration.integrationId);
+    const name = def?.name || integration.integrationId;
+    const connectedAt = integration.connectedAt
+      ? new Date(integration.connectedAt).toLocaleDateString()
+      : '—';
+
+    console.log(
+      `  ${name.substring(0, nameWidth - 1).padEnd(nameWidth)}${integration.integrationId.substring(0, idWidth - 1).padEnd(idWidth)}${connectedAt}`
+    );
+  }
+
+  console.log('');
 }
 
 function exitWithError(message: string): never {

@@ -197,13 +197,12 @@ export async function deleteIntegrationRemote(
 
 export interface ListIntegrationsRequest {
   organizationId?: string;
-  contextType: 'organization' | 'member' | 'process_instance';
-  memberId?: string;
   processInstanceId?: string;
 }
 
 export interface IntegrationSummaryEntry {
   integrationId: string;
+  contextType: 'organization' | 'member' | 'process_instance';
   connected: boolean;
   connectedAt?: string;
   connectedBy?: string;
@@ -215,7 +214,6 @@ export interface IntegrationSummaryEntry {
 export interface ListIntegrationsSuccessResponse {
   success: true;
   data: {
-    connectedIntegrations: string[];
     integrations: IntegrationSummaryEntry[];
   };
   requestId: string;
