@@ -111,6 +111,44 @@ export {
   type DataIngestionDeploymentEntry,
 } from './utils/project-json.js';
 
+// Integration client
+export {
+  createIntegrationRemote,
+  deleteIntegrationRemote,
+  listIntegrationsRemote,
+  isCreateIntegrationSuccess,
+  isDeleteIntegrationSuccess,
+  isDeleteIntegrationPending,
+  isListIntegrationsSuccess,
+  type CreateIntegrationRequest,
+  type CreateIntegrationResponse,
+  type CreateIntegrationOptions,
+  type DeleteIntegrationRequest,
+  type DeleteIntegrationResponse,
+  type DeleteIntegrationOptions,
+  type ListIntegrationsRequest,
+  type ListIntegrationsResponse,
+  type ListIntegrationsOptions,
+  type IntegrationSummaryEntry,
+} from './utils/integration-client.js';
+
+// Encryption
+export {
+  encryptSecret,
+  fetchPublicKey,
+  type EncryptedField,
+  type EncryptedData,
+} from './utils/encryption.js';
+
+// Integration field registry
+export {
+  INTEGRATION_FIELDS,
+  OAUTH_INTEGRATIONS,
+  getIntegrationDef,
+  isOAuthIntegration,
+  type IntegrationFieldDef,
+} from './data/integration-fields.js';
+
 // Configuration
 export {
   readConfig,

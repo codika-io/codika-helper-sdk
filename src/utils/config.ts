@@ -52,6 +52,9 @@ export const ENDPOINTS = {
   listExecutions: '/listExecutionsPublic',
   getProcessSkills: '/getProcessSkillsPublic',
   redeployDeploymentInstance: '/redeployDeploymentInstancePublic',
+  createIntegration: '/createIntegrationPublic',
+  deleteIntegration: '/deleteIntegrationPublic',
+  listIntegrations: '/listIntegrationsPublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────

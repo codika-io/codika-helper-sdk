@@ -25,6 +25,11 @@ src/
         index.ts          # Parent verify command
         use-case.ts       # Validate entire use-case folders
         workflow.ts       # Validate single workflow files
+      integration/
+        index.ts          # Parent integration command
+        set.ts            # Create or update an integration (encrypt + POST)
+        list.ts           # List integrations and connection status
+        delete.ts         # Delete an integration (two-phase confirmation)
       init.ts             # Scaffold a new use case folder
       redeploy.ts         # Redeploy a deployment instance with parameter overrides
       whoami.ts           # Show current authenticated identity
@@ -43,7 +48,11 @@ src/
     document-deploy-client.ts     # Low-level document deployment HTTP client
     project-client.ts             # Low-level project creation HTTP client
     redeploy-client.ts              # Low-level redeploy HTTP client
+    integration-client.ts           # Low-level integration management HTTP client (set, list, delete)
+    encryption.ts                   # RSA-OAEP + AES-GCM encryption for integration secrets
     project-json.ts               # Read/write project.json (projectId, organizationId, dataIngestionDeployments)
+  data/
+    integration-fields.ts          # Static registry of all 42+ integration field definitions
   validation/             # Validation rules and runner
 scripts/
   toggle-cli.sh           # Toggle between local dev and npm versions
@@ -133,6 +142,12 @@ codika redeploy [--process-instance-id <id>] [--path <path>] [--project-file <pa
 
 # Validate a single workflow
 codika verify workflow <path> [--json] [--fix]
+
+# Manage integrations (requires integrations:manage scope)
+codika integration set openai --secret OPENAI_API_KEY=sk-xxx [--json]
+codika integration set supabase --path . --secret SUPABASE_HOST=https://xxx.supabase.co --secret SUPABASE_SERVICE_ROLE_KEY=eyJ...
+codika integration list [--context-type organization|process_instance] [--path <path>] [--json]
+codika integration delete openai [--confirm] [--json]
 ```
 
 ### Authentication Resolution

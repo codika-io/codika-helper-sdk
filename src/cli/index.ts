@@ -38,6 +38,7 @@ import { completionCommand } from './commands/completion.js';
 import { publishCommand } from './commands/publish.js';
 import { redeployCommand } from './commands/redeploy.js';
 import { listCommand } from './commands/list/index.js';
+import { integrationCommand } from './commands/integration/index.js';
 import { checkProfileExpiry } from '../utils/config.js';
 
 // Read version from package.json dynamically
@@ -77,6 +78,7 @@ program.addCommand(completionCommand);
 program.addCommand(publishCommand);
 program.addCommand(redeployCommand);
 program.addCommand(listCommand);
+program.addCommand(integrationCommand);
 
 // Profile expiry warning — runs before every command
 program.hook('preAction', () => {
