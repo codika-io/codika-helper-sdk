@@ -1,6 +1,6 @@
 {
   "name": "codika",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Codika SDK - types, utilities, and CLI for use case configuration, validation, and deployment",
   "type": "module",
   "main": "./dist/index.js",
