@@ -148,7 +148,7 @@ export function getConfiguration(): ProcessDeploymentConfigurationInput {
           type: 'subworkflow' as const,
           title: 'Process Text',
           description: 'Called by Main Workflow to process text',
-          inputSchema: [{ name: 'text', type: 'string' as const }],
+          inputSchema: [{ key: 'text', type: 'string' as const }],
           calledBy: ['main-workflow'],
         } satisfies SubworkflowTrigger,
       ],

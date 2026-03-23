@@ -24,7 +24,7 @@ export function getConfiguration() {
             type: 'subworkflow' as const,
             title: 'Helper',
             description: 'Called by other workflows',
-            inputSchema: [{ name: 'data', type: 'object' as const }],
+            inputSchema: [{ key: 'data', type: 'object' as const }],
             calledBy: ['main-workflow'],
           },
         ],

@@ -104,8 +104,8 @@ export function getConfiguration() {
       triggers: [{
         type: "subworkflow" as const,
         inputSchema: [
-          { name: "phone", type: "string" },
-          { name: "count", type: "number" },
+          { key: "phone", type: "string" },
+          { key: "count", type: "number" },
         ],
       }],
     }],

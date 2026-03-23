@@ -300,7 +300,7 @@ export interface ServiceEventTrigger {
 export type SubworkflowInputType = 'string' | 'number' | 'boolean' | 'array' | 'object';
 
 export interface SubworkflowInput {
-  name: string;
+  key: string;
   type: SubworkflowInputType;
 }
 

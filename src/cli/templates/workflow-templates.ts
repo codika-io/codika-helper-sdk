@@ -393,7 +393,7 @@ export function generateSubWorkflow() {
         onError: 'continueErrorOutput',
         parameters: {
           workflowInputs: {
-            values: [{ name: 'text', type: 'string' }],
+            values: [{ key: 'text', type: 'string' }],
           },
         },
         typeVersion: 1.1,
