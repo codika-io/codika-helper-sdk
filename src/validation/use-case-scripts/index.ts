@@ -19,6 +19,7 @@ import { checkTriggerTypes } from './trigger-types.js';
 import { checkSkillConsistency } from './skill-consistency.js';
 import { checkCustomIntegrationSchema } from './custom-integration-schema.js';
 import { checkInputSchemaFormat } from './input-schema-format.js';
+import { checkScheduleTriggerFields } from './schedule-trigger-fields.js';
 
 /**
  * All use-case scripts to run during validation
@@ -40,6 +41,7 @@ export const useCaseScripts: UseCaseScript[] = [
   checkSkillConsistency,
   checkCustomIntegrationSchema,
   checkInputSchemaFormat,
+  checkScheduleTriggerFields,
 ];
 
 // Re-export individual scripts
@@ -56,3 +58,4 @@ export { checkTriggerTypes } from './trigger-types.js';
 export { checkSkillConsistency } from './skill-consistency.js';
 export { checkCustomIntegrationSchema } from './custom-integration-schema.js';
 export { checkInputSchemaFormat } from './input-schema-format.js';
+export { checkScheduleTriggerFields } from './schedule-trigger-fields.js';
