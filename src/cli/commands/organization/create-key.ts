@@ -93,27 +93,8 @@ async function runCreateOrganizationKey(options: CreateOrganizationKeyCommandOpt
     apiKey,
   });
 
-  if (options.json) {
-    console.log(JSON.stringify(result, null, 2));
-  } else if (isCreateOrganizationApiKeySuccess(result)) {
-    console.log('');
-    console.log('\x1b[32m\u2713 Organization API Key Created Successfully\x1b[0m');
-    console.log('');
-    console.log('\x1b[33m\u26A0 Save the API key below \u2014 it will not be shown again.\x1b[0m');
-    console.log('');
-    console.log(`  API Key:     ${result.data.apiKey}`);
-    console.log(`  Key Prefix:  ${result.data.keyPrefix}`);
-    console.log(`  Key ID:      ${result.data.keyId}`);
-    console.log(`  Name:        ${result.data.name}`);
-    console.log(`  Scopes:      ${result.data.scopes.join(', ')}`);
-    console.log(`  Created:     ${new Date(result.data.createdAt).toLocaleDateString()}`);
-    if (result.data.expiresAt) {
-      console.log(`  Expires:     ${new Date(result.data.expiresAt).toLocaleDateString()}`);
-    }
-    console.log(`  Request ID:  ${result.requestId}`);
-    console.log('');
-
-    // Save as a new profile
+  // Save as a new profile on success (regardless of --json mode)
+  if (isCreateOrganizationApiKeySuccess(result)) {
     const config = readConfig();
     const profileData: ProfileData = {
       apiKey: result.data.apiKey,
@@ -133,8 +114,28 @@ async function runCreateOrganizationKey(options: CreateOrganizationKeyCommandOpt
 
     upsertProfile(profileName, profileData);
     setActiveProfile(profileName);
+  }
 
-    console.log(`  Saved as profile "${profileName}" (now active)`);
+  if (options.json) {
+    console.log(JSON.stringify(result, null, 2));
+  } else if (isCreateOrganizationApiKeySuccess(result)) {
+    console.log('');
+    console.log('\x1b[32m\u2713 Organization API Key Created Successfully\x1b[0m');
+    console.log('');
+    console.log('\x1b[33m\u26A0 Save the API key below \u2014 it will not be shown again.\x1b[0m');
+    console.log('');
+    console.log(`  API Key:     ${result.data.apiKey}`);
+    console.log(`  Key Prefix:  ${result.data.keyPrefix}`);
+    console.log(`  Key ID:      ${result.data.keyId}`);
+    console.log(`  Name:        ${result.data.name}`);
+    console.log(`  Scopes:      ${result.data.scopes.join(', ')}`);
+    console.log(`  Created:     ${new Date(result.data.createdAt).toLocaleDateString()}`);
+    if (result.data.expiresAt) {
+      console.log(`  Expires:     ${new Date(result.data.expiresAt).toLocaleDateString()}`);
+    }
+    console.log(`  Request ID:  ${result.requestId}`);
+    console.log('');
+    console.log(`  Saved as profile "${Object.keys(readConfig().profiles).pop()}" (now active)`);
     console.log('');
   } else if (isCreateOrganizationApiKeyError(result)) {
     console.log('');
