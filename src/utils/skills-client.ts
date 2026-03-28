@@ -42,8 +42,8 @@ export async function fetchSkills(options: FetchSkillsOptions): Promise<FetchSki
 
   const url = `${apiUrl}/${processInstanceId}`;
 
-  // Use X-Process-Manager-Key for org keys (cko_/cka_), X-API-Key for instance keys (ck_)
-  const headerName = apiKey.startsWith('ck_') && !apiKey.startsWith('cko_') && !apiKey.startsWith('cka_')
+  // Use X-Process-Manager-Key for org keys (cko_/cka_/ckp_), X-API-Key for instance keys (ck_)
+  const headerName = apiKey.startsWith('ck_') && !apiKey.startsWith('cko_') && !apiKey.startsWith('cka_') && !apiKey.startsWith('ckp_')
     ? 'X-API-Key'
     : 'X-Process-Manager-Key';
 

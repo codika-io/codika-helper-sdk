@@ -129,7 +129,7 @@ export async function runConfigSet(options: ConfigSetOptions): Promise<void> {
 
     const profileData: ProfileData = {
       apiKey,
-      type: apiKey.startsWith('cka_') ? 'admin-api-key' : 'org-api-key',
+      type: apiKey.startsWith('cka_') ? 'admin-api-key' : apiKey.startsWith('ckp_') ? 'personal-api-key' : 'org-api-key',
       ...(baseUrl !== PRODUCTION_BASE_URL && { baseUrl }),
     };
 

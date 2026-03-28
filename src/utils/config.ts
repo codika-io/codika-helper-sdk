@@ -16,7 +16,7 @@ import { homedir } from 'os';
 
 export interface ProfileData {
   apiKey: string;
-  type: 'org-api-key' | 'admin-api-key';
+  type: 'org-api-key' | 'admin-api-key' | 'personal-api-key';
   organizationId?: string;
   organizationName?: string;
   keyName?: string;
@@ -55,6 +55,8 @@ export const ENDPOINTS = {
   createIntegration: '/createIntegrationPublic',
   deleteIntegration: '/deleteIntegrationPublic',
   listIntegrations: '/listIntegrationsPublic',
+  createOrganization: '/createOrganizationViaApiKey',
+  createOrganizationApiKey: '/createOrganizationApiKeyPublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────
@@ -189,7 +191,16 @@ export function deriveProfileName(
   existingNames: Set<string>,
 ): string {
   let base: string;
-  if (data.type === 'org-api-key' && data.organizationName) {
+  if (data.type === 'personal-api-key') {
+    // Personal keys have no org — use keyName, keyPrefix, or 'personal'
+    if (data.keyName) {
+      base = slugify(data.keyName);
+    } else if (data.keyPrefix) {
+      base = data.keyPrefix;
+    } else {
+      base = 'personal';
+    }
+  } else if (data.type === 'org-api-key' && data.organizationName) {
     base = slugify(data.organizationName);
   } else if (data.keyName) {
     base = slugify(data.keyName);

@@ -25,6 +25,10 @@ src/
         index.ts          # Parent verify command
         use-case.ts       # Validate entire use-case folders
         workflow.ts       # Validate single workflow files
+      organization/
+        index.ts          # Parent organization command
+        create.ts         # Create organizations via API key
+        create-key.ts     # Create organization API keys via personal/admin key
       integration/
         index.ts          # Parent integration command
         set.ts            # Create or update an integration (encrypt + POST)
@@ -46,6 +50,8 @@ src/
     data-ingestion-deploy-client.ts  # Low-level data ingestion deployment HTTP client
     data-ingestion-deployer.ts    # High-level data ingestion deployer (auto-discovers from data-ingestion/ folder)
     document-deploy-client.ts     # Low-level document deployment HTTP client
+    organization-client.ts          # Low-level organization creation HTTP client
+    org-api-key-client.ts           # Low-level organization API key creation HTTP client
     project-client.ts             # Low-level project creation HTTP client
     redeploy-client.ts              # Low-level redeploy HTTP client
     integration-client.ts           # Low-level integration management HTTP client (set, list, delete)
@@ -136,6 +142,12 @@ codika verify use-case <path> [--json] [--fix] [--strict]
 
 # Create a project via API key (--path writes project.json with projectId + organizationId)
 codika project create --name "My Project" [--path <dir>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
+
+# Create an organization via API key (requires organizations:create scope)
+codika organization create --name "My Org" [--description <desc>] [--size <size>] [--n8n-base-url <url>] [--n8n-api-key <key>] [--api-key <key>] [--json]
+
+# Create an organization API key (requires api-keys:manage scope, personal/admin key only)
+codika organization create-key --organization-id <id> --name <name> --scopes <scopes> [--description <desc>] [--expires-in-days <days>] [--api-key <key>] [--json]
 
 # Redeploy a deployment instance with parameter overrides
 codika redeploy [--process-instance-id <id>] [--path <path>] [--project-file <path>] [--environment <dev|prod>] [--param <KEY=VALUE>]... [--params <json>] [--params-file <path>] [--force] [--api-url <url>] [--api-key <key>] [--json]

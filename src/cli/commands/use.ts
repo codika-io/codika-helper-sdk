@@ -71,6 +71,8 @@ export const useCommand = new Command('use')
         const marker = active ? '\u25cf' : ' ';
         const orgLabel = profile.type === 'admin-api-key'
           ? '(admin)'
+          : profile.type === 'personal-api-key'
+          ? '(personal)'
           : (profile.organizationName || '');
         const keyDisplay = maskApiKey(profile.apiKey);
         console.log(`  ${marker} ${pName.padEnd(20)} ${orgLabel.padEnd(20)} ${keyDisplay}`);
@@ -95,7 +97,7 @@ export const useCommand = new Command('use')
     console.log('');
     console.log(`\x1b[32m\u2713 Switched to "${name}"\x1b[0m`);
     console.log('');
-    if (exists.profile.type !== 'admin-api-key' && exists.profile.organizationName) {
+    if (exists.profile.type === 'org-api-key' && exists.profile.organizationName) {
       console.log(`  Organization: ${exists.profile.organizationName}`);
     }
     console.log(`  Key:          ${maskApiKey(exists.profile.apiKey)}`);

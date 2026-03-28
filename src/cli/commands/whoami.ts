@@ -54,12 +54,13 @@ export const whoamiCommand = new Command('whoami')
       }
 
       const isAdmin = result.data.type === 'admin-api-key';
+      const isPersonal = result.data.type === 'personal-api-key';
 
       console.log('');
-      console.log(`Logged in to Codika${isAdmin ? ' (admin)' : ''}`);
+      console.log(`Logged in to Codika${isAdmin ? ' (admin)' : isPersonal ? ' (personal)' : ''}`);
       console.log('');
 
-      if (!isAdmin && result.data.organizationName) {
+      if (!isAdmin && !isPersonal && result.data.organizationName) {
         const orgDisplay = result.data.organizationId
           ? `${result.data.organizationName} (${result.data.organizationId})`
           : result.data.organizationName;
@@ -98,12 +99,13 @@ export const whoamiCommand = new Command('whoami')
       }
 
       const isAdmin = activeProfile.profile.type === 'admin-api-key';
+      const isPersonal = activeProfile.profile.type === 'personal-api-key';
 
       console.log('');
-      console.log(`Logged in to Codika${isAdmin ? ' (admin)' : ''}  \x1b[33m(cached \u2014 run 'codika login' to refresh)\x1b[0m`);
+      console.log(`Logged in to Codika${isAdmin ? ' (admin)' : isPersonal ? ' (personal)' : ''}  \x1b[33m(cached \u2014 run 'codika login' to refresh)\x1b[0m`);
       console.log('');
 
-      if (!isAdmin && activeProfile.profile.organizationName) {
+      if (!isAdmin && !isPersonal && activeProfile.profile.organizationName) {
         const orgDisplay = activeProfile.profile.organizationId
           ? `${activeProfile.profile.organizationName} (${activeProfile.profile.organizationId})`
           : activeProfile.profile.organizationName;
