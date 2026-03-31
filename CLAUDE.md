@@ -28,6 +28,7 @@ src/
       organization/
         index.ts          # Parent organization command
         create.ts         # Create organizations via API key
+        update-key.ts     # Update organization API key scopes/name/description
         create-key.ts     # Create organization API keys via personal/admin key
       integration/
         index.ts          # Parent integration command
@@ -148,6 +149,18 @@ codika organization create --name "My Org" [--description <desc>] [--size <size>
 
 # Create an organization API key (requires api-keys:manage scope, personal/admin key only)
 codika organization create-key --organization-id <id> --name <name> --scopes <scopes> [--description <desc>] [--expires-in-days <days>] [--api-key <key>] [--json]
+
+# Update an organization API key's scopes, name, or description
+codika organization update-key --key-id <id> [--scopes <scopes>] [--name <name>] [--description <desc>] [--api-key <key>] [--json]
+
+# List projects in the organization
+codika list projects [--archived] [--limit <n>] [--api-key <key>] [--json]
+
+# Get project details
+codika get project <projectId> [--api-key <key>] [--json]
+
+# Get instance with expanded workflow details
+codika get instance [processInstanceId] [--workflows] [--environment <env>] [--api-key <key>] [--json]
 
 # Redeploy a deployment instance with parameter overrides
 codika redeploy [--process-instance-id <id>] [--path <path>] [--project-file <path>] [--environment <dev|prod>] [--param <KEY=VALUE>]... [--params <json>] [--params-file <path>] [--force] [--api-url <url>] [--api-key <key>] [--json]

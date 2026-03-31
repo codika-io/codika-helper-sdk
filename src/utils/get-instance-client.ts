@@ -5,10 +5,24 @@
 
 // ── Response Data Types ────────────────────────────────────
 
+export interface WorkflowTriggerSummary {
+  type: 'http' | 'schedule' | 'service_event' | 'subworkflow' | 'data_ingestion';
+  method?: string;
+  cronExpression?: string;
+  timezone?: string;
+  service?: string;
+  eventType?: string;
+  inputSchema?: unknown[];
+}
+
 export interface WorkflowSummary {
   workflowId: string;
   n8nWorkflowId: string | null;
   workflowName: string;
+  n8nWorkflowIsActive?: boolean | null;
+  triggers?: WorkflowTriggerSummary[];
+  cost?: number | null;
+  integrationUids?: string[];
 }
 
 export interface DeploymentData {
@@ -37,6 +51,7 @@ export interface ProcessInstanceData {
 
 export interface GetProcessInstanceOptions {
   processInstanceId: string;
+  includeWorkflowDetails?: boolean;
   apiUrl: string;
   apiKey: string;
 }
@@ -79,7 +94,10 @@ export function isGetProcessInstanceError(
 export async function getProcessInstance(
   options: GetProcessInstanceOptions,
 ): Promise<GetProcessInstanceResponse> {
-  const { processInstanceId, apiKey, apiUrl } = options;
+  const { processInstanceId, includeWorkflowDetails, apiKey, apiUrl } = options;
+
+  const requestBody: Record<string, unknown> = { processInstanceId };
+  if (includeWorkflowDetails) requestBody.includeWorkflowDetails = true;
 
   const response = await fetch(apiUrl, {
     method: 'POST',
@@ -87,7 +105,7 @@ export async function getProcessInstance(
       'Content-Type': 'application/json',
       'X-Process-Manager-Key': apiKey,
     },
-    body: JSON.stringify({ processInstanceId }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

@@ -14,6 +14,7 @@ import { Command } from 'commander';
 import { useCaseCommand } from './use-case.js';
 import { executionCommand } from './execution.js';
 import { instanceCommand } from './instance.js';
+import { projectCommand } from './project.js';
 import { skillsCommand } from './skills.js';
 
 export const getCommand = new Command('get')
@@ -21,4 +22,5 @@ export const getCommand = new Command('get')
   .addCommand(useCaseCommand)
   .addCommand(executionCommand)
   .addCommand(instanceCommand)
+  .addCommand(projectCommand)
   .addCommand(skillsCommand);

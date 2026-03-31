@@ -11,6 +11,7 @@ import {
   getProcessInstanceOrThrow,
   type GetProcessInstanceSuccessResponse,
   type DeploymentData,
+  type WorkflowSummary,
 } from '../../../utils/get-instance-client.js';
 import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
 import { readProjectJson } from '../../../utils/project-json.js';
@@ -21,6 +22,7 @@ export const instanceCommand = new Command('instance')
   .option('--path <path>', 'Path to use case folder (to auto-resolve from project.json)')
   .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
   .option('--environment <env>', 'Environment: dev or prod', 'dev')
+  .option('--workflows', 'Show expanded workflow details (triggers, activation, cost)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output result as JSON')
@@ -47,6 +49,7 @@ interface InstanceOptions {
   path?: string;
   projectFile?: string;
   environment?: string;
+  workflows?: boolean;
   apiUrl?: string;
   apiKey?: string;
   json?: boolean;
@@ -116,6 +119,7 @@ async function runGetInstance(
   // Fetch instance details
   const result = await getProcessInstanceOrThrow({
     processInstanceId,
+    includeWorkflowDetails: options.workflows,
     apiUrl,
     apiKey,
   });
@@ -170,8 +174,31 @@ function printInstanceSummary(result: GetProcessInstanceSuccessResponse): void {
       console.log('');
       console.log('  Workflows:');
       for (const wf of deployment.workflows) {
-        const n8nPart = wf.n8nWorkflowId ? ` (n8n: ${wf.n8nWorkflowId})` : '';
-        console.log(`    - ${wf.workflowId}${n8nPart}`);
+        if (wf.triggers) {
+          // Expanded workflow details (--workflows flag)
+          console.log(`    ${wf.workflowId}`);
+          if (wf.n8nWorkflowId) {
+            console.log(`      n8n ID:     ${wf.n8nWorkflowId}`);
+          }
+          if (wf.n8nWorkflowIsActive !== undefined && wf.n8nWorkflowIsActive !== null) {
+            const activeText = wf.n8nWorkflowIsActive
+              ? '\x1b[32myes\x1b[0m'
+              : '\x1b[33mno\x1b[0m';
+            console.log(`      Active:     ${activeText}`);
+          }
+          if (wf.triggers.length > 0) {
+            const triggerStr = wf.triggers.map(formatTrigger).join(', ');
+            console.log(`      Triggers:   ${triggerStr}`);
+          }
+          if (wf.cost != null) {
+            console.log(`      Cost:       ${wf.cost} credits`);
+          }
+          console.log('');
+        } else {
+          // Slim view (default)
+          const n8nPart = wf.n8nWorkflowId ? ` (n8n: ${wf.n8nWorkflowId})` : '';
+          console.log(`    - ${wf.workflowId}${n8nPart}`);
+        }
       }
     }
   } else {
@@ -194,6 +221,17 @@ function formatStatus(
     return data.isActive ? 'deployed (active)' : 'deployed (paused)';
   }
   return status;
+}
+
+function formatTrigger(trigger: NonNullable<WorkflowSummary['triggers']>[number]): string {
+  switch (trigger.type) {
+    case 'http': return `http (${trigger.method || 'POST'})`;
+    case 'schedule': return `schedule (${trigger.cronExpression || '?'})`;
+    case 'service_event': return `${trigger.service || 'event'}:${trigger.eventType || '?'}`;
+    case 'subworkflow': return 'subworkflow';
+    case 'data_ingestion': return 'data_ingestion';
+    default: return trigger.type;
+  }
 }
 
 function formatParamValue(value: unknown): string {

@@ -11,8 +11,10 @@
 import { Command } from 'commander';
 import { createOrganizationCommand } from './create.js';
 import { createOrganizationKeyCommand } from './create-key.js';
+import { updateOrganizationKeyCommand } from './update-key.js';
 
 export const organizationCommand = new Command('organization')
   .description('Manage organizations on the Codika platform')
   .addCommand(createOrganizationCommand)
-  .addCommand(createOrganizationKeyCommand);
+  .addCommand(createOrganizationKeyCommand)
+  .addCommand(updateOrganizationKeyCommand);

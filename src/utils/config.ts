@@ -61,6 +61,9 @@ export const ENDPOINTS = {
   listProcessInstances: '/listProcessInstancesPublic',
   activateInstance: '/activateProcessInstancePublic',
   deactivateInstance: '/deactivateProcessInstancePublic',
+  listProjects: '/listProjectsPublic',
+  getProject: '/getProjectPublic',
+  updateOrganizationApiKey: '/updateOrganizationApiKeyPublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────
