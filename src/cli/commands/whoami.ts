@@ -14,6 +14,7 @@ import {
   resolveApiKey,
   resolveEndpointUrl,
   getActiveProfile,
+  getProfileByName,
   maskApiKey,
   describeApiKeySource,
 } from '../../utils/config.js';
@@ -26,6 +27,7 @@ export const whoamiCommand = new Command('whoami')
   .action(async (options: { json?: boolean; profile?: string }) => {
     const apiKey = resolveApiKey(undefined, options.profile);
     const activeProfile = getActiveProfile();
+    const effectiveProfileName = options.profile ?? activeProfile?.name ?? null;
 
     if (!apiKey) {
       if (options.json) {
@@ -48,7 +50,7 @@ export const whoamiCommand = new Command('whoami')
           loggedIn: true,
           ...result.data,
           source: describeApiKeySource(),
-          profileName: activeProfile?.name ?? null,
+          profileName: effectiveProfileName,
         }, null, 2));
         return;
       }
@@ -79,46 +81,50 @@ export const whoamiCommand = new Command('whoami')
         const dateStr = expDate.toLocaleDateString();
         console.log(`  Expires:       ${dateStr}${isExpired ? ' \x1b[33m[EXPIRED]\x1b[0m' : ''}`);
       }
-      if (activeProfile) {
-        console.log(`  Profile:       ${activeProfile.name}`);
+      if (effectiveProfileName) {
+        console.log(`  Profile:       ${effectiveProfileName}`);
       }
       console.log('');
       return;
     }
 
     // Network error — fall back to cached profile data
-    if (activeProfile) {
+    const fallbackProfile = options.profile
+      ? (() => { const p = getProfileByName(options.profile!); return p ? { name: options.profile!, profile: p } : null; })()
+      : activeProfile;
+
+    if (fallbackProfile) {
       if (options.json) {
         console.log(JSON.stringify({
           loggedIn: true,
           cached: true,
-          ...activeProfile.profile,
-          profileName: activeProfile.name,
+          ...fallbackProfile.profile,
+          profileName: fallbackProfile.name,
         }, null, 2));
         return;
       }
 
-      const isAdmin = activeProfile.profile.type === 'admin-api-key';
-      const isPersonal = activeProfile.profile.type === 'personal-api-key';
+      const isAdmin = fallbackProfile.profile.type === 'admin-api-key';
+      const isPersonal = fallbackProfile.profile.type === 'personal-api-key';
 
       console.log('');
       console.log(`Logged in to Codika${isAdmin ? ' (admin)' : isPersonal ? ' (personal)' : ''}  \x1b[33m(cached \u2014 run 'codika login' to refresh)\x1b[0m`);
       console.log('');
 
-      if (!isAdmin && !isPersonal && activeProfile.profile.organizationName) {
-        const orgDisplay = activeProfile.profile.organizationId
-          ? `${activeProfile.profile.organizationName} (${activeProfile.profile.organizationId})`
-          : activeProfile.profile.organizationName;
+      if (!isAdmin && !isPersonal && fallbackProfile.profile.organizationName) {
+        const orgDisplay = fallbackProfile.profile.organizationId
+          ? `${fallbackProfile.profile.organizationName} (${fallbackProfile.profile.organizationId})`
+          : fallbackProfile.profile.organizationName;
         console.log(`  Organization:  ${orgDisplay}`);
       }
-      if (activeProfile.profile.keyName) {
-        console.log(`  Key name:      ${activeProfile.profile.keyName}`);
+      if (fallbackProfile.profile.keyName) {
+        console.log(`  Key name:      ${fallbackProfile.profile.keyName}`);
       }
       console.log(`  Key:           ${maskApiKey(apiKey)}`);
-      if (activeProfile.profile.scopes && activeProfile.profile.scopes.length > 0) {
-        console.log(`  Scopes:        ${activeProfile.profile.scopes.join(', ')}`);
+      if (fallbackProfile.profile.scopes && fallbackProfile.profile.scopes.length > 0) {
+        console.log(`  Scopes:        ${fallbackProfile.profile.scopes.join(', ')}`);
       }
-      console.log(`  Profile:       ${activeProfile.name}`);
+      console.log(`  Profile:       ${fallbackProfile.name}`);
       console.log('');
       return;
     }
