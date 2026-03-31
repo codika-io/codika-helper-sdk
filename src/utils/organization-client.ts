@@ -13,6 +13,12 @@ export interface CreateOrganizationOptions {
   description?: string;
   /** Optional organization size */
   size?: string;
+  /** Optional logo URL (existing HTTPS URL) */
+  logoUrl?: string;
+  /** Optional logo as base64-encoded string (uploaded to platform storage by the API) */
+  logoBase64?: string;
+  /** MIME type of the base64 logo (defaults to image/png) */
+  logoMimeType?: string;
   /** Optional self-hosted n8n base URL */
   n8nBaseUrl?: string;
   /** Optional self-hosted n8n API key */
@@ -85,6 +91,9 @@ export async function createOrganization(
     name,
     description,
     size,
+    logoUrl,
+    logoBase64,
+    logoMimeType,
     n8nBaseUrl,
     n8nApiKey,
     storeCredentialCopy,
@@ -102,6 +111,17 @@ export async function createOrganization(
 
   if (size) {
     requestBody.size = size;
+  }
+
+  if (logoUrl) {
+    requestBody.logoUrl = logoUrl;
+  }
+
+  if (logoBase64) {
+    requestBody.logoBase64 = logoBase64;
+    if (logoMimeType) {
+      requestBody.logoMimeType = logoMimeType;
+    }
   }
 
   if (n8nBaseUrl) {

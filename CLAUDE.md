@@ -144,7 +144,7 @@ codika verify use-case <path> [--json] [--fix] [--strict]
 codika project create --name "My Project" [--path <dir>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--organization-id <id>] [--json]
 
 # Create an organization via API key (requires organizations:create scope)
-codika organization create --name "My Org" [--description <desc>] [--size <size>] [--n8n-base-url <url>] [--n8n-api-key <key>] [--api-key <key>] [--json]
+codika organization create --name "My Org" [--description <desc>] [--size <size>] [--logo <path>] [--n8n-base-url <url>] [--n8n-api-key <key>] [--store-credential-copy] [--api-key <key>] [--json]
 
 # Create an organization API key (requires api-keys:manage scope, personal/admin key only)
 codika organization create-key --organization-id <id> --name <name> --scopes <scopes> [--description <desc>] [--expires-in-days <days>] [--api-key <key>] [--json]
