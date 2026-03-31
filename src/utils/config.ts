@@ -57,6 +57,7 @@ export const ENDPOINTS = {
   listIntegrations: '/listIntegrationsPublic',
   createOrganization: '/createOrganizationViaApiKey',
   createOrganizationApiKey: '/createOrganizationApiKeyPublic',
+  getProcessInstance: '/getProcessInstancePublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────
