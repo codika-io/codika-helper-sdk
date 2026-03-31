@@ -94,6 +94,7 @@ async function runCreateOrganizationKey(options: CreateOrganizationKeyCommandOpt
   });
 
   // Save as a new profile on success (regardless of --json mode)
+  let savedProfileName: string | undefined;
   if (isCreateOrganizationApiKeySuccess(result)) {
     const config = readConfig();
     const profileData: ProfileData = {
@@ -107,13 +108,13 @@ async function runCreateOrganizationKey(options: CreateOrganizationKeyCommandOpt
       ...(result.data.expiresAt && { expiresAt: result.data.expiresAt }),
     };
 
-    const profileName = deriveProfileName(
+    savedProfileName = deriveProfileName(
       { type: 'org-api-key', keyName: result.data.name, keyPrefix: result.data.keyPrefix },
       new Set(Object.keys(config.profiles)),
     );
 
-    upsertProfile(profileName, profileData);
-    setActiveProfile(profileName);
+    upsertProfile(savedProfileName, profileData);
+    setActiveProfile(savedProfileName);
   }
 
   if (options.json) {
@@ -135,7 +136,7 @@ async function runCreateOrganizationKey(options: CreateOrganizationKeyCommandOpt
     }
     console.log(`  Request ID:  ${result.requestId}`);
     console.log('');
-    console.log(`  Saved as profile "${Object.keys(readConfig().profiles).pop()}" (now active)`);
+    console.log(`  Saved as profile "${savedProfileName}" (now active)`);
     console.log('');
   } else if (isCreateOrganizationApiKeyError(result)) {
     console.log('');
