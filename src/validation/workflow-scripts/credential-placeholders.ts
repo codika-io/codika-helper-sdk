@@ -34,6 +34,9 @@ const CREDENTIAL_TYPES = {
   INSTCRED: 'DERCTSNI',
 } as const;
 
+// Non-credential placeholder types that can appear in credential fields (skip validation)
+const ALLOWED_NON_CREDENTIAL_TYPES = ['ORGSECRET', 'PROCDATA', 'USERDATA', 'MEMSECRT', 'SYSCREDS', 'INSTPARM', 'SUBWKFL'] as const;
+
 type CredentialType = keyof typeof CREDENTIAL_TYPES;
 
 // Pattern to extract credential type from a placeholder
@@ -58,8 +61,14 @@ function validateIdPlaceholder(value: string): { valid: boolean; error?: string;
       }
       // Check for unknown credential type
       const typeMatch = value.match(/^\{\{([A-Z]+)_/);
-      if (typeMatch && !(typeMatch[1] in CREDENTIAL_TYPES)) {
-        return { valid: false, error: `unknown credential type "${typeMatch[1]}"` };
+      if (typeMatch) {
+        // Skip non-credential placeholder types (e.g. ORGSECRET used for webhook auth)
+        if ((ALLOWED_NON_CREDENTIAL_TYPES as readonly string[]).includes(typeMatch[1])) {
+          return { valid: true };
+        }
+        if (!(typeMatch[1] in CREDENTIAL_TYPES)) {
+          return { valid: false, error: `unknown credential type "${typeMatch[1]}"` };
+        }
       }
       // Check for wrong suffix
       for (const [type, suffix] of Object.entries(CREDENTIAL_TYPES)) {
@@ -106,8 +115,14 @@ function validateNamePlaceholder(value: string): { valid: boolean; error?: strin
       }
       // Check for unknown credential type
       const typeMatch = value.match(/^\{\{([A-Z]+)_/);
-      if (typeMatch && !(typeMatch[1] in CREDENTIAL_TYPES)) {
-        return { valid: false, error: `unknown credential type "${typeMatch[1]}"` };
+      if (typeMatch) {
+        // Skip non-credential placeholder types (e.g. ORGSECRET used for webhook auth)
+        if ((ALLOWED_NON_CREDENTIAL_TYPES as readonly string[]).includes(typeMatch[1])) {
+          return { valid: true };
+        }
+        if (!(typeMatch[1] in CREDENTIAL_TYPES)) {
+          return { valid: false, error: `unknown credential type "${typeMatch[1]}"` };
+        }
       }
       // Check for wrong suffix
       for (const [type, suffix] of Object.entries(CREDENTIAL_TYPES)) {

@@ -1,0 +1,28 @@
+{
+  "name": "Valid Workflow With Auth",
+  "nodes": [
+    {
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "webhook-trigger",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/test",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "{{ORGSECRET_WEBHOOK_AUTH_CRED_ID_TERCESORG}}",
+          "name": "{{ORGSECRET_WEBHOOK_AUTH_CRED_NAME_TERCESORG}}"
+        }
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

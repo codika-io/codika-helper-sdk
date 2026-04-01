@@ -29,8 +29,15 @@ export function generateMainWorkflow(slug: string) {
         parameters: {
           httpMethod: 'POST',
           path: `{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/${slug}`,
+          authentication: 'headerAuth',
           responseMode: 'lastNode',
           options: {},
+        },
+        credentials: {
+          httpHeaderAuth: {
+            id: '{{ORGSECRET_WEBHOOK_AUTH_CRED_ID_TERCESORG}}',
+            name: '{{ORGSECRET_WEBHOOK_AUTH_CRED_NAME_TERCESORG}}',
+          },
         },
         typeVersion: 2,
         webhookId: `${slug}-webhook`,
@@ -248,8 +255,15 @@ export function generateScheduledWorkflow(slug: string) {
         parameters: {
           httpMethod: 'POST',
           path: `{{PROCDATA_PROCESS_ID_ATADCORP}}/{{USERDATA_PROCESS_INSTANCE_UID_ATADRESU}}/${slug}-report`,
+          authentication: 'headerAuth',
           responseMode: 'onReceived',
           options: {},
+        },
+        credentials: {
+          httpHeaderAuth: {
+            id: '{{ORGSECRET_WEBHOOK_AUTH_CRED_ID_TERCESORG}}',
+            name: '{{ORGSECRET_WEBHOOK_AUTH_CRED_NAME_TERCESORG}}',
+          },
         },
         typeVersion: 2,
         webhookId: `${slug}-report-webhook`,
@@ -392,8 +406,9 @@ export function generateSubWorkflow() {
         position: [0, 0],
         onError: 'continueErrorOutput',
         parameters: {
+          inputSource: 'workflowInputs',
           workflowInputs: {
-            values: [{ key: 'text', type: 'string' }],
+            values: [{ name: 'text', type: 'string' }],
           },
         },
         typeVersion: 1.1,
@@ -466,7 +481,14 @@ export function generateDataIngestionWorkflow(slug: string) {
         parameters: {
           httpMethod: 'POST',
           path: `={{$json.webhook_path || '${slug}/embed'}}`,
+          authentication: 'headerAuth',
           responseMode: 'lastNode',
+        },
+        credentials: {
+          httpHeaderAuth: {
+            id: '{{ORGSECRET_WEBHOOK_AUTH_CRED_ID_TERCESORG}}',
+            name: '{{ORGSECRET_WEBHOOK_AUTH_CRED_NAME_TERCESORG}}',
+          },
         },
         typeVersion: 2,
         webhookId: crypto.randomUUID(),

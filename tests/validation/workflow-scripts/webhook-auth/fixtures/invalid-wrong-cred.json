@@ -1,0 +1,28 @@
+{
+  "name": "Invalid - Wrong Credential Placeholder",
+  "nodes": [
+    {
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "webhook-trigger",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test/endpoint",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "some-hardcoded-id",
+          "name": "some-hardcoded-name"
+        }
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
