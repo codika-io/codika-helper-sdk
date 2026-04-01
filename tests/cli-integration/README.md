@@ -84,3 +84,4 @@ Each command file uses these tags:
 | `config set/show/clear` | [commands/config.md](commands/config.md) | — | Stub |
 | `init` | [commands/init.md](commands/init.md) | — | Stub |
 | `status` | [commands/status.md](commands/status.md) | — | Stub |
+| `notes upsert\|list\|get` | [commands/notes.md](commands/notes.md) | 22 | Not yet tested |

@@ -64,6 +64,8 @@ export const ENDPOINTS = {
   listProjects: '/listProjectsPublic',
   getProject: '/getProjectPublic',
   updateOrganizationApiKey: '/updateOrganizationApiKeyPublic',
+  upsertProjectNote: '/upsertProjectNote',
+  getProjectNotes: '/getProjectNotes',
 } as const;
 
 // ── Config file path ─────────────────────────────────────
