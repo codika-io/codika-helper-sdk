@@ -502,7 +502,7 @@ describe('maskApiKey', () => {
 
 describe('constants', () => {
   it('should have correct production base URL', () => {
-    expect(PRODUCTION_BASE_URL).toBe('https://europe-west1-codika-app.cloudfunctions.net');
+    expect(PRODUCTION_BASE_URL).toBe('https://api.codika.io');
   });
 
   it('should have all expected endpoints', () => {

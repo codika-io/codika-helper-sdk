@@ -36,7 +36,7 @@ export type EndpointName = keyof typeof ENDPOINTS;
 
 // ── Constants ────────────────────────────────────────────
 
-export const PRODUCTION_BASE_URL = 'https://europe-west1-codika-app.cloudfunctions.net';
+export const PRODUCTION_BASE_URL = 'https://api.codika.io';
 
 export const ENDPOINTS = {
   deployUseCase: '/deployProcessUseCase',
