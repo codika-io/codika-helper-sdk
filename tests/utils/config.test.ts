@@ -423,16 +423,16 @@ describe('resolveEndpointUrl', () => {
   it('should derive from profile baseUrl when no flag or legacy env', () => {
     upsertProfile('test', makeProfile({ baseUrl: 'https://custom.example.com' }));
     expect(resolveEndpointUrl('deployUseCase'))
-      .toBe('https://custom.example.com/deployProcessUseCase');
+      .toBe('https://custom.example.com/deployprocessusecase');
   });
 
   it('should derive from production default when nothing is set', () => {
     expect(resolveEndpointUrl('deployUseCase'))
-      .toBe(PRODUCTION_BASE_URL + '/deployProcessUseCase');
+      .toBe(PRODUCTION_BASE_URL + '/deployprocessusecase');
     expect(resolveEndpointUrl('createProject'))
-      .toBe(PRODUCTION_BASE_URL + '/createProjectViaApiKey');
+      .toBe(PRODUCTION_BASE_URL + '/createprojectviaapikey');
     expect(resolveEndpointUrl('deployDataIngestion'))
-      .toBe(PRODUCTION_BASE_URL + '/deployDataIngestion');
+      .toBe(PRODUCTION_BASE_URL + '/deploydataingestion');
   });
 
   it('should resolve all endpoint paths correctly', () => {
@@ -506,12 +506,12 @@ describe('constants', () => {
   });
 
   it('should have all expected endpoints', () => {
-    expect(ENDPOINTS.deployUseCase).toBe('/deployProcessUseCase');
-    expect(ENDPOINTS.deployDataIngestion).toBe('/deployDataIngestion');
-    expect(ENDPOINTS.createProject).toBe('/createProjectViaApiKey');
-    expect(ENDPOINTS.deployDocuments).toBe('/deployUseCaseDocuments');
-    expect(ENDPOINTS.getMetadata).toBe('/getMetadataDocumentsEndpoint');
-    expect(ENDPOINTS.verifyApiKey).toBe('/verifyApiKey');
+    expect(ENDPOINTS.deployUseCase).toBe('/deployprocessusecase');
+    expect(ENDPOINTS.deployDataIngestion).toBe('/deploydataingestion');
+    expect(ENDPOINTS.createProject).toBe('/createprojectviaapikey');
+    expect(ENDPOINTS.deployDocuments).toBe('/deployusecasedocuments');
+    expect(ENDPOINTS.getMetadata).toBe('/getmetadatadocumentsendpoint');
+    expect(ENDPOINTS.verifyApiKey).toBe('/verifyapikey');
   });
 
   it('should have a helpful API_KEY_MISSING_MESSAGE', () => {

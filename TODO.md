@@ -282,7 +282,7 @@ Dry Run — No changes will be made
   Use case:       ./use-cases/marketplace/email-responder
   Project ID:     sk8I3e6JQHTw5ptcHz6q  (from project.json)
   Organization:   Propale AI 3           (profile: propale-ai-3)
-  API endpoint:   https://api.codika.io/deployProcessUseCase
+  API endpoint:   https://api.codika.io/deployprocessusecase
 
   Version:
     Current:      1.2.3

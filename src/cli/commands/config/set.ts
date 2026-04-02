@@ -54,7 +54,7 @@ export async function runConfigSet(options: ConfigSetOptions): Promise<void> {
     console.log('');
     console.log('Verifying API key...');
 
-    const verifyUrl = resolveEndpointUrl('verifyApiKey', baseUrl !== PRODUCTION_BASE_URL ? baseUrl + '/verifyApiKey' : undefined);
+    const verifyUrl = resolveEndpointUrl('verifyApiKey', baseUrl !== PRODUCTION_BASE_URL ? baseUrl + '/verifyapikey' : undefined);
     const result = await verifyApiKeyRemote(apiKey, verifyUrl);
 
     if (!result.success) {

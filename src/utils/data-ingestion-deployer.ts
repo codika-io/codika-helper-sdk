@@ -123,7 +123,7 @@ export function discoverDataIngestionWorkflow(useCasePath: string): string {
  * const result = await deployDataIngestionFromFolder({
  *   useCasePath: '/path/to/use-cases/my-use-case',
  *   apiKey: 'your-api-key',
- *   apiUrl: 'https://api.codika.io/deployDataIngestion',
+ *   apiUrl: 'https://api.codika.io/deploydataingestion',
  * });
  *
  * if (isDataIngestionDeploySuccess(result)) {
