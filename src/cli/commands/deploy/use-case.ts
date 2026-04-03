@@ -33,7 +33,7 @@ export const useCaseCommand = new Command('use-case')
   .option('--patch', 'Patch version bump (default)')
   .option('--minor', 'Minor version bump')
   .option('--major', 'Major version bump')
-  .option('--version <version>', 'Explicit API version (X.Y format)')
+  .option('--target-version <version>', 'Explicit API version (X.Y format)')
   .option(
     '--additional-file <absolutePath:relativePath>',
     'Add file with its relative path (repeatable)',
@@ -70,7 +70,7 @@ interface UseCaseCommandOptions {
   patch?: boolean;
   minor?: boolean;
   major?: boolean;
-  version?: string;
+  targetVersion?: string;
   additionalFile?: string[];
   json?: boolean;
   dryRun?: boolean;
@@ -100,7 +100,7 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     patch: options.patch,
     minor: options.minor,
     major: options.major,
-    version: options.version,
+    version: options.targetVersion,
   });
 
   // Read current local version and compute new version

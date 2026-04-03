@@ -5,7 +5,7 @@
  *
  * Usage:
  *   codika notes get <projectId> --type brief
- *   codika notes get <projectId> --type brief --version 0.1.0
+ *   codika notes get <projectId> --type brief --target-version 0.1.0
  *   codika notes get <projectId> --type brief --history
  */
 
@@ -18,7 +18,7 @@ import { resolveApiKey, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../.
 
 interface GetOptions {
   type: string;
-  version?: string;
+  targetVersion?: string;
   history?: boolean;
   apiUrl?: string;
   apiKey?: string;
@@ -30,7 +30,7 @@ export const notesGetCommand = new Command('get')
   .description('Get a project note (content, version, or history)')
   .argument('<projectId>', 'Project ID')
   .requiredOption('--type <type>', 'Document type ID')
-  .option('--version <version>', 'Get a specific version (e.g. 0.1.0)')
+  .option('--target-version <version>', 'Get a specific version (e.g. 0.1.0)')
   .option('--history', 'Show all versions')
   .option('--api-url <url>', 'API URL override')
   .option('--api-key <key>', 'API key override')
@@ -65,7 +65,7 @@ async function runGet(projectId: string, options: GetOptions): Promise<void> {
     projectId,
     documentTypeId: options.type,
     includeHistory: options.history ?? false,
-    version: options.version,
+    version: options.targetVersion,
     apiUrl,
     apiKey: apiKey!,
   });

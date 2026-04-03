@@ -1,6 +1,6 @@
 # `codika get use-case <projectId> [outputPath]`
 
-Fetches metadata documents from a deployed use case and reconstructs the local folder structure. Supports `--list` to list documents without downloading, `--version` to fetch a specific version, and `--no-data-ingestion` to exclude data ingestion workflows.
+Fetches metadata documents from a deployed use case and reconstructs the local folder structure. Supports `--list` to list documents without downloading, `--target-version` to fetch a specific version, and `--no-data-ingestion` to exclude data ingestion workflows.
 
 **Scope required**: `deploy:use-case`
 **Method**: POST (body: `{ projectId, version?, includeContent, includeDataIngestion, dataIngestionVersion? }`)
@@ -94,10 +94,10 @@ codika get use-case h8iCqSgTjSsKySyufq36 --list --profile cli-test-owner-full --
 
 ---
 
-## [P] `--version` flag fetches specific version
+## [P] `--target-version` flag fetches specific version
 
 ```bash
-codika get use-case h8iCqSgTjSsKySyufq36 --list --version "1.0" --profile cli-test-owner-full --json | jq '.data.version'
+codika get use-case h8iCqSgTjSsKySyufq36 --list --target-version "1.0" --profile cli-test-owner-full --json | jq '.data.version'
 ```
 
 **Expect**: `"1.0"`
@@ -114,7 +114,7 @@ codika get use-case h8iCqSgTjSsKySyufq36 --list --profile cli-test-owner-full --
 
 **Expect**: A version string in `X.Y` format. Should be >= `"1.0"`.
 
-**Why**: Confirms that omitting `--version` defaults to the latest deployed version.
+**Why**: Confirms that omitting `--target-version` defaults to the latest deployed version.
 
 ---
 
@@ -157,7 +157,7 @@ codika get use-case h8iCqSgTjSsKySyufq36 --list --di-version "1.0" --profile cli
 ## [N] Invalid version format
 
 ```bash
-codika get use-case h8iCqSgTjSsKySyufq36 --list --version "abc" --profile cli-test-owner-full --json 2>&1
+codika get use-case h8iCqSgTjSsKySyufq36 --list --target-version "abc" --profile cli-test-owner-full --json 2>&1
 ```
 
 **Expect**: Exit code non-zero, error about version format must be "X.Y".

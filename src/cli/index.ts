@@ -53,7 +53,7 @@ const { version: VERSION } = require('../../package.json');
 program
   .name('codika')
   .description('Codika CLI - Deploy and manage use cases')
-  .version(VERSION, '-V, --cli-version');
+  .version(VERSION);
 
 // Register commands
 program.addCommand(deployCommand);

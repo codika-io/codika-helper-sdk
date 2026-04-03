@@ -58,10 +58,10 @@ codika deploy use-case /path/to/valid-use-case --minor --profile cli-test-owner-
 
 ---
 
-## [P] `--version` explicit API version
+## [P] `--target-version` explicit API version
 
 ```bash
-codika deploy use-case /path/to/valid-use-case --version 2.0 --profile cli-test-owner-full --json
+codika deploy use-case /path/to/valid-use-case --target-version 2.0 --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`, the API receives `explicitVersion: "2.0"` and creates that specific version.

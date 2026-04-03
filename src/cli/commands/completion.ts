@@ -77,7 +77,7 @@ _codika_completions() {
       fi
       case "$subcmd" in
         use-case)
-          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --project-file --patch --minor --major --version --additional-file --json --dry-run" -- "$cur") )
+          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --project-file --patch --minor --major --target-version --additional-file --json --dry-run" -- "$cur") )
           return
           ;;
         process-data-ingestion)
@@ -97,7 +97,7 @@ _codika_completions() {
           return
           ;;
         use-case)
-          COMPREPLY=( $(compgen -W "--api-key --project-id --version --include-content --json" -- "$cur") )
+          COMPREPLY=( $(compgen -W "--api-key --project-id --target-version --include-content --json" -- "$cur") )
           return
           ;;
       esac
@@ -250,7 +250,7 @@ _codika() {
                     '--patch[Bump patch version]' \\
                     '--minor[Bump minor version]' \\
                     '--major[Bump major version]' \\
-                    '--version[Explicit version]:version:' \\
+                    '--target-version[Target version]:version:' \\
                     '--additional-file[Additional file to include]:file:_files' \\
                     '--json[Output as JSON]' \\
                     '--dry-run[Dry run without deploying]' \\
@@ -299,7 +299,7 @@ _codika() {
                   _arguments \\
                     '--api-key[API key]:key:' \\
                     '--project-id[Project ID]:id:' \\
-                    '--version[Version]:version:' \\
+                    '--target-version[Target version]:version:' \\
                     '--include-content[Include workflow content]' \\
                     '--json[Output as JSON]'
                   ;;
@@ -502,7 +502,7 @@ complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subco
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l patch -d 'Bump patch version'
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l minor -d 'Bump minor version'
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l major -d 'Bump major version'
-complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l version -d 'Explicit version'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l target-version -d 'Target version'
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l additional-file -d 'Additional file' -F
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l project-file -d 'Custom project file' -rF
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
@@ -532,7 +532,7 @@ complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcomma
 # get use-case options
 complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l api-key -d 'API key'
 complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l project-id -d 'Project ID'
-complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l version -d 'Version'
+complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l target-version -d 'Target version'
 complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l include-content -d 'Include workflow content'
 complete -c codika -n '__fish_seen_subcommand_from get; and __fish_seen_subcommand_from use-case' -l json -d 'Output as JSON'
 

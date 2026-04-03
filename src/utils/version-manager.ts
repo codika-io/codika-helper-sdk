@@ -102,7 +102,7 @@ export function incrementSemver(
  * | (default / --patch)| minor_bump    | patch          |
  * | --minor            | minor_bump    | minor          |
  * | --major            | major_bump    | major          |
- * | --version X.Y      | explicit      | patch          |
+ * | --target-version X.Y | explicit     | patch          |
  */
 export function resolveVersionStrategies(flags: {
   patch?: boolean;

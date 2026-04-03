@@ -6,7 +6,7 @@
  * Usage:
  *   codika notes upsert <projectId> --type <type> --title "..." --content "..." --summary "..."
  *   codika notes list <projectId> [--type <type>]
- *   codika notes get <projectId> --type <type> [--version <version>] [--history]
+ *   codika notes get <projectId> --type <type> [--target-version <version>] [--history]
  */
 
 import { Command } from 'commander';

@@ -134,7 +134,7 @@ codika notes get h8iCqSgTjSsKySyufq36 --type test-brief --profile cli-test-owner
 ## [P] Get -- specific version
 
 ```bash
-codika notes get h8iCqSgTjSsKySyufq36 --type test-brief --version 0.0.0 --profile cli-test-owner-full --json
+codika notes get h8iCqSgTjSsKySyufq36 --type test-brief --target-version 0.0.0 --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`, `data.documents[0].version: "0.0.0"`, content is the original ("This is a test project brief..."). Exit code 0.
@@ -242,7 +242,7 @@ codika notes get h8iCqSgTjSsKySyufq36 --type nonexistent-type --profile cli-test
 ## [N] Get -- version requires type
 
 ```bash
-codika notes get h8iCqSgTjSsKySyufq36 --version 0.0.0 --profile cli-test-owner-full --json
+codika notes get h8iCqSgTjSsKySyufq36 --target-version 0.0.0 --profile cli-test-owner-full --json
 ```
 
 **Expect**: Error from commander about missing `--type`. Exit code 1.

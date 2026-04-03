@@ -19,7 +19,7 @@ export const useCaseCommand = new Command('use-case')
   .description('Fetch a deployed use case from the Codika platform')
   .argument('<projectId>', 'Project ID to fetch')
   .argument('[outputPath]', 'Output directory (defaults to ./<projectId>)')
-  .option('--version <version>', 'Version to fetch in "X.Y" format (fetches latest if omitted)')
+  .option('--target-version <version>', 'Version to fetch in "X.Y" format (fetches latest if omitted)')
   .option('--with-data-ingestion', 'Include data ingestion workflow (default: true)', true)
   .option('--no-data-ingestion', 'Exclude data ingestion workflow')
   .option('--di-version <version>', 'Data ingestion version in "X.Y" format (latest if omitted)')
@@ -47,7 +47,7 @@ export const useCaseCommand = new Command('use-case')
   });
 
 interface GetUseCaseCommandOptions {
-  version?: string;
+  targetVersion?: string;
   dataIngestion?: boolean;
   diVersion?: string;
   list?: boolean;
@@ -63,8 +63,8 @@ async function runGetUseCase(
   options: GetUseCaseCommandOptions,
 ): Promise<void> {
   // Validate version format if provided
-  if (options.version && !/^\d+\.\d+$/.test(options.version)) {
-    exitWithError(`Version must be "X.Y" format (e.g., "1.0"). Provided: ${options.version}`);
+  if (options.targetVersion && !/^\d+\.\d+$/.test(options.targetVersion)) {
+    exitWithError(`Version must be "X.Y" format (e.g., "1.0"). Provided: ${options.targetVersion}`);
   }
 
   if (options.diVersion && !/^\d+\.\d+$/.test(options.diVersion)) {
@@ -85,8 +85,8 @@ async function runGetUseCase(
 
   if (!options.json) {
     console.log(`\nFetching use case "${projectId}"...`);
-    if (options.version) {
-      console.log(`  Version: ${options.version}`);
+    if (options.targetVersion) {
+      console.log(`  Version: ${options.targetVersion}`);
     }
     if (options.list) {
       console.log('  Mode: list only (no download)');
@@ -100,7 +100,7 @@ async function runGetUseCase(
   const includeDataIngestion = options.dataIngestion !== false;
   const result = await fetchMetadataOrThrow({
     projectId,
-    version: options.version,
+    version: options.targetVersion,
     includeContent,
     includeDataIngestion,
     dataIngestionVersion: options.diVersion,

@@ -136,7 +136,7 @@ codika deploy process-data-ingestion <path> [--project-id <id>] [--project-file 
 codika deploy documents <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--json]
 
 # Fetch a deployed use case (includes data ingestion by default)
-codika get use-case <projectId> [outputPath] [--version <X.Y>] [--di-version <X.Y>] [--no-data-ingestion] [--list] [--json]
+codika get use-case <projectId> [outputPath] [--target-version <X.Y>] [--di-version <X.Y>] [--no-data-ingestion] [--list] [--json]
 
 # Validate a use-case folder
 codika verify use-case <path> [--json] [--fix] [--strict]
