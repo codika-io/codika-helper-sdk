@@ -19,8 +19,8 @@ export const instancesCommand = new Command('instances')
   .option('--limit <n>', 'Number of results (default: 20, max: 100)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (options: ListInstancesCommandOptions) => {
     try {
       await runListInstances(options);

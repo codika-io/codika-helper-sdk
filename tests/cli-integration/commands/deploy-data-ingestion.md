@@ -34,27 +34,27 @@ codika deploy process-data-ingestion /path/to/use-case --profile cli-test-owner-
 
 ---
 
-## [P] `--version-strategy major_bump`
+## [P] `--major`
 
 ```bash
-codika deploy process-data-ingestion /path/to/use-case --version-strategy major_bump --profile cli-test-owner-full --json
+codika deploy process-data-ingestion /path/to/use-case --major --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`, the local `dataIngestionVersion` in version.json is bumped with a major increment (e.g., `1.0.0` -> `2.0.0`).
 
-**Why**: Tests the three version strategies: `major_bump`, `minor_bump` (default), `explicit`.
+**Why**: Tests version bump flags: `--patch` (default), `--minor`, `--major`, `--target-version`.
 
 ---
 
-## [P] `--version-strategy explicit` with `--explicit-version`
+## [P] `--target-version`
 
 ```bash
-codika deploy process-data-ingestion /path/to/use-case --version-strategy explicit --explicit-version 3.0 --profile cli-test-owner-full --json
+codika deploy process-data-ingestion /path/to/use-case --target-version 3.0 --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`, API receives the explicit version `3.0`.
 
-**Why**: Explicit version strategy requires `--explicit-version` to be provided. Tests that both flags work together.
+**Why**: `--target-version` sets an explicit API version. Tests that the flag works correctly.
 
 ---
 
@@ -94,27 +94,15 @@ codika deploy process-data-ingestion /nonexistent/path --profile cli-test-owner-
 
 ---
 
-## [N] Invalid version strategy
+## [N] Invalid `--target-version` format
 
 ```bash
-codika deploy process-data-ingestion /path/to/use-case --version-strategy invalid_strategy --profile cli-test-owner-full --json
+codika deploy process-data-ingestion /path/to/use-case --target-version abc --profile cli-test-owner-full --json
 ```
 
-**Expect**: `success: false`, error contains "Invalid version strategy: invalid_strategy. Must be one of: major_bump, minor_bump, explicit". Exit code 1.
+**Expect**: `success: false`, error contains "Invalid version format". Exit code 1.
 
-**Why**: CLI validates the version strategy against a whitelist before calling the API.
-
----
-
-## [N] Explicit strategy without `--explicit-version`
-
-```bash
-codika deploy process-data-ingestion /path/to/use-case --version-strategy explicit --profile cli-test-owner-full --json
-```
-
-**Expect**: `success: false`, error contains "Explicit version is required when using --version-strategy explicit". Exit code 1.
-
-**Why**: The `explicit` strategy requires a companion flag. Missing it is a client-side validation error.
+**Why**: `--target-version` requires a valid `X.Y` format. Bad values are rejected client-side.
 
 ---
 

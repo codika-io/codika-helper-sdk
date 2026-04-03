@@ -35,7 +35,7 @@ interface WorkflowCommandOptions {
 export const workflowCommand = new Command('workflow')
   .description('Validate a workflow JSON file')
   .argument('<path>', 'Path to the workflow JSON file')
-  .option('--json', 'Output result as JSON')
+  .option('--json', 'Output as JSON')
   .option('--strict', 'Treat "should" severity as "must"')
   .option('--fix', 'Apply available auto-fixes')
   .option('--dry-run', 'Show what --fix would change without applying')

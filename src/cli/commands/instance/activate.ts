@@ -20,8 +20,8 @@ export const activateCommand = new Command('activate')
   .option('--environment <env>', 'Environment: dev or prod', 'dev')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (processInstanceId: string | undefined, options: InstanceCommandOptions) => {
     try {
       await runActivate(processInstanceId, options);

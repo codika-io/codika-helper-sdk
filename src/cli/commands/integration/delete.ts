@@ -49,7 +49,7 @@ export const deleteSubCommand = new Command('delete')
   .option('--profile <name>', 'Use a specific profile')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
+  .option('--json', 'Output as JSON')
   .action(async (integrationId: string, options: DeleteCommandOptions) => {
     try {
       await runDelete(integrationId, options);

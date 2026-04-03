@@ -72,8 +72,8 @@ export const initCommand = new Command('init')
   .option('--project-file <path>', 'Custom filename for the project file (default: project.json)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (pathArg: string, options: InitOptions) => {
     try {
       await runInit(pathArg, options);

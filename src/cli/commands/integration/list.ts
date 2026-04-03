@@ -46,7 +46,7 @@ export const listSubCommand = new Command('list')
   .option('--profile <name>', 'Use a specific profile')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
+  .option('--json', 'Output as JSON')
   .action(async (options: ListCommandOptions) => {
     try {
       await runList(options);

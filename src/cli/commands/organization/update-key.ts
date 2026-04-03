@@ -18,10 +18,10 @@ export const updateOrganizationKeyCommand = new Command('update-key')
   .option('--scopes <scopes>', 'New comma-separated scopes (replaces existing)')
   .option('--name <name>', 'New key name')
   .option('--description <description>', 'New key description')
-  .option('--api-url <url>', 'Codika API URL')
-  .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (options: UpdateKeyCommandOptions) => {
     try {
       await runUpdateKey(options);

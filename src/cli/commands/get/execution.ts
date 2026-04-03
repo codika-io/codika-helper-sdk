@@ -26,8 +26,8 @@ export const executionCommand = new Command('execution')
   .option('-o, --output <path>', 'Save to file instead of stdout')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (executionId: string, options: ExecutionOptions) => {
     try {
       await runGetExecution(executionId, options);

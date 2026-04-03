@@ -81,7 +81,7 @@ _codika_completions() {
           return
           ;;
         process-data-ingestion)
-          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --project-file --version-strategy --explicit-version --json" -- "$cur") )
+          COMPREPLY=( $(compgen -W "--api-url --api-key --project-id --project-file --patch --minor --major --target-version --json" -- "$cur") )
           return
           ;;
       esac
@@ -258,12 +258,14 @@ _codika() {
                   ;;
                 process-data-ingestion)
                   _arguments \\
-                    '--api-url[API base URL]:url:' \\
-                    '--api-key[API key]:key:' \\
+                    '--api-url[Override API URL]:url:' \\
+                    '--api-key[Override API key]:key:' \\
                     '--project-id[Project ID]:id:' \\
                     '--project-file[Custom project file]:file:_files -g "*.json"' \\
-                    '--version-strategy[Version strategy]:strategy:(patch minor major)' \\
-                    '--explicit-version[Explicit version]:version:' \\
+                    '--patch[Patch version bump]' \\
+                    '--minor[Minor version bump]' \\
+                    '--major[Major version bump]' \\
+                    '--target-version[Target version]:version:' \\
                     '--json[Output as JSON]' \\
                     '*:path:_files -/'
                   ;;
@@ -512,8 +514,10 @@ complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subco
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l api-url -d 'API base URL'
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l api-key -d 'API key'
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-id -d 'Project ID'
-complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l version-strategy -d 'Version strategy'
-complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l explicit-version -d 'Explicit version'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l patch -d 'Patch version bump'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l minor -d 'Minor version bump'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l major -d 'Major version bump'
+complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l target-version -d 'Target version'
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l project-file -d 'Custom project file' -rF
 complete -c codika -n '__fish_seen_subcommand_from deploy; and __fish_seen_subcommand_from process-data-ingestion' -l json -d 'Output as JSON'
 

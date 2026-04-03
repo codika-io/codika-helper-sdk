@@ -89,12 +89,12 @@ function extractProjectIdFromConfig(configPath: string): string | undefined {
 export const documentsCommand = new Command('documents')
   .description('Deploy use case documents (stage markdown files) to the Codika platform')
   .argument('<path>', 'Path to the use case folder (must contain a documents/ subfolder)')
-  .option('--api-url <url>', 'Codika API URL (env: CODIKA_API_URL)')
-  .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
   .option('--project-id <id>', 'Override project ID')
   .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (path: string, options: DocumentsCommandOptions) => {
     try {
       await runDeployDocuments(path, options);

@@ -24,10 +24,10 @@ export const useCaseCommand = new Command('use-case')
   .option('--no-data-ingestion', 'Exclude data ingestion workflow')
   .option('--di-version <version>', 'Data ingestion version in "X.Y" format (latest if omitted)')
   .option('--list', 'List documents without downloading')
-  .option('--api-url <url>', 'Codika API URL (env: CODIKA_BASE_URL)')
-  .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (projectId: string, outputPath: string | undefined, options: GetUseCaseCommandOptions) => {
     try {
       await runGetUseCase(projectId, outputPath, options);

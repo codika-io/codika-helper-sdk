@@ -23,10 +23,10 @@ export const createProjectCommand = new Command('create')
   .option('--organization-id <organizationId>', 'Organization ID (required for admin key, derived from org API key)')
   .option('--path <dir>', 'Write project.json into this directory after creation')
   .option('--project-file <path>', 'Custom filename for project file (default: project.json)')
-  .option('--api-url <url>', 'Codika API URL for project creation (env: CODIKA_PROJECT_API_URL)')
-  .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (options: CreateProjectCommandOptions) => {
     try {
       await runCreateProject(options);
@@ -59,7 +59,7 @@ interface CreateProjectCommandOptions {
 }
 
 async function runCreateProject(options: CreateProjectCommandOptions): Promise<void> {
-  // Resolve API URL: --api-url > CODIKA_PROJECT_API_URL env > config baseUrl + path > production default
+  // Resolve API URL: --api-url > config baseUrl + path > production default
   const apiUrl = resolveEndpointUrl('createProject', options.apiUrl, options.profile);
 
   // Resolve API key: --api-key > CODIKA_API_KEY env > config file

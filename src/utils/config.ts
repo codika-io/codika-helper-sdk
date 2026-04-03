@@ -279,28 +279,10 @@ export function getProfileByName(name: string): ProfileData | null {
 /**
  * Resolve a full endpoint URL.
  *
- * Priority: flagOverride (full URL) > per-endpoint env var > base URL + path
- *
- * The per-endpoint env vars maintain backward compat:
- *   - deployUseCase:      CODIKA_API_URL
- *   - deployDataIngestion: CODIKA_DATA_INGESTION_API_URL
- *   - createProject:      CODIKA_PROJECT_API_URL
+ * Priority: flagOverride (full URL) > base URL + endpoint path
  */
 export function resolveEndpointUrl(endpoint: EndpointName, flagOverride?: string, profileName?: string): string {
   if (flagOverride) return flagOverride;
-
-  // Legacy per-endpoint env vars for backward compatibility
-  const legacyEnvMap: Partial<Record<EndpointName, string>> = {
-    deployUseCase: 'CODIKA_API_URL',
-    deployDataIngestion: 'CODIKA_DATA_INGESTION_API_URL',
-    createProject: 'CODIKA_PROJECT_API_URL',
-  };
-
-  const envVar = legacyEnvMap[endpoint];
-  if (envVar && process.env[envVar]) {
-    return process.env[envVar]!;
-  }
-
   return resolveBaseUrl(undefined, profileName) + ENDPOINTS[endpoint];
 }
 

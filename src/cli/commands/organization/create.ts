@@ -30,10 +30,10 @@ export const createOrganizationCommand = new Command('create')
   .option('--n8n-base-url <url>', 'Self-hosted n8n instance URL')
   .option('--n8n-api-key <key>', 'Self-hosted n8n API key')
   .option('--store-credential-copy', 'Store encrypted credential backup in Codika (self-hosted n8n only)')
-  .option('--api-url <url>', 'Codika API URL (env: CODIKA_API_URL)')
-  .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (options: CreateOrganizationCommandOptions) => {
     try {
       await runCreateOrganization(options);

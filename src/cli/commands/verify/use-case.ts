@@ -37,7 +37,7 @@ interface UseCaseCommandOptions {
 export const useCaseCommand = new Command('use-case')
   .description('Validate a use-case folder')
   .argument('<path>', 'Path to the use-case folder')
-  .option('--json', 'Output result as JSON')
+  .option('--json', 'Output as JSON')
   .option('--strict', 'Treat "should" severity as "must"')
   .option('--skip-workflows', 'Skip individual workflow validation')
   .option('--fix', 'Apply available auto-fixes')

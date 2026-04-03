@@ -40,8 +40,8 @@ export const skillsCommand = new Command('skills')
   .option('--stdout', 'Print skill content to stdout instead of writing files')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (processInstanceIdArg: string | undefined, options: SkillsOptions) => {
     try {
       await runGetSkills(processInstanceIdArg, options);

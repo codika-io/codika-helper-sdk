@@ -25,8 +25,8 @@ export const instanceCommand = new Command('instance')
   .option('--workflows', 'Show expanded workflow details (triggers, activation, cost)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (processInstanceId: string | undefined, options: InstanceOptions) => {
     try {
       await runGetInstance(processInstanceId, options);

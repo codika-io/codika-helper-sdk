@@ -19,7 +19,7 @@ import {
 export const useCommand = new Command('use')
   .description('Switch active profile or list profiles')
   .argument('[name]', 'Profile name to switch to')
-  .option('--json', 'Output profiles as JSON (includes organizationId for matching with project.json)')
+  .option('--json', 'Output as JSON')
   .addOption(new Option('--list-names').hideHelp())
   .action((name: string | undefined, options: { listNames?: boolean; json?: boolean }) => {
     // Hidden: print profile names one per line (for shell completion)

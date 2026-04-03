@@ -20,15 +20,22 @@ import { exitWithError } from '../../utils/output.js';
 import { resolveApiKeyForOrg, resolveEndpointUrl, API_KEY_MISSING_MESSAGE } from '../../../utils/config.js';
 import { readProjectJson, updateProjectJson } from '../../../utils/project-json.js';
 import { archiveDataIngestionDeployment, updateProjectInfoDataIngestion } from '../../../utils/deployment-archiver.js';
-import type { DataIngestionVersionStrategy } from '../../../types/process-types.js';
+import {
+  resolveVersionStrategies,
+  parseSemver,
+  incrementSemver,
+  formatSemver,
+} from '../../../utils/version-manager.js';
 
 interface DataIngestionCommandOptions {
   apiUrl?: string;
   apiKey?: string;
   projectId?: string;
   projectFile?: string;
-  versionStrategy: string;
-  explicitVersion?: string;
+  patch?: boolean;
+  minor?: boolean;
+  major?: boolean;
+  targetVersion?: string;
   json?: boolean;
   profile?: string;
 }
@@ -60,31 +67,19 @@ function writeDataIngestionVersion(useCasePath: string, version: string): void {
   writeFileSync(versionPath, JSON.stringify(data, null, 2) + '\n');
 }
 
-function incrementVersion(version: string, strategy: string): string {
-  const parts = version.split('.').map(Number);
-  const [major = 1, minor = 0, patch = 0] = parts;
-  switch (strategy) {
-    case 'major_bump': return `${major + 1}.0.0`;
-    case 'minor_bump': return `${major}.${minor + 1}.0`;
-    default: return `${major}.${minor}.${patch + 1}`;
-  }
-}
-
 export const processDataIngestionCommand = new Command('process-data-ingestion')
   .description('Deploy a process-level data ingestion configuration to the Codika platform')
   .argument('<path>', 'Path to the use case folder (containing config.ts with getDataIngestionConfig)')
-  .option('--api-url <url>', 'Codika Data Ingestion API URL (env: CODIKA_DATA_INGESTION_API_URL)')
-  .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
   .option('--project-id <id>', 'Override project ID (skips project.json and config.ts)')
   .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
-  .option(
-    '--version-strategy <strategy>',
-    'Version strategy: major_bump, minor_bump, or explicit',
-    'minor_bump'
-  )
-  .option('--explicit-version <version>', 'Explicit version (required if strategy is explicit)')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--patch', 'Patch version bump (default)')
+  .option('--minor', 'Minor version bump')
+  .option('--major', 'Major version bump')
+  .option('--target-version <version>', 'Explicit API version (X.Y format)')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (path: string, options: DataIngestionCommandOptions) => {
     try {
       await runDeployDataIngestion(path, options);
@@ -116,7 +111,7 @@ async function runDeployDataIngestion(
     exitWithError(`Use case path does not exist: ${absolutePath}`);
   }
 
-  // Resolve API URL: --api-url > CODIKA_DATA_INGESTION_API_URL env > config baseUrl + path > production default
+  // Resolve API URL: --api-url > config baseUrl + path > production default
   const apiUrl = resolveEndpointUrl('deployDataIngestion', options.apiUrl);
 
   // Resolve API key with org-aware fallback: flag > env > matching org profile > active profile
@@ -133,20 +128,13 @@ async function runDeployDataIngestion(
     console.log(`Using profile "${keyResult.profileName}" (matches project organization)`);
   }
 
-  // Validate version strategy
-  const validStrategies = ['major_bump', 'minor_bump', 'explicit'];
-  if (!validStrategies.includes(options.versionStrategy)) {
-    exitWithError(
-      `Invalid version strategy: ${options.versionStrategy}. Must be one of: ${validStrategies.join(', ')}`
-    );
-  }
-
-  const versionStrategy = options.versionStrategy as DataIngestionVersionStrategy;
-
-  // Validate explicit version if strategy is explicit
-  if (versionStrategy === 'explicit' && !options.explicitVersion) {
-    exitWithError('Explicit version is required when using --version-strategy explicit');
-  }
+  // Resolve version strategies from shorthand flags
+  const { apiStrategy, localStrategy, explicitVersion } = resolveVersionStrategies({
+    patch: options.patch,
+    minor: options.minor,
+    major: options.major,
+    version: options.targetVersion,
+  });
 
   // Deploy
   const result = await deployDataIngestionFromFolder({
@@ -155,15 +143,17 @@ async function runDeployDataIngestion(
     apiKey,
     projectId: options.projectId,
     projectFile: options.projectFile,
-    versionStrategy,
-    explicitVersion: options.explicitVersion,
+    versionStrategy: apiStrategy,
+    explicitVersion,
   });
 
   // Handle success: post-deploy tracking
   if (isDataIngestionDeploySuccess(result)) {
     // 1. Update version.json
     const currentVersion = readDataIngestionVersion(absolutePath);
-    const newVersion = incrementVersion(currentVersion, options.versionStrategy);
+    const currentSemver = parseSemver(currentVersion);
+    const newSemver = incrementSemver(currentSemver, localStrategy);
+    const newVersion = formatSemver(newSemver);
     writeDataIngestionVersion(absolutePath, newVersion);
 
     // 2. Archive deployment

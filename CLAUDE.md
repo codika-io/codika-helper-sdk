@@ -127,10 +127,10 @@ codika config clear --profile <name>  # clear one profile
 codika init <path> [--name <name>] [--description <desc>] [--icon <icon>] [--no-project] [--project-id <id>] [--project-file <path>] [--no-install] [--json]
 
 # Deploy a use case
-codika deploy use-case <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika deploy use-case <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--patch|--minor|--major|--target-version <version>] [--profile <name>] [--json] [--dry-run]
 
 # Deploy process-level data ingestion
-codika deploy process-data-ingestion <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--version-strategy <strategy>] [--json]
+codika deploy process-data-ingestion <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--patch|--minor|--major|--target-version <version>] [--profile <name>] [--json]
 
 # Deploy use case documents (stage markdown files)
 codika deploy documents <path> [--project-id <id>] [--project-file <path>] [--api-url <url>] [--api-key <key>] [--json]

@@ -26,8 +26,8 @@ import { archiveDeployment, updateProjectInfo } from '../../../utils/deployment-
 export const useCaseCommand = new Command('use-case')
   .description('Deploy a use case to the Codika platform')
   .argument('<path>', 'Path to the use case folder (containing config.ts and workflows/)')
-  .option('--api-url <url>', 'Codika API URL (env: CODIKA_API_URL)')
-  .option('--api-key <key>', 'Codika API key (env: CODIKA_API_KEY)')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
   .option('--project-id <id>', 'Override project ID (skips project.json and config.ts)')
   .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
   .option('--patch', 'Patch version bump (default)')
@@ -40,9 +40,9 @@ export const useCaseCommand = new Command('use-case')
     (value: string, previous: string[]) => previous.concat([value]),
     [] as string[]
   )
-  .option('--json', 'Output result as JSON')
+  .option('--json', 'Output as JSON')
   .option('--dry-run', 'Preview what would be deployed without calling the API')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (path: string, options: UseCaseCommandOptions) => {
     try {
       await runDeployUseCase(path, options);
@@ -86,7 +86,7 @@ async function runDeployUseCase(useCasePath: string, options: UseCaseCommandOpti
     exitWithError(`Use case path does not exist: ${absolutePath}`);
   }
 
-  // Resolve API URL: --api-url > CODIKA_API_URL env > config baseUrl + path > production default
+  // Resolve API URL: --api-url > config baseUrl + path > production default
   const apiUrl = resolveEndpointUrl('deployUseCase', options.apiUrl, options.profile);
 
   // Resolve API key: --api-key > CODIKA_API_KEY env > config file

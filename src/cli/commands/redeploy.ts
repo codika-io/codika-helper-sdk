@@ -55,8 +55,8 @@ export const redeployCommand = new Command('redeploy')
   .option('--force', 'Force redeploy')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (options: RedeployCommandOptions) => {
     try {
       await runRedeploy(options);

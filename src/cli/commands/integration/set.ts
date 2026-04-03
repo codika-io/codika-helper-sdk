@@ -10,8 +10,8 @@
  */
 
 import { Command } from 'commander';
-import { resolve } from 'path';
-import { readFileSync } from 'fs';
+import { resolve, join } from 'path';
+import { readFileSync, existsSync } from 'fs';
 import {
   createIntegrationRemote,
   deleteIntegrationRemote,
@@ -33,6 +33,7 @@ import {
   findProfileByOrgId,
 } from '../../../utils/config.js';
 import { readProjectJson } from '../../../utils/project-json.js';
+import { extractCustomIntegrationSchema } from '../../../utils/config-loader.js';
 
 interface SetCommandOptions {
   secret?: string[];
@@ -79,7 +80,7 @@ export const setCommand = new Command('set')
   .option('--profile <name>', 'Use a specific profile')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
+  .option('--json', 'Output as JSON')
   .action(async (integrationId: string, options: SetCommandOptions) => {
     try {
       await runSet(integrationId, options);
@@ -266,15 +267,43 @@ async function runSet(integrationId: string, options: SetCommandOptions): Promis
   // ── Load custom schema for cstm_* integrations ──────
   let customIntegrationSchema: Record<string, any> | undefined;
   if (integrationId.startsWith('cstm_')) {
-    if (!options.customSchemaFile) {
-      exitWithError(
-        `Custom integration ${integrationId} requires --custom-schema-file.\n` +
-        `  This JSON file should contain the CustomIntegrationSchema (id, name, contextType, n8nCredentialType, secretFields, etc.).\n` +
-        `  Example: codika integration set ${integrationId} --secret API_KEY=xxx --custom-schema-file ./schema.json`
-      );
+    if (options.customSchemaFile) {
+      // Explicit schema file takes precedence
+      const schemaContent = readFileSync(resolve(options.customSchemaFile), 'utf-8');
+      customIntegrationSchema = JSON.parse(schemaContent);
+    } else {
+      // Auto-extract from config.ts in the --path directory (or CWD)
+      const useCasePath = resolve(options.path || process.cwd());
+      const hasConfig = existsSync(join(useCasePath, 'config.ts')) || existsSync(join(useCasePath, 'config.js'));
+
+      if (hasConfig) {
+        try {
+          const schema = await extractCustomIntegrationSchema(useCasePath, integrationId);
+          if (schema) {
+            customIntegrationSchema = schema;
+            if (!options.json) {
+              console.log(`  Schema:     auto-extracted from config.ts`);
+            }
+          } else {
+            exitWithError(
+              `Custom integration ${integrationId} not found in config.ts customIntegrations array at ${useCasePath}.\n` +
+              `  Either add it to customIntegrations in config.ts, or pass --custom-schema-file.`
+            );
+          }
+        } catch (err) {
+          exitWithError(
+            `Failed to load config.ts at ${useCasePath}: ${err instanceof Error ? err.message : String(err)}\n` +
+            `  You can bypass this by passing --custom-schema-file with the schema JSON.`
+          );
+        }
+      } else {
+        exitWithError(
+          `Custom integration ${integrationId} requires a schema.\n` +
+          `  Option 1: Use --path to point to a use case folder with config.ts (schema auto-extracted)\n` +
+          `  Option 2: Pass --custom-schema-file with the schema JSON`
+        );
+      }
     }
-    const schemaContent = readFileSync(resolve(options.customSchemaFile), 'utf-8');
-    customIntegrationSchema = JSON.parse(schemaContent);
   }
 
   // ── Call API ─────────────────────────────────────────

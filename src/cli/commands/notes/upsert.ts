@@ -40,10 +40,10 @@ export const upsertCommand = new Command('upsert')
   .option('--file <path>', 'Read content from a file instead of --content')
   .option('--agent-id <agentId>', 'Agent identifier')
   .option('--major-change', 'Bump MINOR version instead of PATCH')
-  .option('--api-url <url>', 'API URL override')
-  .option('--api-key <key>', 'API key override')
-  .option('--profile <name>', 'Profile name')
-  .option('--json', 'JSON output')
+  .option('--api-url <url>', 'Override API URL')
+  .option('--api-key <key>', 'Override API key')
+  .option('--profile <name>', 'Use a specific profile')
+  .option('--json', 'Output as JSON')
   .action(async (projectId: string, options: UpsertOptions) => {
     try {
       await runUpsert(projectId, options);

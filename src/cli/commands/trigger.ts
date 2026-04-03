@@ -41,8 +41,8 @@ export const triggerCommand = new Command('trigger')
   .option('-o, --output <path>', 'Save result to file (with --poll)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
-  .option('--json', 'Output result as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--json', 'Output as JSON')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (workflowId: string, options: TriggerOptions) => {
     try {
       await runTrigger(workflowId, options);

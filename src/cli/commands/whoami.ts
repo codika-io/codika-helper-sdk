@@ -23,7 +23,7 @@ import { verifyApiKeyRemote, type VerifyResult } from './config/set.js';
 export const whoamiCommand = new Command('whoami')
   .description('Show current authentication identity')
   .option('--json', 'Output as JSON')
-  .option('--profile <name>', 'Use a specific profile instead of the active one')
+  .option('--profile <name>', 'Use a specific profile')
   .action(async (options: { json?: boolean; profile?: string }) => {
     const apiKey = resolveApiKey(undefined, options.profile);
     const activeProfile = getActiveProfile();

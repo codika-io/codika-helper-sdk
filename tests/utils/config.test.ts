@@ -43,8 +43,6 @@ const originalXdg = process.env.XDG_CONFIG_HOME;
 const originalApiKey = process.env.CODIKA_API_KEY;
 const originalBaseUrl = process.env.CODIKA_BASE_URL;
 const originalApiUrl = process.env.CODIKA_API_URL;
-const originalDataIngestionUrl = process.env.CODIKA_DATA_INGESTION_API_URL;
-const originalProjectUrl = process.env.CODIKA_PROJECT_API_URL;
 
 // Helper to create a profile
 function makeProfile(overrides?: Partial<ProfileData>): ProfileData {
@@ -72,8 +70,6 @@ beforeEach(() => {
   delete process.env.CODIKA_API_KEY;
   delete process.env.CODIKA_BASE_URL;
   delete process.env.CODIKA_API_URL;
-  delete process.env.CODIKA_DATA_INGESTION_API_URL;
-  delete process.env.CODIKA_PROJECT_API_URL;
   // Clean up any leftover config from previous test
   if (existsSync(TEST_CONFIG_DIR)) {
     rmSync(TEST_CONFIG_DIR, { recursive: true });
@@ -90,10 +86,6 @@ afterEach(() => {
   else delete process.env.CODIKA_BASE_URL;
   if (originalApiUrl !== undefined) process.env.CODIKA_API_URL = originalApiUrl;
   else delete process.env.CODIKA_API_URL;
-  if (originalDataIngestionUrl !== undefined) process.env.CODIKA_DATA_INGESTION_API_URL = originalDataIngestionUrl;
-  else delete process.env.CODIKA_DATA_INGESTION_API_URL;
-  if (originalProjectUrl !== undefined) process.env.CODIKA_PROJECT_API_URL = originalProjectUrl;
-  else delete process.env.CODIKA_PROJECT_API_URL;
   // Clean up temp dir
   if (existsSync(TEST_CONFIG_DIR)) {
     rmSync(TEST_CONFIG_DIR, { recursive: true });
@@ -405,22 +397,7 @@ describe('resolveEndpointUrl', () => {
       .toBe('https://override.example.com/deploy');
   });
 
-  it('should return legacy env var for deployUseCase', () => {
-    process.env.CODIKA_API_URL = 'https://legacy.example.com/deploy';
-    expect(resolveEndpointUrl('deployUseCase')).toBe('https://legacy.example.com/deploy');
-  });
-
-  it('should return legacy env var for deployDataIngestion', () => {
-    process.env.CODIKA_DATA_INGESTION_API_URL = 'https://legacy.example.com/ingest';
-    expect(resolveEndpointUrl('deployDataIngestion')).toBe('https://legacy.example.com/ingest');
-  });
-
-  it('should return legacy env var for createProject', () => {
-    process.env.CODIKA_PROJECT_API_URL = 'https://legacy.example.com/project';
-    expect(resolveEndpointUrl('createProject')).toBe('https://legacy.example.com/project');
-  });
-
-  it('should derive from profile baseUrl when no flag or legacy env', () => {
+  it('should derive from profile baseUrl when no flag', () => {
     upsertProfile('test', makeProfile({ baseUrl: 'https://custom.example.com' }));
     expect(resolveEndpointUrl('deployUseCase'))
       .toBe('https://custom.example.com/deployprocessusecase');
