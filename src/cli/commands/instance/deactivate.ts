@@ -4,7 +4,7 @@
  * Deactivates (pauses) a process instance's workflows.
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { resolve } from 'path';
 import {
   deactivateInstanceOrThrow,
@@ -17,7 +17,7 @@ export const deactivateCommand = new Command('deactivate')
   .argument('[processInstanceId]', 'Process instance ID')
   .option('--path <path>', 'Path to use case folder')
   .option('--project-file <path>', 'Custom project file path')
-  .option('--environment <env>', 'Environment: dev or prod', 'dev')
+  .addOption(new Option('--environment <env>', 'Environment: dev or prod').choices(['dev', 'prod']).default('dev'))
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output as JSON')

@@ -9,7 +9,7 @@
  *   codika integration set openai --secrets '{"OPENAI_API_KEY":"sk-xxx"}' --json
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { resolve, join } from 'path';
 import { readFileSync, existsSync } from 'fs';
 import {
@@ -74,7 +74,7 @@ export const setCommand = new Command('set')
   .option('--process-instance-id <id>', 'Process instance ID (for process_instance context)')
   .option('--path <path>', 'Path to use case folder (for project.json resolution)')
   .option('--project-file <path>', 'Custom project file')
-  .option('--environment <env>', 'Environment: dev or prod', 'dev')
+  .addOption(new Option('--environment <env>', 'Environment: dev or prod').choices(['dev', 'prod']).default('dev'))
   .option('--custom-schema-file <path>', 'Path to custom integration schema JSON (for cstm_* integrations)')
   .option('--force', 'Delete existing integration and recreate')
   .option('--profile <name>', 'Use a specific profile')

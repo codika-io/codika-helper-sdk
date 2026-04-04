@@ -11,7 +11,7 @@
  *   codika integration list --process-instance-id <id> --json
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { resolve } from 'path';
 import {
   listIntegrationsRemote,
@@ -42,7 +42,7 @@ export const listSubCommand = new Command('list')
   .option('--process-instance-id <id>', 'Process instance ID (includes instance-level integrations)')
   .option('--path <path>', 'Path to use case folder (resolves process instance from project.json)')
   .option('--project-file <path>', 'Custom project file')
-  .option('--environment <env>', 'Environment: dev or prod', 'dev')
+  .addOption(new Option('--environment <env>', 'Environment: dev or prod').choices(['dev', 'prod']).default('dev'))
   .option('--profile <name>', 'Use a specific profile')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')

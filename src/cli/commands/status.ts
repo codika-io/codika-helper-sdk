@@ -16,6 +16,7 @@ import { resolve, basename, join } from 'path';
 import { existsSync, readdirSync, statSync } from 'fs';
 import {
   getActiveProfile,
+  getProfileByName,
   listProfiles,
   resolveApiKey,
   describeApiKeySource,
@@ -72,14 +73,19 @@ export async function gatherStatus(
   targetPath: string,
   runVerify: boolean,
   projectFile?: string,
+  profileName?: string,
 ): Promise<StatusResult> {
   const absolutePath = resolve(targetPath);
 
   // ── Identity ──────────────────────────────────────────
-  const activeProfile = getActiveProfile();
+  const activeProfile = profileName
+    ? (() => { const p = getProfileByName(profileName); return p ? { name: profileName, profile: p } : null; })()
+    : getActiveProfile();
   const profiles = listProfiles();
-  const apiKey = resolveApiKey();
-  const keySource = describeApiKeySource();
+  const apiKey = resolveApiKey(undefined, profileName);
+  const keySource = profileName
+    ? (activeProfile ? `profile "${profileName}"` : 'not set')
+    : describeApiKeySource();
 
   const identity: StatusResult['identity'] = {
     loggedIn: !!apiKey,
@@ -342,9 +348,10 @@ export const statusCommand = new Command('status')
   .option('--json', 'Output as JSON')
   .option('--verify', 'Run quick validation on the use case')
   .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
-  .action(async (path: string, options: { json?: boolean; verify?: boolean; projectFile?: string }) => {
+  .option('--profile <name>', 'Use a specific profile')
+  .action(async (path: string, options: { json?: boolean; verify?: boolean; projectFile?: string; profile?: string }) => {
     try {
-      const result = await gatherStatus(path, !!options.verify, options.projectFile);
+      const result = await gatherStatus(path, !!options.verify, options.projectFile, options.profile);
 
       if (options.json) {
         console.log(JSON.stringify(result, null, 2));

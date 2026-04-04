@@ -194,7 +194,12 @@ async function runInit(pathArg: string, options: InitOptions): Promise<void> {
   if (options.projectId) {
     // Use existing project ID
     projectId = options.projectId;
-    writeProjectJson(targetPath, { projectId }, options.projectFile);
+    const orgId = getActiveProfile()?.profile.organizationId;
+    const projectData: { projectId: string; organizationId?: string } = { projectId };
+    if (orgId) {
+      projectData.organizationId = orgId;
+    }
+    writeProjectJson(targetPath, projectData, options.projectFile);
     createdFiles.push(projectFileName);
   } else if (options.project !== false) {
     // Try to create project on the platform

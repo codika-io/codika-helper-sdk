@@ -7,7 +7,7 @@
  *   codika redeploy [options]
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
 import {
@@ -43,7 +43,7 @@ export const redeployCommand = new Command('redeploy')
   .option('--process-instance-id <id>', 'Target process instance ID')
   .option('--path <path>', 'Path to use case folder (default: cwd)')
   .option('--project-file <path>', 'Custom project file (default: project.json)')
-  .option('--environment <env>', 'Environment: dev or prod (default: dev)', 'dev')
+  .addOption(new Option('--environment <env>', 'Environment: dev or prod').choices(['dev', 'prod']).default('dev'))
   .option(
     '--param <KEY=VALUE>',
     'Parameter override (repeatable)',

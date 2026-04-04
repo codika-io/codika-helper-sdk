@@ -5,7 +5,7 @@
  * including deployment parameters, status, version, and workflows.
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { resolve } from 'path';
 import {
   getProcessInstanceOrThrow,
@@ -21,7 +21,7 @@ export const instanceCommand = new Command('instance')
   .argument('[processInstanceId]', 'Process instance ID')
   .option('--path <path>', 'Path to use case folder (to auto-resolve from project.json)')
   .option('--project-file <path>', 'Path to custom project file (e.g., project-client-a.json)')
-  .option('--environment <env>', 'Environment: dev or prod', 'dev')
+  .addOption(new Option('--environment <env>', 'Environment: dev or prod').choices(['dev', 'prod']).default('dev'))
   .option('--workflows', 'Show expanded workflow details (triggers, activation, cost)')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')

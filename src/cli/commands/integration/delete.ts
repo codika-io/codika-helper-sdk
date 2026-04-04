@@ -9,7 +9,7 @@
  *   codika integration delete supabase --process-instance-id <id> --confirm
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { resolve } from 'path';
 import {
   deleteIntegrationRemote,
@@ -44,7 +44,7 @@ export const deleteSubCommand = new Command('delete')
   .option('--process-instance-id <id>', 'Process instance ID')
   .option('--path <path>', 'Path to use case folder (for project.json resolution)')
   .option('--project-file <path>', 'Custom project file')
-  .option('--environment <env>', 'Environment: dev or prod', 'dev')
+  .addOption(new Option('--environment <env>', 'Environment: dev or prod').choices(['dev', 'prod']).default('dev'))
   .option('--confirm', 'Skip confirmation and delete immediately')
   .option('--profile <name>', 'Use a specific profile')
   .option('--api-url <url>', 'Override API URL')
