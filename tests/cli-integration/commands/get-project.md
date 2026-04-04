@@ -160,6 +160,48 @@ codika get project h8iCqSgTjSsKySyufq36 --profile codika-admin-macbook-pro --jso
 
 ---
 
+## [N] Missing project ID argument
+
+Commander should reject when no positional argument is provided.
+
+```bash
+codika get project --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Non-zero exit code, error message about missing argument (Commander prints `error: missing required argument 'projectId'`). No API call made.
+
+**Why**: Validates that Commander's built-in argument enforcement works. This is the first guard before any business logic runs.
+
+---
+
+## [N] Missing API key — exit code 2
+
+No `--api-key`, no `--profile`, no `CODIKA_API_KEY` env var. The CLI should fail with exit code 2 (CLI validation error), not exit code 1 (API error).
+
+```bash
+CODIKA_API_KEY= codika get project h8iCqSgTjSsKySyufq36 --profile nonexistent-profile --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Exit code `2`, stderr contains `API key is required`. No API call made.
+
+**Why**: Tests the `exitWithError(API_KEY_MISSING_MESSAGE)` path (line 54 in source). Exit code 2 distinguishes local validation errors from remote API errors (exit code 1). This is documented in the exit codes table but had no dedicated test.
+
+---
+
+## [P] --api-url flag overrides endpoint
+
+The `--api-url` flag should override the resolved endpoint URL. Pointing it at a bogus URL should produce a network error, proving the flag was used.
+
+```bash
+codika get project h8iCqSgTjSsKySyufq36 --profile cli-test-owner-full --api-url "https://localhost:1/fake" --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Exit code `1`, error about connection refused or fetch failure (not a "not found" or "unauthorized" error from the real API).
+
+**Why**: The `--api-url` flag is one of four `.option()` declarations but had no test. This confirms `resolveEndpointUrl` respects the flag override.
+
+---
+
 ## Last tested
 
 2026-03-31 — 12/12 PASS

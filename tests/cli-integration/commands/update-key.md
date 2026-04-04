@@ -203,6 +203,69 @@ codika organization update-key --key-id "R7wKRSuJ5BuQNVUqLtuJ" --scopes "deploy:
 
 ---
 
+## [N] Missing API key — no profile, no env, no flag
+
+No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. Hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path (exit code 2).
+
+```bash
+env -u CODIKA_API_KEY codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --scopes "deploy:use-case" --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`. The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
+
+**Why**: Verifies the early-exit guard before any HTTP call. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1).
+
+---
+
+## [N] Empty `--scopes` value
+
+```bash
+codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --scopes "" --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Exit code `2`, stderr contains "At least one scope is required when --scopes is provided." The split/filter/Boolean logic produces an empty array, which triggers this guard.
+
+**Why**: Validates the empty-scopes guard at line 69 of the source. Without this test, `--scopes ""` could silently pass through and clear all scopes server-side.
+
+---
+
+## [N] Invalid API key
+
+```bash
+codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --scopes "deploy:use-case" --api-key "cko_garbage_key_here" --json
+```
+
+**Expect**: Exit code `1`, `success: false`, error about unauthorized / invalid API key.
+
+**Why**: Verifies the auth middleware rejects invalid keys before reaching business logic. Distinct from "missing key" (exit code 2) — this is an API-level rejection (exit code 1).
+
+---
+
+## [N] Human-readable error output
+
+```bash
+codika organization update-key --key-id "nonexistent123" --scopes "deploy:use-case" --profile cli-test-owner-full
+```
+
+**Expect**: `✗ API Key Update Failed` header, followed by `Error:` and `Request ID:` lines. No JSON.
+
+**Why**: Verifies the `isUpdateKeyError` branch in the non-JSON output path (lines 104-111 of source). All other negative tests use `--json`; this confirms the human-readable error formatting works too.
+
+---
+
+## [P] `--api-url` flag is accepted
+
+```bash
+codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --name "cli-test-limited" --api-url "https://us-central1-codika-app.cloudfunctions.net" --profile cli-test-owner-full --json
+```
+
+**Expect**: `success: true` (the production URL is the default, so the override still works). Confirms the `--api-url` flag is wired through to `resolveEndpointUrl`.
+
+**Why**: Every `.option()` flag should have at least one test exercising it. Without this, a typo in the flag name or broken resolution would go undetected.
+
+---
+
 ## Last tested
 
-2026-03-31 — 13/13 PASS
+2026-03-31 — 13/13 PASS (original tests)
+2026-04-04 — +5 new tests added (untested)

@@ -28,7 +28,7 @@ codika list instances --profile cli-test-owner-full --json
 codika list instances --profile cli-test-owner-full
 ```
 
-**Expect**: Table with `● Process Instances` header, column headers (Title, Env, Status, Version, Last Executed), one row per instance, footer showing count.
+**Expect**: Table with `● Process Instances` header, column headers (Title, Env, Status, Version, Last Executed), one row per instance, footer showing count ("Showing 15 instances").
 
 **Why**: Verifies the CLI table formatter works, not just the JSON path.
 
@@ -94,6 +94,20 @@ codika list instances --limit 2 --profile cli-test-owner-full --json | jq '.data
 
 ---
 
+## [P] `--limit` count reflects limited result
+
+When `--limit` truncates results, `data.count` should still match the returned array length.
+
+```bash
+codika list instances --limit 3 --profile cli-test-owner-full --json | jq '(.data.count == (.data.instances | length))'
+```
+
+**Expect**: `true`
+
+**Why**: Ensures `count` tracks the actual returned set, not the total in the org.
+
+---
+
 ## [P] `--archived` flag
 
 ```bash
@@ -130,6 +144,18 @@ codika list instances --environment dev --limit 1 --profile cli-test-owner-full 
 
 ---
 
+## [P] Combined filters — `--environment prod --archived`
+
+```bash
+codika list instances --environment prod --archived --profile cli-test-owner-full --json | jq '[.data.instances[] | select(.environment != "prod" or .archived != true)] | length'
+```
+
+**Expect**: `0` (every returned instance is prod AND archived). The result set itself may be empty if no prod archived instances exist, which is also valid.
+
+**Why**: Verifies that environment and archived filters compose correctly — no instance in the result should violate either filter.
+
+---
+
 ## [S] Member sees fewer instances
 
 The member user should only see shared instances (7 vs owner's 15).
@@ -158,17 +184,31 @@ MEMBER_COUNT=$(codika list instances --profile cli-test-member --json | jq '.dat
 
 ---
 
-## [S] Scope enforcement — limited key
-
-The limited key has `deploy:use-case` + `instances:read`, so it SHOULD be able to list instances.
+## [S] Member instances are a subset of owner instances
 
 ```bash
-codika list instances --profile cli-test-limited --json | jq '.success'
+OWNER_IDS=$(codika list instances --profile cli-test-owner-full --json | jq -r '[.data.instances[].processInstanceId] | sort | .[]')
+MEMBER_IDS=$(codika list instances --profile cli-test-member --json | jq -r '[.data.instances[].processInstanceId] | sort | .[]')
+echo "$MEMBER_IDS" | while read id; do echo "$OWNER_IDS" | grep -q "$id" && echo "OK:$id" || echo "FAIL:$id"; done
 ```
 
-**Expect**: `true`
+**Expect**: Every member instance ID appears in the owner set. No `FAIL:` lines.
 
-**Why**: Confirms that `instances:read` is sufficient for listing instances, regardless of what other scopes the key has or lacks.
+**Why**: The member should never see an instance that the owner cannot see. If they do, the sharing model has a privilege escalation bug.
+
+---
+
+## [S] Scope enforcement — limited key (has `instances:read`)
+
+The limited key has `deploy:use-case` + `instances:read`, so it SHOULD be able to list instances. Its userId is the owner, so it sees all instances.
+
+```bash
+codika list instances --profile cli-test-limited --json | jq '[.success, .data.count]'
+```
+
+**Expect**: `[true, 15]`
+
+**Why**: Confirms that `instances:read` is sufficient for listing instances, regardless of what other scopes the key has or lacks. The count of 15 matches the owner because the key's userId is the owner.
 
 ---
 
@@ -178,45 +218,100 @@ codika list instances --profile cli-test-limited --json | jq '.success'
 codika list instances --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json | jq '.data.organizationId'
 ```
 
-**Expect**: `"HF5DaJQamZxIeMj0zfWY"` (the cross-org's own org, NOT `l0gM8nHm2o2lpupMpm5x`). The response should contain only instances from the cross-org's organization.
+**Expect**: `"HF5DaJQamZxIeMj0zfWY"` (the cross-org's own org, NOT `l0gM8nHm2o2lpupMpm5x`). The response should contain only instances from the cross-org's organization (6 instances).
 
 **Why**: Proves organization isolation — the API key is scoped to its own org and cannot see the test org's instances.
+
+---
+
+## [S] Cross-org instance IDs do not overlap with test org
+
+```bash
+CROSS_IDS=$(codika list instances --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json | jq -r '[.data.instances[].processInstanceId] | .[]')
+TEST_IDS=$(codika list instances --profile cli-test-owner-full --json | jq -r '[.data.instances[].processInstanceId] | .[]')
+OVERLAP=$(comm -12 <(echo "$CROSS_IDS" | sort) <(echo "$TEST_IDS" | sort) | wc -l | tr -d ' ')
+[ "$OVERLAP" -eq 0 ] && echo "PASS" || echo "FAIL:$OVERLAP"
+```
+
+**Expect**: `PASS` — zero overlapping instance IDs between the two orgs.
+
+**Why**: Belt-and-suspenders check on org isolation. Even if `organizationId` looks correct, the actual instance data must not leak across orgs.
 
 ---
 
 ## [N] Invalid API key
 
 ```bash
-codika list instances --api-key "cko_garbage_key_here" --json
+codika list instances --api-key "cko_garbage_key_here" --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 1, `success: false`, error about unauthorized.
+**Expect**: Exit code `1`, `success: false`, error about unauthorized.
 
-**Why**: Verifies the auth middleware rejects invalid keys before reaching the business logic.
+**Why**: Verifies the auth middleware rejects invalid keys before reaching the business logic. Exit code is 1 (API error, not CLI validation).
 
 ---
 
-## [N] Invalid `--limit` value
+## [N] Missing API key — no profile, no env, no flag
+
+No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. This hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path (exit code 2).
 
 ```bash
-codika list instances --limit -5 --profile cli-test-owner-full --json 2>&1
+env -u CODIKA_API_KEY codika list instances --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code non-zero, error message about invalid limit / must be a positive integer.
+**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2` (CLI validation error, not `1`). The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
 
-**Why**: Verifies client-side validation of the limit parameter before the API call is made.
+**Why**: Verifies the early-exit guard before any HTTP call. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1).
+
+---
+
+## [N] Invalid `--limit` value — non-numeric
+
+```bash
+codika list instances --limit abc --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Stderr contains "Invalid limit. Must be a positive integer." Exit code `2`.
+
+**Why**: Verifies the limit validation guard catches NaN input. The guard checks `isNaN(limit) || limit < 1`.
+
+---
+
+## [N] Invalid `--limit` value — zero
+
+```bash
+codika list instances --limit 0 --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Same — exit code `2`, "Invalid limit" message. Zero satisfies `limit < 1`.
+
+**Why**: Boundary case for the limit validation — ensures zero is not accepted as a valid limit.
+
+---
+
+## [N] Invalid `--limit` value — negative
+
+```bash
+codika list instances --limit -5 --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Exit code `2`, "Invalid limit" message. Negative numbers satisfy `limit < 1`.
+
+**Why**: Edge case for the limit validation — ensures negative values are caught by the same guard.
 
 ---
 
 ## [N] Invalid `--environment` value
 
+The CLI passes `--environment` through to the API without client-side validation. The Cloud Function only recognizes `dev` and `prod`.
+
 ```bash
-codika list instances --environment staging --profile cli-test-owner-full --json
+codika list instances --environment staging --profile cli-test-owner-full --json | jq '.data.instances | length'
 ```
 
-**Expect**: Either an empty result set or an error. The Cloud Function only accepts `dev` or `prod`.
+**Expect**: `0` (empty result set) or an API error. The Cloud Function should not return instances from other environments when an unrecognized value is passed.
 
-**Why**: Verifies that invalid environment values don't cause unexpected behavior.
+**Why**: Verifies that invalid environment values don't cause unexpected behavior (e.g., returning all instances, or a 500 error).
 
 ---
 

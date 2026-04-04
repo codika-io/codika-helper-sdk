@@ -134,6 +134,64 @@ codika list projects --profile cli-test-limited --json
 
 ---
 
+## [N] Missing API key — no profile, no env, no flag
+
+No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. This hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path (exit code 2).
+
+```bash
+env -u CODIKA_API_KEY codika list projects --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2` (CLI validation error, not `1`).
+
+**Why**: Verifies the early-exit guard before any HTTP call. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1). The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
+
+---
+
+## [N] Invalid `--limit` value
+
+```bash
+codika list projects --limit abc --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Stderr contains "Invalid limit. Must be a positive integer." Exit code `2`.
+
+```bash
+codika list projects --limit 0 --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Same — exit code `2`, "Invalid limit" message. The guard checks `isNaN(limit) || limit < 1`.
+
+**Why**: Verifies the limit validation guard. Both NaN (`abc`) and below-minimum (`0`) must be rejected with exit code 2.
+
+---
+
+## [S] Cross-org isolation
+
+The cross-org key belongs to org `HF5DaJQamZxIeMj0zfWY`. It must never return projects from the test org (`l0gM8nHm2o2lpupMpm5x`).
+
+```bash
+codika list projects --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json | jq '.data.organizationId'
+```
+
+**Expect**: Either `"HF5DaJQamZxIeMj0zfWY"` (their own org) or an error if the key lacks `projects:read`. Never `"l0gM8nHm2o2lpupMpm5x"`. The projects array must not contain any project IDs from the test org (e.g., `h8iCqSgTjSsKySyufq36`).
+
+**Why**: Confirms that organization-level data isolation holds. A valid key from org B cannot see org A's projects, even though both orgs exist in the same Firestore database.
+
+---
+
+## [N] `--limit` negative value
+
+```bash
+codika list projects --limit -5 --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Exit code `2`, "Invalid limit" message. Negative numbers satisfy `limit < 1`.
+
+**Why**: Edge case for the limit validation — ensures negative values are caught by the same guard.
+
+---
+
 ## Last tested
 
 2026-03-31 — 10/10 PASS

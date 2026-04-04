@@ -134,6 +134,75 @@ codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --workflows --profile c
 
 ---
 
+## Flag Coverage
+
+### [P] `--json` structured output
+
+```bash
+codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-owner-full --json | jq '.success'
+```
+
+**Expect**: `true`
+
+**Why**: Confirms `--json` flag produces valid JSON with the expected top-level `success` field.
+
+---
+
+### [P] Human-readable output without `--workflows`
+
+```bash
+codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-owner-full 2>&1
+```
+
+**Expect**: Output contains `✓ Process Instance`, `Instance ID:`, `Process ID:`, `Environment:`, `Status:`, `Version:`, `Title:`, and `Workflows:` section with slim format (`- workflowId (n8n: id)`). No `Triggers:`, `Active:`, or `Cost:` lines.
+
+**Why**: Verifies the default human-readable formatter renders the slim workflow view, distinct from the `--workflows` expanded layout.
+
+---
+
+### [P] `--api-key` flag overrides profile
+
+```bash
+API_KEY=$(codika config show --json 2>/dev/null | jq -r '.profiles["cli-test-owner-full"].apiKey')
+codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --api-key "$API_KEY" --json | jq '.success'
+```
+
+**Expect**: `true`
+
+**Why**: Confirms that passing `--api-key` directly works without `--profile`. This is the highest-priority auth resolution path and the one used in CI/CD.
+
+---
+
+### [P] `--environment prod` resolves production instance
+
+The test org has both a dev instance (`019d444d-1bd0-70f5-b6ff-21d1b5ed5b71`) and a prod instance (`019d444e-290a-721b-9ce3-f3d454eb6d0e`). This test uses the prod instance ID directly to confirm the `--environment` flag is accepted.
+
+```bash
+codika get instance 019d444e-290a-721b-9ce3-f3d454eb6d0e --environment prod --profile cli-test-owner-full --json | jq '.data.environment'
+```
+
+**Expect**: `"prod"`
+
+**Why**: Verifies the `--environment` option is accepted and the prod instance returns `environment: "prod"`. When combined with `--path` resolution (see ID resolution tests), this flag selects `prodProcessInstanceId` from `project.json`.
+
+---
+
+## Instance ID Resolution
+
+### [N] Missing instance ID — no argument, no project.json
+
+No positional argument, no `--path`, not run from a use case folder. This hits the `exitWithError` at line 96.
+
+```bash
+codika get instance --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Stderr contains "Process instance ID is required". Exit code `2` (CLI validation error, not `1`).
+
+**Why**: Verifies the early-exit guard when the resolution chain finds nothing. Exit code 2 distinguishes CLI validation errors from API errors.
+
+---
+
 ## Negative Tests
 
 ### [N] Nonexistent instance
@@ -148,6 +217,34 @@ codika get instance nonexistent-id --workflows --profile cli-test-owner-full --j
 
 ---
 
+### [N] Missing API key — no profile, no env, no flag
+
+No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. This hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path (exit code 2).
+
+```bash
+env -u CODIKA_API_KEY codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --json 2>&1; echo "EXIT:$?"
+```
+
+**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`.
+
+**Why**: Verifies the early-exit guard before any HTTP call. The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
+
+---
+
+### [N] Invalid API key
+
+```bash
+codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --api-key "cko_garbage_key_here" --json
+```
+
+**Expect**: Exit code 1, `success: false`, error about unauthorized.
+
+**Why**: Verifies the auth middleware rejects invalid keys before reaching the business logic.
+
+---
+
+## Security Tests
+
 ### [P] Limited key with `instances:read` — should work
 
 The limited key has `instances:read` scope, so it should be able to get instance details even though it lacks other scopes.
@@ -159,6 +256,32 @@ codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --workflows --profile c
 **Expect**: `true`
 
 **Why**: Confirms scope enforcement is per-endpoint — `instances:read` is sufficient for `getProcessInstancePublic`, regardless of what other scopes the key has or lacks.
+
+---
+
+### [S] Cross-org isolation
+
+The cross-org key belongs to org `HF5DaJQamZxIeMj0zfWY`. It must not be able to fetch instances from the test org (`l0gM8nHm2o2lpupMpm5x`).
+
+```bash
+codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json
+```
+
+**Expect**: Exit code 1, `success: false`, error about not found or permission denied. Must NOT return the test org's instance data.
+
+**Why**: Confirms that organization-level data isolation holds. A valid key from org B cannot read org A's instances, even though both exist in the same Firestore database.
+
+---
+
+### [S] Member visibility — member can see shared instance
+
+```bash
+codika get instance 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-member --json | jq '.success'
+```
+
+**Expect**: `true` (if instance is shared with member) OR exit code 1 with not found/permission error (if not shared). The key point: the member must NOT see data from instances outside their visibility scope.
+
+**Why**: Confirms the sharing model applies to instance reads — members only see instances they have access to, not all org instances.
 
 ---
 

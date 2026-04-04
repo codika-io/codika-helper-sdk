@@ -28,6 +28,7 @@ One-time setup for CLI integration tests. Creates the organization, users, keys,
 | `cli-test-owner` | `cko_HwMY2LUV` | Owner | All 11 | `2GL1RWDB96O6PRr5iKvE` |
 | `cli-test-member` | `cko_murX0spn` | Member | All 11 | `USuKqmVXPkLJuz5hpAtR` |
 | `cli-test-limited` | `cko_URWigC5s` | Owner | `deploy:use-case`, `instances:read` | `1QwX6lSm83jf5PTOvqCl` |
+| `cli-test-personal` | `ckp_lAqgVGge` | Personal | `organizations:create`, `api-keys:manage` | — |
 
 ### How profiles were created
 
