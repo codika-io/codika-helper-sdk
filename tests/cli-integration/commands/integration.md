@@ -1,7 +1,7 @@
 # `codika integration set/list/delete`
 
 Manages integrations on the Codika platform. Three sub-commands handle the full lifecycle:
-- **set**: Creates or updates an integration by encrypting secrets (RSA-OAEP + AES-GCM) and sending them to the platform. Supports org, member, and process_instance context types. Custom integrations (cstm_*) require `--custom-schema-file`.
+- **set**: Creates or updates an integration by encrypting secrets (RSA-OAEP + AES-GCM) and sending them to the platform. Supports org, member, and process_instance context types. Custom integrations (cstm_*) auto-extract the schema from config.ts when `--path` is provided, or accept `--custom-schema-file` as fallback.
 - **list**: Lists connected integrations across all context levels (org + member by default, process_instance if instance ID is provided).
 - **delete**: Deletes an integration with two-phase confirmation (first call shows affected process instances, second call with `--confirm` performs deletion).
 
@@ -135,15 +135,15 @@ codika integration set openai --secret "no-equals-sign" --profile cli-test-owner
 
 ---
 
-### [N] Custom integration without `--custom-schema-file`
+### [N] Custom integration without schema or config.ts
 
 ```bash
-codika integration set cstm_acme_crm --secret API_KEY=test --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-owner-full --json
+cd /tmp && codika integration set cstm_acme_crm --secret API_KEY=test --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-owner-full --json
 ```
 
-**Expect**: Exit code 2, error contains "Custom integration cstm_acme_crm requires --custom-schema-file".
+**Expect**: Exit code 2, error contains "Custom integration cstm_acme_crm requires a schema".
 
-**Why**: Custom integrations (cstm_* prefix) need a schema file defining the integration's fields, credential type, etc.
+**Why**: Custom integrations (cstm_* prefix) need a schema — either auto-extracted from config.ts (via `--path`) or explicitly provided via `--custom-schema-file`.
 
 ---
 
