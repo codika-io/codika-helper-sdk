@@ -31,7 +31,7 @@ A declarative test suite for the `codika` CLI. Each command has a markdown playb
 
 ## Operation estimates
 
-### Total test cases: ~684
+### Total test cases: ~703
 
 | Category | Count | % |
 |----------|-------|---|

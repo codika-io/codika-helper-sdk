@@ -11,6 +11,8 @@ tests/cli-integration/
   README.md                ← You are here — framework guide
   CLAUDE.md                ← Agent instructions for executing tests
   OVERVIEW.md              ← Operation estimates, risk levels, batch plan
+  ROADMAP.md               ← CLI + framework improvements (done + planned)
+  SKIPS.md                 ← Tracker for all skipped tests with fix instructions
   setup.md                 ← Test environment config (org, profiles, resources)
 
   commands/                ← One playbook per command (26 files, ~684 tests)
