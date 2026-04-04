@@ -19,10 +19,32 @@ import {
 
 export const configShowCommand = new Command('show')
   .description('Display current configuration')
-  .action(() => {
+  .option('--json', 'Output as JSON')
+  .action((options: { json?: boolean }) => {
     const profiles = listProfiles();
     const baseUrl = resolveBaseUrl();
     const urlSource = describeBaseUrlSource();
+
+    if (options.json) {
+      console.log(JSON.stringify({
+        profiles: profiles.map(({ name, profile, active }) => ({
+          name,
+          active,
+          type: profile.type,
+          organizationId: profile.organizationId || null,
+          organizationName: profile.organizationName || null,
+          keyPrefix: profile.keyPrefix || maskApiKey(profile.apiKey),
+          scopes: profile.scopes || [],
+          expiresAt: profile.expiresAt || null,
+        })),
+        baseUrl,
+        baseUrlSource: urlSource,
+      }, null, 2));
+      if (profiles.length === 0) {
+        process.exit(0);
+      }
+      return;
+    }
 
     console.log('');
     console.log('Codika Configuration');

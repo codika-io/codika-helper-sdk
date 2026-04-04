@@ -318,10 +318,10 @@ ${description.replace(/`/g, "'")}
 
 ## Getting Started
 
-1. Edit the workflow JSON files in \\\`workflows/\\\` to add your business logic
+1. Edit the workflow JSON files in \`workflows/\` to add your business logic
 2. Update the schemas in this file to match your input/output
-3. Run: \\\`codika verify use-case .\\\`
-4. Run: \\\`codika deploy use-case .\\\`\`;
+3. Run: \`codika verify use-case .\`
+4. Run: \`codika deploy use-case .\`\`;
 }
 ${withDataIngestion ? generateDataIngestionSection(slug) : ''}`;
 }
@@ -350,8 +350,8 @@ export function getDataIngestionConfig(): ProcessDataIngestionConfigInput {
     workflowName: 'Embedding Ingestion',
     n8nWorkflowJsonBase64: workflowBase64,
     webhooks: {
-      embed: \\\`{{PROCDATA_PROCESS_ID_ATADCORP}}/embed\\\`,
-      delete: \\\`{{PROCDATA_PROCESS_ID_ATADCORP}}/embed-delete\\\`,
+      embed: \`{{PROCDATA_PROCESS_ID_ATADCORP}}/embed\`,
+      delete: \`{{PROCDATA_PROCESS_ID_ATADCORP}}/embed-delete\`,
     },
     purpose: 'Embed KB documents into Pinecone for RAG retrieval',
     cost: 2,

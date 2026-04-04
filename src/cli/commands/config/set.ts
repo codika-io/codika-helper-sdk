@@ -40,6 +40,11 @@ export async function runConfigSet(options: ConfigSetOptions): Promise<void> {
   let apiKey = options.apiKey;
   const baseUrl = options.baseUrl || PRODUCTION_BASE_URL;
 
+  if (options.apiKey === '') {
+    console.error('\x1b[31mError:\x1b[0m API key cannot be empty.');
+    process.exit(2);
+  }
+
   // Interactive prompt for API key if not provided via flag
   if (!apiKey) {
     apiKey = await promptMasked('API key: ');

@@ -105,7 +105,7 @@ async function runGetSkills(processInstanceIdArg: string | undefined, options: S
   });
 
   if (!isFetchSkillsSuccess(response)) {
-    throw new Error(`Failed to fetch skills: ${response.error.message}`);
+    throw new Error(`Failed to fetch skills: ${response.error?.message || JSON.stringify(response.error) || 'Unknown error'}`);
   }
 
   const { skills } = response.data;

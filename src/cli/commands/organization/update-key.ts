@@ -63,7 +63,10 @@ async function runUpdateKey(options: UpdateKeyCommandOptions): Promise<void> {
 
   // Parse scopes if provided
   let scopes: string[] | undefined;
-  if (options.scopes) {
+  if (options.scopes !== undefined) {
+    if (options.scopes === '') {
+      exitWithError('--scopes cannot be empty.');
+    }
     scopes = options.scopes.split(',').map(s => s.trim()).filter(Boolean);
     if (scopes.length === 0) {
       exitWithError('At least one scope is required when --scopes is provided.');
@@ -71,7 +74,7 @@ async function runUpdateKey(options: UpdateKeyCommandOptions): Promise<void> {
   }
 
   // At least one update field required
-  if (!options.scopes && !options.name && options.description === undefined) {
+  if (options.scopes === undefined && !options.name && options.description === undefined) {
     exitWithError('At least one field to update is required (--scopes, --name, or --description).');
   }
 
