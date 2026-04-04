@@ -231,12 +231,12 @@ codika organization create --api-key "$CODIKA_PERSONAL_KEY" --json 2>&1; echo "E
 ## [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika organization create --name "CLI Test No Key" --json 2>&1; echo "EXIT:$?"
+codika organization create --name "CLI Test No Key" --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains `API key is required. Either:` (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: The `resolveApiKey` call returns undefined, triggering `exitWithError(API_KEY_MISSING_MESSAGE)` at line 76. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1). The `--json` flag is irrelevant here because `exitWithError` always writes to stderr.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

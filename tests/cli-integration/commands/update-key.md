@@ -208,12 +208,12 @@ codika organization update-key --key-id "R7wKRSuJ5BuQNVUqLtuJ" --scopes "deploy:
 No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. Hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path (exit code 2).
 
 ```bash
-env -u CODIKA_API_KEY codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --scopes "deploy:use-case" --json 2>&1; echo "EXIT:$?"
+codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --scopes "deploy:use-case" --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`. The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard before any HTTP call. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1).
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 
@@ -223,9 +223,9 @@ env -u CODIKA_API_KEY codika organization update-key --key-id "1QwX6lSm83jf5PTOv
 codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --scopes "" --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `2`, stderr contains "At least one scope is required when --scopes is provided." The split/filter/Boolean logic produces an empty array, which triggers this guard.
+**Expect**: Exit code `2`, stderr contains `--scopes cannot be empty.`
 
-**Why**: Validates the empty-scopes guard at line 69 of the source. Without this test, `--scopes ""` could silently pass through and clear all scopes server-side.
+**Why**: Validates the empty-scopes guard. The split/filter/Boolean logic produces an empty array, which triggers this guard. Without this test, `--scopes ""` could silently pass through and clear all scopes server-side.
 
 ---
 
@@ -256,12 +256,12 @@ codika organization update-key --key-id "nonexistent123" --scopes "deploy:use-ca
 ## [P] `--api-url` flag is accepted
 
 ```bash
-codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --name "cli-test-limited" --api-url "https://us-central1-codika-app.cloudfunctions.net" --profile cli-test-owner-full --json
+codika organization update-key --key-id "1QwX6lSm83jf5PTOvqCl" --name "cli-test-limited" --api-url "https://localhost:9999" --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: `success: true` (the production URL is the default, so the override still works). Confirms the `--api-url` flag is wired through to `resolveEndpointUrl`.
+**Expect**: Exit code `1`, error about network/connection failure (not a "not found" or "unauthorized" error from the real API). Confirms the `--api-url` flag is wired through to `resolveEndpointUrl`.
 
-**Why**: Every `.option()` flag should have at least one test exercising it. Without this, a typo in the flag name or broken resolution would go undetected.
+**Why**: Using a deliberately bogus URL proves the flag overrides the default endpoint. A network error confirms the CLI attempted to call the overridden URL, not the production default.
 
 ---
 

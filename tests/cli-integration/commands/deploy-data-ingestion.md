@@ -2,7 +2,7 @@
 
 Deploys a process-level data ingestion configuration to the Codika platform. This is separate from use case deployment -- updating data ingestion does NOT trigger "update available" notifications. Manages local `version.json` (dataIngestionVersion field), deployment archiving, and project.json updates with webhook URLs.
 
-**Scope required**: `deploy:data-ingestion`
+**Scope required**: `deploy:use-case`
 **Method**: POST (body: data ingestion configuration + workflow)
 **Cloud Function**: `deployDataIngestion`
 
@@ -300,26 +300,26 @@ codika deploy process-data-ingestion /path/to/use-case --target-version 1.2.3 --
 No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. This hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path.
 
 ```bash
-env -u CODIKA_API_KEY codika deploy process-data-ingestion /path/to/use-case 2>&1; echo "EXIT:$?"
+codika deploy process-data-ingestion /path/to/use-case --profile nonexistent-profile-name 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key is required". Exit code `2` (CLI validation error, not `1`).
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard before any HTTP call. The `exitWithError` function writes to stderr and exits with code 2. The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 
-## [S] Scope enforcement -- limited key lacks `deploy:data-ingestion`
+## [S] Scope enforcement -- limited key has `deploy:use-case`
 
-The limited key has `deploy:use-case` + `instances:read` but NOT `deploy:data-ingestion`.
+The limited key has `deploy:use-case` + `instances:read`, which includes the required scope for data ingestion deployment.
 
 ```bash
 codika deploy process-data-ingestion /path/to/use-case --project-id h8iCqSgTjSsKySyufq36 --profile cli-test-limited --json
 ```
 
-**Expect**: `success: false`, error contains `deploy:data-ingestion`. Exit code 1.
+**Expect**: The scope check passes (key has `deploy:use-case`). The command may fail for other reasons (missing config, path issues) but NOT with a scope error.
 
-**Why**: Data ingestion deployment requires its own scope, separate from `deploy:use-case`. The limited key authenticates fine but is rejected at the scope layer. This proves that `deploy:use-case` does NOT implicitly grant `deploy:data-ingestion`.
+**Why**: Data ingestion deployment now uses the `deploy:use-case` scope (the separate `deploy:data-ingestion` scope has been removed).
 
 ---
 

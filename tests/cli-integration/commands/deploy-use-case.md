@@ -251,12 +251,12 @@ codika deploy use-case /nonexistent/path --profile cli-test-owner-full --json 2>
 ## [N] Missing API key — no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika deploy use-case /path/to/valid-use-case --json 2>&1; echo "EXIT:$?"
+codika deploy use-case /path/to/valid-use-case --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains `"API key"` (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard when no API key can be resolved from any source. The exit happens before any deployment logic.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

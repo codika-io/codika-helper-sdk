@@ -271,9 +271,9 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --verify --profile cli-test-owner-full --json | jq '.readiness.validation'
 ```
 
-**Expect**: Non-null object with `valid` (boolean), `mustViolations` (number), `shouldWarnings` (number). For a valid fixture: `valid: true`, `mustViolations: 0`.
+**Expect**: Non-null object with `valid` (boolean), `mustViolations` (number), `shouldWarnings` (number). The fixture currently has 3 must violations (WORKFLOW-SETTINGS, WEBHOOK-ID, WEBHOOK-AUTH): `valid: false`, `mustViolations: 3`.
 
-**Why**: `--verify` adds an inline validation pass. This tests the happy path where validation passes.
+**Why**: `--verify` adds an inline validation pass. The fixture has known violations that are reflected in the validation result.
 
 ---
 

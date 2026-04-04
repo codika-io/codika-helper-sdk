@@ -243,12 +243,12 @@ codika deploy documents /path/to/orphan-use-case --profile cli-test-owner-full -
 ## [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika deploy documents /path/to/use-case-with-docs --json 2>&1; echo "EXIT:$?"
+codika deploy documents /path/to/use-case-with-docs --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`. No JSON output because `exitWithError` bypasses the JSON catch block.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard before any HTTP call. The `--json` flag is irrelevant here because `exitWithError` always writes to stderr.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

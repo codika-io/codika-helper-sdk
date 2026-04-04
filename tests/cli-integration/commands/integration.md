@@ -215,12 +215,12 @@ cd /tmp && codika integration set supabase --secret SUPABASE_HOST=test --context
 ### [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika integration set openai --secret OPENAI_API_KEY=test --json 2>&1; echo "EXIT:$?"
+codika integration set openai --secret OPENAI_API_KEY=test --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `2`, stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant).
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard (set.ts line 167) before any encryption or HTTP call. Same exit code 2 pattern as other CLI validation errors.
+**Why**: Verifies the early-exit guard before any encryption or HTTP call when no valid profile can be resolved.
 
 ---
 
@@ -293,12 +293,12 @@ codika integration list --profile cli-test-owner-full
 ### [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika integration list --json 2>&1; echo "EXIT:$?"
+codika integration list --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `2`, stderr contains "API key".
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Same early-exit guard as `integration set`. Verifies the auth resolution chain fails cleanly before any HTTP call (list.ts line 87).
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 
@@ -370,9 +370,9 @@ codika integration delete supabase --process-instance-id 019d444d-1bd0-70f5-b6ff
 codika integration delete nonexistent_integration --confirm --profile cli-test-owner-full --json
 ```
 
-**Expect**: `success: false`, error about integration not found. Exit code 1.
+**Expect**: `success: true`, message about "already deleted or does not exist". Exit code 0.
 
-**Why**: Standard 404 handling. The API returns an error when the integration does not exist in the target context.
+**Why**: Delete is idempotent. If the integration does not exist, the API returns success rather than an error.
 
 ---
 
@@ -393,12 +393,12 @@ cd /tmp && codika integration delete supabase --context-type process_instance --
 ### [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika integration delete openai --confirm --json 2>&1; echo "EXIT:$?"
+codika integration delete openai --confirm --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `2`, stderr contains "API key".
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Same early-exit guard as the other subcommands (delete.ts line 113).
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

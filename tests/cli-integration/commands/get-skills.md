@@ -227,12 +227,12 @@ cd /tmp && codika get skills --profile cli-test-owner-full --json 2>&1; echo "EX
 No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. This hits the `throw new Error(API_KEY_MISSING_MESSAGE)` path.
 
 ```bash
-cd /tmp && env -u CODIKA_API_KEY codika get skills 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --json 2>&1; echo "EXIT:$?"
+cd /tmp && codika get skills 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `1`. JSON output with `success: false` and error message containing `API key is required`. Unlike `list projects` (which uses `exitWithError` with exit code 2), this command throws through the catch block so all errors exit with code 1.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the API key resolution guard. The process instance ID resolves fine, but no API key is available.
+**Why**: Verifies the API key resolution guard when no valid profile can be resolved.
 
 ---
 

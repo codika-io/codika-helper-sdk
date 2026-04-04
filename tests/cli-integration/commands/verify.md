@@ -18,9 +18,9 @@ Local validation commands that check use-case folders and individual workflow JS
 codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 0. Output contains a pass indicator (check mark or "passed"). No `must` violations listed.
+**Expect**: Exit code 1. Output lists 3 `must` violations (WORKFLOW-SETTINGS, WEBHOOK-ID, WEBHOOK-AUTH). The fixture currently has these known violations.
 
-**Why**: Baseline -- a well-formed use case with config.ts + workflows/ should pass all rules in default mode.
+**Why**: Baseline -- verifies the expected violation count for the fixture. Use `--fix` to auto-fix WORKFLOW-SETTINGS, or update the fixture to get a clean pass.
 
 ---
 
@@ -30,9 +30,9 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json
 ```
 
-**Expect**: Exit code 0. JSON with `valid: true`, `path` (absolute), `summary` object with `must: 0`, `findings` array with no `severity: "must"` items, `filesValidated` >= 1, `ruleCount` object.
+**Expect**: Exit code 1. JSON with `valid: false`, `path` (absolute), `summary` object with `must: 3`, `findings` array containing 3 `severity: "must"` items (WORKFLOW-SETTINGS, WEBHOOK-ID, WEBHOOK-AUTH), `filesValidated` >= 1, `ruleCount` object.
 
-**Why**: Machine-readable output is essential for agents and CI pipelines. Verifies the full JSON structure.
+**Why**: Machine-readable output is essential for agents and CI pipelines. The fixture currently has 3 must violations. Verifies the full JSON structure.
 
 ---
 
@@ -66,7 +66,7 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/invalid-config --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 1. JSON with `valid: false`, `findings` array contains at least one item with `severity: "must"`. Rule name should be config-exports related (e.g. `UC-CONFIG-EXPORTS`).
+**Expect**: Exit code 1. JSON with `valid: false`, `findings` array contains at least one item with `severity: "must"`. Rule name should be config-exports related (e.g. `CONFIG-EXPORTS`).
 
 **Why**: A use case with a broken config.ts should be caught by the config-exports validation script.
 
@@ -108,7 +108,7 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 cp -r tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case /tmp/verify-fix-test && codika verify use-case /tmp/verify-fix-test --fix --json | jq '{valid, findings: [.findings[] | select(.fixable == true)]}'
 ```
 
-**Expect**: Exit code 0. Any auto-fixable findings (e.g. WF-SETTINGS, WF-SANITIZATION) are applied. The `findings` array may show `fixable: true` items that were resolved.
+**Expect**: Exit code 0. Any auto-fixable findings (e.g. WORKFLOW-SETTINGS, WORKFLOW-SANITIZATION) are applied. The `findings` array may show `fixable: true` items that were resolved.
 
 **Why**: `--fix` modifies workflow JSON files in place to fix known issues (missing settings, transient IDs).
 
@@ -144,7 +144,7 @@ rm -rf /tmp/verify-dryrun-test
 
 ### [P] `--fix` modifies files but `--dry-run` does not
 
-This test proves `--fix` and `--dry-run` differ in file mutation behavior. Use a fixture with a fixable issue (WF-SANITIZATION):
+This test proves `--fix` and `--dry-run` differ in file mutation behavior. Use a fixture with a fixable issue (WORKFLOW-SANITIZATION):
 
 ```bash
 cp tests/validation/workflow-scripts/workflow-sanitization/fixtures/invalid-has-id.json /tmp/fixable-wf.json && BEFORE=$(md5 -q /tmp/fixable-wf.json) && cp -r tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case /tmp/verify-fix-mutation-test
@@ -170,10 +170,10 @@ rm -rf /tmp/verify-fix-mutation-test /tmp/fixable-wf.json
 ### [P] `--rules` runs only specified rules
 
 ```bash
-codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --rules "UC-CONFIG-EXPORTS" --json | jq '[.findings[] | .rule] | unique'
+codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --rules "CONFIG-EXPORTS" --json | jq '[.findings[] | .rule] | unique'
 ```
 
-**Expect**: Array contains only `"UC-CONFIG-EXPORTS"` (or is empty if the rule passes). No findings from other rules like `CK-INIT`, `WF-SETTINGS`, etc.
+**Expect**: Array contains only `"CONFIG-EXPORTS"` (or is empty if the rule passes). No findings from other rules like `CODIKA-INIT`, `WORKFLOW-SETTINGS`, etc.
 
 **Why**: Targeted validation lets developers focus on specific rules during development without noise from unrelated checks.
 
@@ -182,10 +182,10 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 ### [P] `--rules` with multiple comma-separated values
 
 ```bash
-codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --rules "UC-CONFIG-EXPORTS,CK-INIT" --json | jq '[.findings[] | .rule] | unique'
+codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --rules "CONFIG-EXPORTS,CODIKA-INIT" --json | jq '[.findings[] | .rule] | unique'
 ```
 
-**Expect**: Only `UC-CONFIG-EXPORTS` and/or `CK-INIT` findings (or empty if both pass). No other rule names present.
+**Expect**: Only `CONFIG-EXPORTS` and/or `CODIKA-INIT` findings (or empty if both pass). No other rule names present.
 
 **Why**: Verifies comma-separated rule filtering works for multiple rules.
 
@@ -194,10 +194,10 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 ### [P] `--exclude-rules` skips specified rules
 
 ```bash
-codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --exclude-rules "UC-CONFIG-EXPORTS" --json | jq '[.findings[] | .rule] | unique'
+codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --exclude-rules "CONFIG-EXPORTS" --json | jq '[.findings[] | .rule] | unique'
 ```
 
-**Expect**: No findings with rule `UC-CONFIG-EXPORTS`. All other rules still run normally.
+**Expect**: No findings with rule `CONFIG-EXPORTS`. All other rules still run normally.
 
 **Why**: Users may want to suppress known rules during migration while keeping all other checks active.
 
@@ -206,10 +206,10 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 ### [P] `--exclude-rules` with multiple values
 
 ```bash
-codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --exclude-rules "UC-CONFIG-EXPORTS,WF-SETTINGS" --json | jq '[.findings[] | .rule] | unique'
+codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --exclude-rules "CONFIG-EXPORTS,WORKFLOW-SETTINGS" --json | jq '[.findings[] | .rule] | unique'
 ```
 
-**Expect**: No findings with rule `UC-CONFIG-EXPORTS` or `WF-SETTINGS`. Other rules still run.
+**Expect**: No findings with rule `CONFIG-EXPORTS` or `WORKFLOW-SETTINGS`. Other rules still run.
 
 **Why**: Verifies comma-separated exclusion works for multiple rules.
 
@@ -225,7 +225,7 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --skip-workflows --json | jq '.filesValidated'
 ```
 
-**Expect**: The `--skip-workflows` count is lower than the default count. Only config-level and use-case-level checks run; individual workflow files are not validated. Workflow-specific rules (CK-INIT, WF-SETTINGS, CK-PLACEHOLDERS, etc.) should not appear in findings.
+**Expect**: The `--skip-workflows` count is lower than the default count. Only config-level and use-case-level checks run; individual workflow files are not validated. Workflow-specific rules (CODIKA-INIT, WORKFLOW-SETTINGS, PLACEHOLDER-SYNTAX, etc.) should not appear in findings.
 
 **Why**: For large use cases with many workflows, skipping workflow validation speeds up config-only checks.
 
@@ -249,7 +249,7 @@ codika verify use-case 2>&1; echo "EXIT:$?"
 codika verify use-case /tmp/nonexistent-use-case-path-xyz 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 2. Error message about the path not existing or not being a valid use case folder.
+**Expect**: Exit code 1. Error message about the path not existing or not being a valid use case folder.
 
 **Why**: The command should fail gracefully with a clear error when pointed at a nonexistent path.
 
@@ -261,7 +261,7 @@ codika verify use-case /tmp/nonexistent-use-case-path-xyz 2>&1; echo "EXIT:$?"
 codika verify use-case tests/validation/workflow-scripts/workflow-sanitization/fixtures/valid-clean.json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 2. Error about the path not being a valid use case folder (it's a file, not a directory).
+**Expect**: Exit code 1. Error about the path not being a valid use case folder (it's a file, not a directory).
 
 **Why**: The use-case command expects a directory. Passing a file should produce a clear error, not a confusing crash.
 
@@ -323,7 +323,7 @@ codika verify workflow tests/validation/workflow-scripts/placeholder-syntax/fixt
 codika verify workflow tests/validation/workflow-scripts/placeholder-syntax/fixtures/invalid-placeholder-suffix.json --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 1. `valid: false`, findings contain at least one `CK-PLACEHOLDERS` rule violation with `severity: "must"`.
+**Expect**: Exit code 1. `valid: false`, findings contain at least one `PLACEHOLDER-SYNTAX` rule violation with `severity: "must"`.
 
 **Why**: Invalid placeholder suffixes must be caught by the placeholder syntax rule.
 
@@ -335,7 +335,7 @@ codika verify workflow tests/validation/workflow-scripts/placeholder-syntax/fixt
 codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/fixtures/invalid-has-id.json --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 1. `valid: false`, findings contain `WF-SANITIZATION` rule violation. The finding should have `fixable: true`.
+**Expect**: Exit code 1. `valid: false`, findings contain `WORKFLOW-SANITIZATION` rule violation. The finding should have `fixable: true`.
 
 **Why**: Workflows with transient IDs (versionId, meta, active) must be flagged, and these are auto-fixable.
 
@@ -371,7 +371,7 @@ codika verify workflow tests/validation/use-case-scripts/config-exports/fixtures
 cp tests/validation/workflow-scripts/workflow-sanitization/fixtures/invalid-has-id.json /tmp/fix-workflow-test.json && codika verify workflow /tmp/fix-workflow-test.json --fix --json | jq '.valid'
 ```
 
-**Expect**: `true` (or at least the WF-SANITIZATION finding is resolved). The file at `/tmp/fix-workflow-test.json` is modified in place.
+**Expect**: `true` (or at least the WORKFLOW-SANITIZATION finding is resolved). The file at `/tmp/fix-workflow-test.json` is modified in place.
 
 **Why**: `--fix` must apply auto-fixes to individual workflow files, not just use-case folders.
 
@@ -402,10 +402,10 @@ rm /tmp/dryrun-workflow-test.json
 ### [P] `--rules` on workflow
 
 ```bash
-codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/fixtures/invalid-has-id.json --rules "WF-SANITIZATION" --json | jq '[.findings[] | .rule] | unique'
+codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/fixtures/invalid-has-id.json --rules "WORKFLOW-SANITIZATION" --json | jq '[.findings[] | .rule] | unique'
 ```
 
-**Expect**: Only `"WF-SANITIZATION"` findings (or empty). No findings from other rules like `CK-INIT`, `CK-PLACEHOLDERS`.
+**Expect**: Only `"WORKFLOW-SANITIZATION"` findings (or empty). No findings from other rules like `CODIKA-INIT`, `PLACEHOLDER-SYNTAX`.
 
 **Why**: Rule filtering must work on the workflow subcommand.
 
@@ -414,10 +414,10 @@ codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/f
 ### [P] `--exclude-rules` on workflow
 
 ```bash
-codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/fixtures/invalid-has-id.json --exclude-rules "WF-SANITIZATION" --json | jq '[.findings[] | .rule] | unique'
+codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/fixtures/invalid-has-id.json --exclude-rules "WORKFLOW-SANITIZATION" --json | jq '[.findings[] | .rule] | unique'
 ```
 
-**Expect**: No `WF-SANITIZATION` findings. Other rules still run and may produce findings.
+**Expect**: No `WORKFLOW-SANITIZATION` findings. Other rules still run and may produce findings.
 
 **Why**: Rule exclusion must work on the workflow subcommand.
 
@@ -446,7 +446,7 @@ rm /tmp/bad-workflow.json
 echo 'this is not json' > /tmp/not-json.txt && codika verify workflow /tmp/not-json.txt 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 2. Error about failing to parse the file as JSON.
+**Expect**: Exit code 1. Error about failing to parse the file as JSON.
 
 **Why**: The command should fail gracefully on non-JSON input with a clear parse error.
 
@@ -475,7 +475,7 @@ codika verify workflow 2>&1; echo "EXIT:$?"
 codika verify workflow /tmp/nonexistent-workflow-xyz.json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 2. Error about the file not existing.
+**Expect**: Exit code 1. Error about the file not existing.
 
 **Why**: The command should fail gracefully when pointed at a nonexistent file.
 

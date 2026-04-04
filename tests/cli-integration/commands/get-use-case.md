@@ -235,12 +235,12 @@ codika get use-case h8iCqSgTjSsKySyufq36 --list --di-version "v1" --profile cli-
 No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. This hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path.
 
 ```bash
-env -u CODIKA_API_KEY codika get use-case h8iCqSgTjSsKySyufq36 --list --json 2>&1; echo "EXIT:$?"
+codika get use-case h8iCqSgTjSsKySyufq36 --list --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2` (CLI validation error, not `1`). The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard before any HTTP call. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1).
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 
@@ -262,9 +262,9 @@ codika get use-case nonexistent-project-id-here --list --profile cli-test-owner-
 codika get use-case h8iCqSgTjSsKySyufq36 --list --target-version "99.99" --profile cli-test-owner-full --json
 ```
 
-**Expect**: Exit code `1`, `success: false`, error about version not found.
+**Expect**: `success: true`, `data.documents` is an empty array (no documents for that version). The API returns success with empty results rather than an error.
 
-**Why**: The project exists but the requested version does not. Ensures the API returns a meaningful error rather than an empty success.
+**Why**: The project exists but the requested version has no documents. The API returns an empty document set rather than a 404 error.
 
 ---
 

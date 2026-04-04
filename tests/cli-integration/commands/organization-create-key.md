@@ -75,10 +75,10 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 ## [P] All 11 scopes
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-allscopes-$(date +%s)" --scopes "deploy:use-case,deploy:data-ingestion,projects:create,projects:read,workflows:trigger,executions:read,instances:read,instances:manage,skills:read,integrations:manage,api-keys:manage" --profile cli-test-owner-full --json
+codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-allscopes-$(date +%s)" --scopes "deploy:use-case,projects:create,projects:read,workflows:trigger,executions:read,instances:read,instances:manage,skills:read,integrations:manage,api-keys:manage" --profile cli-test-owner-full --json
 ```
 
-**Expect**: `success: true`, `data.scopes` array has exactly 11 entries matching all valid scopes.
+**Expect**: `success: true`, `data.scopes` array has exactly 10 entries matching all valid scopes.
 
 **Why**: Ensures the full scope list is accepted without server-side rejection. This is the maximum scope set for an org key.
 
@@ -197,12 +197,12 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "te
 No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var.
 
 ```bash
-env -u CODIKA_API_KEY codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "test" --scopes "projects:read" 2>&1; echo "EXIT:$?"
+codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "test" --scopes "projects:read" --profile nonexistent-profile-name 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2` (CLI validation error).
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path at line 73-74. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1). No HTTP call is made.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

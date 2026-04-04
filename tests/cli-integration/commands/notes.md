@@ -196,12 +196,12 @@ codika notes upsert h8iCqSgTjSsKySyufq36 --type "Invalid Type!" --content "test"
 ### [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika notes upsert h8iCqSgTjSsKySyufq36 --type test-fail --content "test" --summary "test" --json 2>&1; echo "EXIT:$?"
+codika notes upsert h8iCqSgTjSsKySyufq36 --type test-fail --content "test" --summary "test" --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key". Exit code 1 (from `exitWithError(API_KEY_MISSING_MESSAGE)`).
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: The `runUpsert` function checks `if (!apiKey)` and calls `exitWithError` before making any HTTP call. Note: unlike some other commands, upsert uses exit code 1 (not 2) for this guard.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 
@@ -282,12 +282,12 @@ codika notes list --profile cli-test-owner-full --json 2>&1; echo "EXIT:$?"
 ### [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika notes list h8iCqSgTjSsKySyufq36 --json 2>&1; echo "EXIT:$?"
+codika notes list h8iCqSgTjSsKySyufq36 --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key". Exit code 1.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: The `runList` function checks `if (!apiKey)` and exits before making any HTTP call.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 
@@ -404,12 +404,12 @@ codika notes get --type test-brief --profile cli-test-owner-full --json 2>&1; ec
 ### [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika notes get h8iCqSgTjSsKySyufq36 --type test-brief --json 2>&1; echo "EXIT:$?"
+codika notes get h8iCqSgTjSsKySyufq36 --type test-brief --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key". Exit code 1.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: The `runGet` function checks `if (!apiKey)` and exits before making any HTTP call.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

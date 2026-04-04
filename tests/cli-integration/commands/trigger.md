@@ -201,12 +201,12 @@ cd /tmp && codika trigger some-workflow --profile cli-test-owner-full 2>&1; echo
 ## [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika trigger some-workflow --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 2>&1; echo "EXIT:$?"
+codika trigger some-workflow --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile nonexistent-profile-name 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains the `API_KEY_MISSING_MESSAGE` constant text (about API key). Exit code `2`.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: After resolving the process instance ID, the CLI resolves the API key via the priority chain (flag > env > profile > none). When all sources fail, `exitWithError(API_KEY_MISSING_MESSAGE)` fires. This is the second `exitWithError` guard in `runTrigger`.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

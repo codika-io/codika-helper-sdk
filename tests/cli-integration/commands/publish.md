@@ -296,12 +296,12 @@ codika publish nonexistent_template_id --project-id h8iCqSgTjSsKySyufq36 --profi
 No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var.
 
 ```bash
-env -u CODIKA_API_KEY codika publish some_template_id --project-id h8iCqSgTjSsKySyufq36 --json 2>&1; echo "EXIT:$?"
+codika publish some_template_id --project-id h8iCqSgTjSsKySyufq36 --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`. The `--json` flag is irrelevant because `exitWithError` always writes to stderr and never produces JSON.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard at line 87-89. `resolveApiKey` returns null/undefined, triggering `exitWithError(API_KEY_MISSING_MESSAGE)`. This is a CLI validation error (exit code 2), not an API error.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

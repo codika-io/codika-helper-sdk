@@ -213,6 +213,8 @@ codika config set --api-key "$(cat ~/.config/codika/config.json | jq -r '.profil
 
 **Expect**: First call creates profile `org-replace-a`. Second call (no `--name`) detects that a profile for the same organizationId already exists and replaces `org-replace-a` rather than creating a new profile. The profile count for this org remains 1.
 
+**Note**: This test may match existing profiles if the owner key's organization already has a profile configured (e.g., `cli-test-owner-full`). In that case, the second call may replace the existing profile rather than `org-replace-a`. To isolate this test, use a fabricated org ID that doesn't match any existing profile's organizationId.
+
 **Why**: When `--name` is omitted and the key belongs to an org that already has a profile, `findProfileByOrgId` kicks in and reuses the existing profile name.
 
 **Cleanup**:

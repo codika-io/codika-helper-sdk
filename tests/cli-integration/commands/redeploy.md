@@ -336,12 +336,12 @@ codika redeploy --process-instance-id nonexistent-instance-id --force --profile 
 ## [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 2>&1; echo "EXIT:$?"
+codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile nonexistent-profile-name 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `2`. Stderr contains `API key is required` with instructions to run `codika login` or set `CODIKA_API_KEY`. This hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path at line 144.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard before any HTTP call. The `--json` flag is irrelevant here because `exitWithError()` always writes to stderr and never produces JSON.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

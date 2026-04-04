@@ -139,12 +139,12 @@ codika list projects --profile cli-test-limited --json
 No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var. This hits the `exitWithError(API_KEY_MISSING_MESSAGE)` path (exit code 2).
 
 ```bash
-env -u CODIKA_API_KEY codika list projects --json 2>&1; echo "EXIT:$?"
+codika list projects --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2` (CLI validation error, not `1`).
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard before any HTTP call. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1). The `--json` flag is irrelevant here because `exitWithError` always writes to stderr and never produces JSON.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 

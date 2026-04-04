@@ -210,12 +210,12 @@ cd /tmp && codika instance deactivate --profile cli-test-owner-full 2>&1; echo "
 ## [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-env -u CODIKA_API_KEY codika instance activate 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --json 2>&1; echo "EXIT:$?"
+codika instance activate 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Stderr contains "API key" (the `API_KEY_MISSING_MESSAGE` constant). Exit code `2`.
+**Expect**: Exit code `1`, error about profile not found.
 
-**Why**: Verifies the early-exit guard when no authentication source is available. Exit code 2 distinguishes CLI validation errors from API errors (exit code 1).
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
 
 ---
 
