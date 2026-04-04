@@ -14,35 +14,35 @@ Creates a new API key scoped to an organization. On success, automatically saves
 ## [P] Happy path -- JSON output
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-temp-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-temp-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`, `data.apiKey` starts with `cko_`, `data.keyId` is a non-empty string, `data.keyPrefix` present, `data.name` matches input, `data.scopes` = `["projects:read"]`, `data.createdAt` present. `requestId` present. Exit code 0.
 
 **Why**: Core happy path -- verifies key creation, scope parsing, JSON response shape, and the `cko_` prefix convention.
 
-**Cleanup**: Delete the key via `codika organization update-key` or Firestore console. Remove the auto-created profile: `codika logout <profile-name>`. Restore active profile: `codika use cli-test-owner-full`.
+**Cleanup**: Delete the key via `codika organization update-key` or Firestore console. Remove the auto-created profile: `codika logout <profile-name>`. Restore active profile: `codika use cli-test-owner-full-v2`.
 
 ---
 
 ## [P] Human-readable output
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-hr-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-hr-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full-v2
 ```
 
 **Expect**: Output contains `Creating API key "..." for organization ...`, then `✓ Organization API Key Created Successfully`, the warning `Save the API key below`, and fields: API Key (`cko_...`), Key Prefix, Key ID, Name, Scopes, Created, Request ID, and `Saved as profile "..." (now active)`. Exit code 0.
 
 **Why**: Verifies the formatted output path including the save warning and auto-profile message. Both output modes must be tested since they follow completely different code paths (lines 120-148 in create-key.ts).
 
-**Cleanup**: Delete key and profile. Restore active profile: `codika use cli-test-owner-full`.
+**Cleanup**: Delete key and profile. Restore active profile: `codika use cli-test-owner-full-v2`.
 
 ---
 
 ## [P] Auto-save profile on success
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-autosave-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-autosave-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full-v2 --json
 ```
 
 After running, verify:
@@ -61,7 +61,7 @@ codika use
 ## [P] Multiple scopes
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-multi-$(date +%s)" --scopes "deploy:use-case,projects:read,instances:read" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-multi-$(date +%s)" --scopes "deploy:use-case,projects:read,instances:read" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`, `data.scopes` = `["deploy:use-case", "projects:read", "instances:read"]` (array of 3).
@@ -72,10 +72,10 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 
 ---
 
-## [P] All 11 scopes
+## [P] All 10 scopes
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-allscopes-$(date +%s)" --scopes "deploy:use-case,projects:create,projects:read,workflows:trigger,executions:read,instances:read,instances:manage,skills:read,integrations:manage,api-keys:manage" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-allscopes-$(date +%s)" --scopes "deploy:use-case,projects:create,projects:read,workflows:trigger,executions:read,instances:read,instances:manage,skills:read,integrations:manage,api-keys:manage" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`, `data.scopes` array has exactly 10 entries matching all valid scopes.
@@ -89,7 +89,7 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 ## [P] `--description` flag
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-desc-$(date +%s)" --scopes "projects:read" --description "Test key for CLI integration" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-desc-$(date +%s)" --scopes "projects:read" --description "Test key for CLI integration" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`. The description is stored with the key (verify via Firestore or a future `get-key` command).
@@ -103,7 +103,7 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 ## [P] `--expires-in-days` flag
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-expiry-$(date +%s)" --scopes "projects:read" --expires-in-days 7 --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-expiry-$(date +%s)" --scopes "projects:read" --expires-in-days 7 --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`, `data.expiresAt` is approximately 7 days from now (ISO 8601 string). The profile saved locally includes the `expiresAt` field.
@@ -117,7 +117,7 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 ## [P] `--expires-in-days` absent -- no expiry
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-noexpiry-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-noexpiry-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`, `data.expiresAt` is absent or undefined in the response. The saved profile does not include `expiresAt`.
@@ -131,7 +131,7 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 ## [P] Scopes with whitespace around commas
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-spaces-$(date +%s)" --scopes "projects:read , instances:read , executions:read" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-spaces-$(date +%s)" --scopes "projects:read , instances:read , executions:read" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`, `data.scopes` = `["projects:read", "instances:read", "executions:read"]` (trimmed, no leading/trailing spaces).
@@ -145,7 +145,7 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 ## [P] `--api-key` flag overrides profile
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-apikey-$(date +%s)" --scopes "projects:read" --api-key "$(codika config show --profile cli-test-owner-full --json | jq -r '.profiles["cli-test-owner-full"].apiKey')" --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-apikey-$(date +%s)" --scopes "projects:read" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: `success: true`. The `--api-key` flag takes priority over `--profile` and env vars in the resolution chain.
@@ -200,9 +200,9 @@ No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var.
 codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "test" --scopes "projects:read" --profile nonexistent-profile-name 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `1`, error about profile not found.
+**Expect**: Exit code `2`, error message contains "API key is required".
 
-**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved. Uses `exitWithError` which exits with code 2.
 
 ---
 
@@ -326,12 +326,12 @@ An owner key with only `api-keys:manage` + `projects:read` should not be able to
 
 ```bash
 # First create a restricted owner key with only api-keys:manage + projects:read
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-restricted-$(date +%s)" --scopes "api-keys:manage,projects:read" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-restricted-$(date +%s)" --scopes "api-keys:manage,projects:read" --profile cli-test-owner-full-v2 --json
 ```
 
 Then use that restricted key to attempt creating a key with broader scopes:
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-escalate" --scopes "deploy:use-case,projects:read" --profile <restricted-key-profile> --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-escalate" --scopes "deploy:use-case,projects:read" --profile <restricted-key-profile> --json
 ```
 
 **Expect**: `success: false`, error about scope escalation (the caller cannot grant scopes they don't have). If the server allows it, note this as a security finding.
@@ -347,7 +347,7 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 Only personal keys (`ckp_`) and admin keys (`cka_`) should be able to create org keys. An existing org key with `api-keys:manage` may or may not be allowed depending on the Cloud Function's key type check.
 
 ```bash
-codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cli-test-orgkey-create" --scopes "projects:read" --profile cli-test-owner-full --json
+codika organization create-key --organization-id GuXOipBEJdgGmKkxujbR --name "cli-test-orgkey-create" --scopes "projects:read" --profile cli-test-owner-full-v2 --json
 ```
 
 **Expect**: Document whether `cko_` keys (like `cli-test-owner-full`) can create other org keys. If the Cloud Function restricts to `ckp_`/`cka_` only, this should fail. If it allows `cko_` keys with `api-keys:manage`, document this behavior.
@@ -358,4 +358,4 @@ codika organization create-key --organization-id l0gM8nHm2o2lpupMpm5x --name "cl
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

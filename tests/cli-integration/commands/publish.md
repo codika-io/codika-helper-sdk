@@ -299,9 +299,9 @@ No `--profile`, no `--api-key`, no `CODIKA_API_KEY` env var.
 codika publish some_template_id --project-id h8iCqSgTjSsKySyufq36 --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `1`, error about profile not found.
+**Expect**: Exit code `2`, error message contains "API key is required".
 
-**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved. Uses `exitWithError` which exits with code 2.
 
 ---
 
@@ -367,4 +367,4 @@ codika publish <templateId> --project-id h8iCqSgTjSsKySyufq36 --api-key "cko_inv
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

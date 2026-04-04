@@ -198,7 +198,7 @@ codika whoami --profile cli-test-owner-full
 codika whoami --profile cli-test-member --json | jq '{type, keyName, organizationId}'
 ```
 
-**Expect**: `type` = `"org-api-key"`, `keyName` contains `"cli-test-member"`, `organizationId` = `"l0gM8nHm2o2lpupMpm5x"`.
+**Expect**: `type` = `"org-api-key"`, `keyName` = `"Member Key Test"`, `organizationId` = `"l0gM8nHm2o2lpupMpm5x"`.
 
 **Why**: Confirms `--profile` flag correctly switches which profile's API key is used for verification, and that different keys return different metadata.
 
@@ -255,24 +255,24 @@ codika use cli-test-owner-full && codika whoami --json | jq '.profileName'
 ### [N] No API key configured (empty env, no profile)
 
 ```bash
-CODIKA_API_KEY="" codika whoami --profile nonexistent-profile --json 2>&1; echo "EXIT:$?"
+env -u CODIKA_API_KEY codika whoami --profile nonexistent-profile --json 2>&1; echo "EXIT:$?"
 ```
 
 **Expect**: Exit code 1. JSON output contains `loggedIn: false`.
 
-**Why**: When no API key can be resolved (profile doesn't exist, no env var), whoami should clearly indicate the user is not logged in and exit non-zero.
+**Why**: When no API key can be resolved (profile doesn't exist, env var unset), whoami should clearly indicate the user is not logged in and exit non-zero. Using `env -u` ensures the env var is fully unset (not just empty), which forces the resolution chain to fall through.
 
 ---
 
 ### [N] No API key -- human-readable output
 
 ```bash
-CODIKA_API_KEY="" codika whoami --profile nonexistent-profile 2>&1; echo "EXIT:$?"
+env -u CODIKA_API_KEY codika whoami --profile nonexistent-profile 2>&1; echo "EXIT:$?"
 ```
 
 **Expect**: Exit code 1. Output contains `Not logged in` and `Run 'codika login' to authenticate`.
 
-**Why**: The human-readable path for "not logged in" must show a clear call-to-action, not just a cryptic error.
+**Why**: The human-readable path for "not logged in" must show a clear call-to-action, not just a cryptic error. Using `env -u` ensures the env var is fully unset.
 
 ---
 
@@ -382,9 +382,9 @@ codika use cli-test-owner-full
 codika use cli-test-owner-full
 ```
 
-**Expect**: Output contains `Switched to "cli-test-owner-full"`, `Organization: Test Organization from CLI`, `Key:` with masked value starting `cko_KBuc...`.
+**Expect**: Output contains `Switched to "cli-test-owner-full"`, `Organization:` line shown if `organizationName` is cached (may be `null` if profile was created with `--skip-verify`), `Key:` with masked value starting `cko_KBuc...`.
 
-**Why**: The confirmation message must show enough context for the user to verify they switched to the intended profile.
+**Why**: The confirmation message must show enough context for the user to verify they switched to the intended profile. The `organizationName` comes from cached profile data, which is only populated when the profile was created with remote verification (not `--skip-verify`).
 
 ---
 
@@ -527,4 +527,4 @@ This test requires an active profile to be unset while other profiles exist -- *
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

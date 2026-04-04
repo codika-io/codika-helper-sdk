@@ -11,6 +11,21 @@ One-time setup for CLI integration tests. Creates the organization, users, keys,
 | **Owner userId** | `2TqvxNzA2eho6RaDPtCf1o4lmCH2` |
 | **Member userId** | `rILcnT0NfogoBEXbSTHPqxvTEEA2` |
 
+## Create-Key Test Organization (v2)
+
+Used for `organization-create-key.md` positive tests (the primary org hit the 20-key limit).
+
+| Field | Value |
+|---|---|
+| **Org ID** | `GuXOipBEJdgGmKkxujbR` |
+| **Name** | CLI Test Org v2 |
+
+| Profile | Key Prefix | Role | Scopes | Firestore Key ID |
+|---|---|---|---|---|
+| `cli-test-owner-full-v2` | `cko_SQMYYEgQ` | Owner | All 10 | `dpiCGBPMVb5BFeHKzyN7` |
+| `cli-test-owner-v2` | `cko_6y19HWmM` | Owner | All 10 | `tj3zzB76aW2mabaLHB6X` |
+| `cli-test-limited-v2` | `cko_S-JjyODW` | Owner | `deploy:use-case`, `instances:read` | `bn6fO4HaCWzm9UoWgyST` |
+
 ## Cross-Org (for isolation tests)
 
 | Field | Value |

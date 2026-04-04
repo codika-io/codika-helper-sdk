@@ -352,7 +352,7 @@ EXEC_ID=$(codika list executions 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --limit 1 
 codika get execution "$EXEC_ID" --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-member --json | jq '.success'
 ```
 
-**Expect**: `true` — the member key has `executions:read` scope and the instance is shared with the member.
+**Expect**: `true` — the member key has `executions:read` scope and instance `019d444d-1bd0-70f5-b6ff-21d1b5ed5b71` is shared with the member. If the instance is not shared with the member, expect `success: false` with "User does not have access to this process instance". Use instance `019d444d-1bd0-70f5-b6ff-21d1b5ed5b71` which is shared with the member.
 
 **Why**: Confirms that non-owner members with the correct scope can access execution data. This is a positive security test — verifying that legitimate access is not blocked.
 
@@ -370,4 +370,4 @@ codika get execution "$EXEC_ID" --process-instance-id 019d444d-1bd0-70f5-b6ff-21
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

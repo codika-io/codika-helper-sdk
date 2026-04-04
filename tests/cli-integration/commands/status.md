@@ -16,19 +16,19 @@ Shows identity, use case context, and deploy readiness — like `git status` for
 ## [P] Happy path — JSON output from a valid use-case folder
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json
 ```
 
-**Expect**: Exit code 0. JSON with three top-level keys: `identity`, `useCase`, `readiness`. `identity.loggedIn` = `true`, `identity.profileName` = `"cli-test-owner-full"`, `identity.organizationName` = `"Test Organization from CLI"`, `identity.organizationId` = `"l0gM8nHm2o2lpupMpm5x"`. `useCase` is non-null with `hasConfigTs: true`, `hasWorkflowsDir: true`, `workflowCount` = `1`, `hasProjectJson: true`, `projectId` = `"test-project-id-12345"`. `readiness.ready` = `true`, `readiness.missing` = `[]`.
+**Expect**: Exit code 0. JSON with three top-level keys: `identity`, `useCase`, `readiness`. `identity.loggedIn` = `true`, `identity.organizationName` = `"Test Organization from CLI"`, `identity.organizationId` = `"l0gM8nHm2o2lpupMpm5x"`. `useCase` is non-null with `hasConfigTs: true`, `hasWorkflowsDir: true`, `workflowCount` = `1`, `hasProjectJson: true`, `projectId` = `"test-project-id-12345"`. `readiness.ready` = `true`, `readiness.missing` = `[]`.
 
-**Why**: Core happy path — verifies that status gathers identity + use case context correctly from a known-good fixture. Exit 0 because the use case has everything needed.
+**Why**: Core happy path — verifies that status gathers identity + use case context correctly from a known-good fixture. Exit 0 because the use case has everything needed. Note: `status` does not support `--profile` — it uses the active profile.
 
 ---
 
 ## [P] Happy path — Human-readable output
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case
 ```
 
 **Expect**: Exit code 0. Output contains an `Identity` heading with Organization (including org ID), Profile (with count), and Key (masked prefix). A `Use Case: valid-use-case` heading with Path, Version, Workflows (`1 file`), Project ID (`test-project-id-12345`), and Profile Match line. A readiness line at the bottom (`Ready to deploy`).
@@ -40,7 +40,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] Identity section — all fields present
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq '.identity | keys'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.identity | keys'
 ```
 
 **Expect**: Exactly 8 keys: `keyPrefix`, `keySource`, `loggedIn`, `organizationId`, `organizationName`, `profileCount`, `profileName`, `type`.
@@ -52,7 +52,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] Identity section — profile count
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq '.identity.profileCount'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.identity.profileCount'
 ```
 
 **Expect**: Number >= 4 (at least the 4 test profiles from setup.md).
@@ -64,7 +64,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] Identity section — key source shows "profile"
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq -r '.identity.keySource'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq -r '.identity.keySource'
 ```
 
 **Expect**: String containing `"profile"` (the key came from the named profile, not env var or flag).
@@ -76,7 +76,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] Use case section — all fields present
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq '.useCase | keys'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.useCase | keys'
 ```
 
 **Expect**: Exactly 11 keys: `currentVersion`, `hasConfigTs`, `hasProjectJson`, `hasVersionJson`, `hasWorkflowsDir`, `name`, `organizationId`, `path`, `profileMatch`, `projectId`, `workflowCount`.
@@ -160,7 +160,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] Profile match — `no-org-in-project` (fixture has no organizationId)
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq '.useCase.profileMatch'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.useCase.profileMatch'
 ```
 
 **Expect**: `{ "status": "no-org-in-project" }`. The valid fixture's `project.json` has `projectId` but no `organizationId`, so profile matching can't compare orgs.
@@ -172,19 +172,19 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] Profile match — `no-profile` (no auth)
 
 ```bash
-CODIKA_API_KEY="" codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.useCase.profileMatch'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile nonexistent-profile --json | jq '.useCase.profileMatch'
 ```
 
 **Expect**: `{ "status": "no-profile" }`.
 
-**Why**: Tests the first branch — when `activeProfile` is null, the match status is `no-profile`. In human-readable output: `n/a (not logged in)`.
+**Why**: Tests the first branch — when `activeProfile` is null, the match status is `no-profile`. In human-readable output: `n/a (not logged in)`. Using `--profile nonexistent-profile` forces no-auth.
 
 ---
 
 ## [P] Readiness — ready when all requirements met
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq '.readiness'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.readiness'
 ```
 
 **Expect**: `ready: true`, `missing: []`, `warnings` is an array (may be empty or contain expiry warning). No `validation` key (since `--verify` was not passed).
@@ -196,7 +196,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] Readiness — missing items for incomplete use case (no workflows, no project.json)
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-config --profile cli-test-owner-full --json | jq '.readiness'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-config --json | jq '.readiness'
 ```
 
 **Expect**: Exit code 1. `ready: false`. `missing` array contains entries for missing workflows (`"No workflow files in workflows/"`) and missing project.json (`"Missing project.json"`). The fixture has `config.ts` but no `workflows/` directory and no `project.json`.
@@ -208,7 +208,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-
 ## [P] Readiness — missing config.ts (only workflows/ exists)
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/missing-config --profile cli-test-owner-full --json | jq '.readiness.missing'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/missing-config --json | jq '.readiness.missing'
 ```
 
 **Expect**: Exit code 1. Array includes `"Missing config.ts"` and `"Missing project.json"`.
@@ -220,7 +220,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/missing-
 ## [P] Status from a non-use-case folder — JSON
 
 ```bash
-codika status /tmp --profile cli-test-owner-full --json
+codika status /tmp --json
 ```
 
 **Expect**: Exit code 0. `useCase` = `null`. `readiness.ready` = `false`. `readiness.missing` = `[]`. `identity` section is fully populated (loggedIn, profileName, etc.).
@@ -232,7 +232,7 @@ codika status /tmp --profile cli-test-owner-full --json
 ## [P] Non-use-case folder — human-readable output
 
 ```bash
-codika status /tmp --profile cli-test-owner-full
+codika status /tmp
 ```
 
 **Expect**: Exit code 0. Output contains the Identity section. No `Use Case:` section. Readiness line shows `No use case detected at this path` (dim text, no error styling).
@@ -244,7 +244,7 @@ codika status /tmp --profile cli-test-owner-full
 ## [P] Default path is current directory
 
 ```bash
-cd /tmp && codika status --profile cli-test-owner-full --json | jq '.useCase'
+cd /tmp && codika status --json | jq '.useCase'
 ```
 
 **Expect**: `null` (since `/tmp` is not a use case). The command uses `.` (cwd) as the default path argument.
@@ -256,7 +256,7 @@ cd /tmp && codika status --profile cli-test-owner-full --json | jq '.useCase'
 ## [P] `--json` flag — output is valid JSON
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq type
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq type
 ```
 
 **Expect**: `"object"`. The entire output is parseable JSON (no ANSI escape codes, no extra text).
@@ -268,7 +268,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] `--verify` flag — runs validation on valid use case
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --verify --profile cli-test-owner-full --json | jq '.readiness.validation'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --verify --json | jq '.readiness.validation'
 ```
 
 **Expect**: Non-null object with `valid` (boolean), `mustViolations` (number), `shouldWarnings` (number). The fixture currently has 3 must violations (WORKFLOW-SETTINGS, WEBHOOK-ID, WEBHOOK-AUTH): `valid: false`, `mustViolations: 3`.
@@ -280,7 +280,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [P] `--verify` flag — validation failure adds to missing
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-config --verify --profile cli-test-owner-full --json | jq '.readiness'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-config --verify --json | jq '.readiness'
 ```
 
 **Expect**: Exit code 1. `validation` object present with `valid: false`, `mustViolations` > 0. `missing` array includes a `"Validation failed"` entry alongside the structural missing items.
@@ -292,19 +292,19 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-
 ## [P] `--verify` flag — human-readable shows validation section
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --verify --profile cli-test-owner-full
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --verify
 ```
 
-**Expect**: Exit code 0. Output contains a `Validation passed` line (with checkmark) between the Use Case section and the Readiness section.
+**Expect**: Exit code 0. Output contains a `Validation failed (3 must, 1 should)` line between the Use Case section and the Readiness section. The fixture currently has 3 must violations (WORKFLOW-SETTINGS, WEBHOOK-ID, WEBHOOK-AUTH) and 1 should warning.
 
-**Why**: Verifies the human-readable formatter renders the validation section when `--verify` is used.
+**Why**: Verifies the human-readable formatter renders the validation section when `--verify` is used. The fixture has known violations.
 
 ---
 
 ## [P] `--verify` without a use case is a no-op
 
 ```bash
-codika status /tmp --verify --profile cli-test-owner-full --json | jq '.readiness.validation'
+codika status /tmp --verify --json | jq '.readiness.validation'
 ```
 
 **Expect**: `null` (validation is skipped when `isUseCase` is false). No error.
@@ -342,31 +342,31 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-us
 ## [N] Not logged in — identity reflects no auth
 
 ```bash
-CODIKA_API_KEY="" codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.identity'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile nonexistent-profile --json | jq '.identity'
 ```
 
 **Expect**: `loggedIn: false`, `profileName: null`, `organizationName: null`, `keyPrefix: null`.
 
-**Why**: Without authentication, the identity section should clearly show the user is not logged in.
+**Why**: Without authentication, the identity section should clearly show the user is not logged in. Using `--profile nonexistent-profile` forces no-auth.
 
 ---
 
 ## [N] Not logged in — readiness blocked
 
 ```bash
-CODIKA_API_KEY="" codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.readiness'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile nonexistent-profile --json | jq '.readiness'
 ```
 
 **Expect**: Exit code 1. `ready: false`. `missing` includes `"No API key (run 'codika login')"`.
 
-**Why**: Without an API key, deployment is impossible. Status should surface this as a missing prerequisite. Exit 1 because a use case was detected but can't deploy.
+**Why**: Without an API key, deployment is impossible. Status should surface this as a missing prerequisite. Using `--profile nonexistent-profile` forces no-auth.
 
 ---
 
 ## [N] Exit code 1 — use case detected but not ready
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-config --profile cli-test-owner-full --json > /tmp/status-out.json 2>&1; echo "EXIT:$?"
+codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-config --json > /tmp/status-out.json 2>&1; echo "EXIT:$?"
 ```
 
 **Expect**: `EXIT:1`. The output is valid JSON with `readiness.ready: false`.
@@ -378,7 +378,7 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/invalid-
 ## [N] Exit code 0 — no use case detected (not an error)
 
 ```bash
-codika status /tmp --profile cli-test-owner-full --json > /tmp/status-out.json 2>&1; echo "EXIT:$?"
+codika status /tmp --json > /tmp/status-out.json 2>&1; echo "EXIT:$?"
 ```
 
 **Expect**: `EXIT:0`. No use case means the command is informational, not a failure.
@@ -393,7 +393,7 @@ This test requires a use case whose `project.json` has an `organizationId` that 
 
 ```bash
 # Hypothetical: if project.json had organizationId "different-org-id"
-codika status <path-with-mismatched-org> --profile cli-test-owner-full --json | jq '.readiness.warnings'
+codika status <path-with-mismatched-org> --json | jq '.readiness.warnings'
 ```
 
 **Expect**: Warnings array contains a message about active profile org not matching project.json org, with a `try: codika use <name>` suggestion if a matching profile exists.
@@ -405,7 +405,7 @@ codika status <path-with-mismatched-org> --profile cli-test-owner-full --json | 
 ## [P] Readiness warnings — key expiry (observational)
 
 ```bash
-codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --profile cli-test-owner-full --json | jq '.readiness.warnings'
+codika status tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case --json | jq '.readiness.warnings'
 ```
 
 **Expect**: Array. May contain an expiry warning (`"API key expires in N days"` or `"API key has expired"`) if the test profile's key is near expiry. Otherwise empty.
@@ -440,4 +440,4 @@ codika status tests/validation/use-case-scripts/config-exports/fixtures/missing-
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

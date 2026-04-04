@@ -234,9 +234,9 @@ codika organization create --api-key "$CODIKA_PERSONAL_KEY" --json 2>&1; echo "E
 codika organization create --name "CLI Test No Key" --profile nonexistent-profile-name --json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `1`, error about profile not found.
+**Expect**: Exit code `2`, error message contains "API key is required".
 
-**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved.
+**Why**: Verifies the early-exit guard before any HTTP call when no valid profile can be resolved. Uses `exitWithError` which exits with code 2.
 
 ---
 
@@ -438,4 +438,4 @@ codika organization create --name "CLI Test Unreachable" --api-url "https://loca
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

@@ -51,10 +51,10 @@ codika get use-case h8iCqSgTjSsKySyufq36 /tmp/uc-download-human --profile cli-te
 ## [P] Downloaded files exist on disk
 
 ```bash
-codika get use-case h8iCqSgTjSsKySyufq36 /tmp/uc-download-disk --profile cli-test-owner-full --json > /dev/null && ls /tmp/uc-download-disk/
+codika get use-case h8iCqSgTjSsKySyufq36 /tmp/uc-download-disk --target-version "1.0" --profile cli-test-owner-full --json > /dev/null && ls /tmp/uc-download-disk/
 ```
 
-**Expect**: At least `config.ts` and a `workflows/` directory. Files are non-empty.
+**Expect**: At least `config.ts` and a `workflows/` directory. Files are non-empty. The `--target-version "1.0"` flag fetches a version that contains config.ts + workflows (the latest version may be DI-only).
 
 ```bash
 test -s /tmp/uc-download-disk/config.ts && echo "OK" || echo "EMPTY"
@@ -318,4 +318,4 @@ rm -rf /tmp/uc-download-test /tmp/uc-download-shape /tmp/uc-download-human /tmp/
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

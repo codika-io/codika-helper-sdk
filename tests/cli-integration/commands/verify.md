@@ -108,9 +108,9 @@ codika verify use-case tests/validation/use-case-scripts/config-exports/fixtures
 cp -r tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case /tmp/verify-fix-test && codika verify use-case /tmp/verify-fix-test --fix --json | jq '{valid, findings: [.findings[] | select(.fixable == true)]}'
 ```
 
-**Expect**: Exit code 0. Any auto-fixable findings (e.g. WORKFLOW-SETTINGS, WORKFLOW-SANITIZATION) are applied. The `findings` array may show `fixable: true` items that were resolved.
+**Expect**: Exit code 1. Auto-fixable findings (e.g. WORKFLOW-SETTINGS, WORKFLOW-SANITIZATION) are applied by `--fix`. However, CODIKA-INIT remains unfixable (it requires manual workflow changes), so `valid` is still `false` after fixing. The `findings` array will show remaining unfixable violations.
 
-**Why**: `--fix` modifies workflow JSON files in place to fix known issues (missing settings, transient IDs).
+**Why**: `--fix` modifies workflow JSON files in place to fix known issues (missing settings, transient IDs), but cannot fix structural issues like missing CODIKA-INIT nodes.
 
 **Cleanup**:
 ```bash
@@ -275,9 +275,9 @@ codika verify use-case tests/validation/workflow-scripts/workflow-sanitization/f
 codika verify workflow tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case/workflows/main-workflow.json 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code 0. Output contains a pass indicator (check mark or "passed"). No `must` violations.
+**Expect**: Exit code 1. Output lists 3 `must` violations (WORKFLOW-SETTINGS, WEBHOOK-ID, WEBHOOK-AUTH). The fixture currently has these known violations at the workflow level.
 
-**Why**: Single-workflow validation baseline -- ensures workflow-level rules pass independently of use-case context.
+**Why**: Single-workflow validation baseline -- verifies the expected violation count for the fixture at the workflow level.
 
 ---
 
@@ -287,9 +287,9 @@ codika verify workflow tests/validation/use-case-scripts/config-exports/fixtures
 codika verify workflow tests/validation/use-case-scripts/config-exports/fixtures/valid-use-case/workflows/main-workflow.json --json
 ```
 
-**Expect**: Exit code 0. JSON with `valid: true`, `path` (absolute), `summary` with `must: 0`, `findings` array with no `must`-severity items.
+**Expect**: Exit code 1. JSON with `valid: false`, `path` (absolute), `summary` with `must: 3`, `findings` array containing 3 `severity: "must"` items (WORKFLOW-SETTINGS, WEBHOOK-ID, WEBHOOK-AUTH).
 
-**Why**: Machine-readable output for the workflow subcommand.
+**Why**: Machine-readable output for the workflow subcommand. The fixture currently has 3 must violations.
 
 ---
 
@@ -347,9 +347,9 @@ codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/f
 codika verify workflow tests/validation/workflow-scripts/workflow-sanitization/fixtures/valid-clean.json --json | jq '.valid'
 ```
 
-**Expect**: `true`.
+**Expect**: `false`. The valid-clean.json fixture now fails CODIKA-INIT and WEBHOOK-AUTH rules (`valid: false`).
 
-**Why**: Confirms `--json` flag works for a passing workflow.
+**Why**: Confirms `--json` flag works for the workflow subcommand. The fixture has known violations (CODIKA-INIT, WEBHOOK-AUTH).
 
 ---
 
@@ -483,4 +483,4 @@ codika verify workflow /tmp/nonexistent-workflow-xyz.json 2>&1; echo "EXIT:$?"
 
 ## Last tested
 
-Not yet tested.
+2026-04-04

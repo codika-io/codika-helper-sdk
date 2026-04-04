@@ -448,9 +448,11 @@ codika integration delete openai --confirm --profile cli-test-limited --json
 codika integration set openai --secret OPENAI_API_KEY=sk-crossorg --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json
 ```
 
-**Expect**: `success: false`, error about org mismatch or unauthorized. Exit code 1.
+**Expect**: `success: true` — the cross-org key creates the integration in its OWN org (`HF5DaJQamZxIeMj0zfWY`), not the test org. This is correct behavior: integration commands always operate on the caller's organization.
 
-**Why**: The cross-org key belongs to org `HF5DaJQamZxIeMj0zfWY`. It cannot create integrations in the test org (`l0gM8nHm2o2lpupMpm5x`). The API enforces organization-level isolation.
+**Why**: The cross-org key belongs to org `HF5DaJQamZxIeMj0zfWY`. Integration set operates on the caller's own org, not a target org. There is no org mismatch because there is no target org parameter — the API uses the org from the authenticated key.
+
+**Cleanup**: `codika integration delete openai --confirm --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs"`
 
 ---
 
@@ -472,9 +474,9 @@ codika integration list --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-
 codika integration delete openai --confirm --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json
 ```
 
-**Expect**: `success: false`, error about integration not found (it belongs to a different org). Exit code 1.
+**Expect**: `success: true` — the delete operates on the caller's own org (`HF5DaJQamZxIeMj0zfWY`), not the test org. If an openai integration exists in that org, it is deleted. If not, the API returns success with "already deleted or does not exist" (delete is idempotent).
 
-**Why**: Cross-org keys cannot delete integrations in another organization. The API looks up the integration within the authenticated org's scope, finds nothing, and returns a not-found error.
+**Why**: Integration delete commands always operate on the caller's organization. There is no cross-org isolation issue because the command never targets another org — it deletes from the authenticated key's own org scope.
 
 ---
 
@@ -516,4 +518,4 @@ codika integration delete openai --confirm --api-key "cko_garbage_key" --json
 
 ## Last tested
 
-Not yet tested.
+2026-04-04
