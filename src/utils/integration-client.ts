@@ -275,3 +275,76 @@ export async function listIntegrationsRemote(
 
   return (await response.json()) as ListIntegrationsResponse;
 }
+
+// ── Get Credential Schema ────────────────────────────
+
+export interface CredentialSchemaData {
+  type: string;
+  properties: Record<string, { type: string; enum?: string[] }>;
+  required: string[];
+  additionalProperties: boolean;
+  allOf?: any[];
+}
+
+export interface GetCredentialSchemaSuccessResponse {
+  success: true;
+  data: CredentialSchemaData;
+  requestId: string;
+}
+
+export interface GetCredentialSchemaErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  };
+  requestId: string;
+}
+
+export type GetCredentialSchemaResponse =
+  | GetCredentialSchemaSuccessResponse
+  | GetCredentialSchemaErrorResponse;
+
+export function isGetCredentialSchemaSuccess(
+  response: GetCredentialSchemaResponse
+): response is GetCredentialSchemaSuccessResponse {
+  return response.success === true;
+}
+
+export interface GetCredentialSchemaOptions {
+  apiUrl: string;
+  apiKey: string;
+  credentialType: string;
+}
+
+export async function getCredentialSchemaRemote(
+  options: GetCredentialSchemaOptions
+): Promise<GetCredentialSchemaResponse> {
+  const url = `${options.apiUrl}?type=${encodeURIComponent(options.credentialType)}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'X-Process-Manager-Key': options.apiKey,
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = `HTTP ${response.status} ${response.statusText}`;
+    try {
+      const body = (await response.json()) as Record<string, unknown>;
+      const err = body.error as Record<string, unknown> | undefined;
+      if (err?.message) errorMessage = String(err.message);
+      if (body.success === false) return body as unknown as GetCredentialSchemaResponse;
+    } catch {
+      // Response body is not JSON
+    }
+    return {
+      success: false,
+      error: { code: `HTTP_${response.status}`, message: errorMessage },
+      requestId: '',
+    };
+  }
+
+  return (await response.json()) as GetCredentialSchemaResponse;
+}

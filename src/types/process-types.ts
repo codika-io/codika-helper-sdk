@@ -665,13 +665,12 @@ export interface CustomIntegrationSchema {
   /** Where this integration is stored */
   contextType: 'organization' | 'member' | 'process_instance';
   /**
-   * n8n credential type to create. Maps to n8n's generic credential types:
-   * - 'httpHeaderAuth': API key in HTTP header (covers Bearer, X-API-Key, etc.)
-   * - 'httpBasicAuth': Username + password (HTTP Basic)
-   * - 'httpQueryAuth': API key as query parameter
-   * - 'none': No n8n credential (integration data used differently)
+   * n8n credential type to create.
+   * Any valid n8n credential type (e.g. 'httpHeaderAuth', 'twilioApi', 'openAiApi')
+   * or 'none' for no n8n credential.
+   * Use the getCredentialSchemaPublic endpoint to discover available types and their fields.
    */
-  n8nCredentialType: 'httpHeaderAuth' | 'httpBasicAuth' | 'httpQueryAuth' | 'none';
+  n8nCredentialType: string;
   /**
    * Maps secret/metadata field keys to n8n credential data field names.
    * Example for httpHeaderAuth: { 'API_KEY': 'value', 'HEADER_NAME': 'name' }

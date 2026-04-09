@@ -66,6 +66,7 @@ export const ENDPOINTS = {
   updateOrganizationApiKey: '/updateorganizationapikeypublic',
   upsertProjectNote: '/upsertprojectnote',
   getProjectNotes: '/getprojectnotes',
+  getCredentialSchema: '/getcredentialschemapublic',
 } as const;
 
 // ── Config file path ─────────────────────────────────────
