@@ -66,7 +66,7 @@ _codika_completions() {
   done
 
   # Top-level commands
-  local commands="deploy get project verify config trigger login init whoami use logout status completion"
+  local commands="deploy get project verify config trigger login init whoami use profiles logout status completion"
 
   # Subcommand completions
   case "$cmd" in
@@ -162,7 +162,7 @@ _codika_completions() {
       COMPREPLY=( $(compgen -W "--json --verify --project-file" -- "$cur") )
       return
       ;;
-    use)
+    use|profiles)
       local profiles
       profiles=$(codika use --list-names 2>/dev/null)
       COMPREPLY=( $(compgen -W "$profiles" -- "$cur") )
@@ -218,6 +218,7 @@ _codika() {
         'init:Scaffold a new use case folder'
         'whoami:Show current authenticated identity'
         'use:Switch active profile or list profiles'
+        'profiles:List all profiles (alias for use)'
         'logout:Remove a profile'
         'status:Show project status'
         'completion:Generate shell completion scripts'
@@ -446,7 +447,7 @@ _codika() {
             '--verify[Run verification]' \\
             '--project-file[Custom project file]:file:_files -g "*.json"'
           ;;
-        use)
+        use|profiles)
           local -a profiles
           profiles=(\${(f)"$(codika use --list-names 2>/dev/null)"})
           _describe 'profile' profiles
@@ -489,6 +490,7 @@ complete -c codika -n '__fish_use_subcommand' -a login -d 'Save API key'
 complete -c codika -n '__fish_use_subcommand' -a init -d 'Scaffold a new use case folder'
 complete -c codika -n '__fish_use_subcommand' -a whoami -d 'Show current authenticated identity'
 complete -c codika -n '__fish_use_subcommand' -a use -d 'Switch active profile or list profiles'
+complete -c codika -n '__fish_use_subcommand' -a profiles -d 'List all profiles (alias for use)'
 complete -c codika -n '__fish_use_subcommand' -a logout -d 'Remove a profile'
 complete -c codika -n '__fish_use_subcommand' -a status -d 'Show project status'
 complete -c codika -n '__fish_use_subcommand' -a completion -d 'Generate shell completion scripts'
@@ -620,8 +622,9 @@ complete -c codika -n '__fish_seen_subcommand_from status' -l json -d 'Output as
 complete -c codika -n '__fish_seen_subcommand_from status' -l verify -d 'Run verification'
 complete -c codika -n '__fish_seen_subcommand_from status' -l project-file -d 'Custom project file' -rF
 
-# use — dynamic profile names
+# use/profiles — dynamic profile names
 complete -c codika -n '__fish_seen_subcommand_from use' -a '(codika use --list-names 2>/dev/null)' -d 'Profile'
+complete -c codika -n '__fish_seen_subcommand_from profiles' -a '(codika use --list-names 2>/dev/null)' -d 'Profile'
 
 # logout — dynamic profile names
 complete -c codika -n '__fish_seen_subcommand_from logout' -a '(codika use --list-names 2>/dev/null)' -d 'Profile'

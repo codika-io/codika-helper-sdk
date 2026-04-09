@@ -17,6 +17,7 @@ import {
 } from '../../utils/config.js';
 
 export const useCommand = new Command('use')
+  .alias('profiles')
   .description('Switch active profile or list profiles')
   .argument('[name]', 'Profile name to switch to')
   .option('--json', 'Output as JSON')
@@ -74,8 +75,9 @@ export const useCommand = new Command('use')
           : profile.type === 'personal-api-key'
           ? '(personal)'
           : (profile.organizationName || '');
+        const orgId = profile.organizationId || '';
         const keyDisplay = maskApiKey(profile.apiKey);
-        console.log(`  ${marker} ${pName.padEnd(20)} ${orgLabel.padEnd(20)} ${keyDisplay}`);
+        console.log(`  ${marker} ${pName.padEnd(20)} ${orgLabel.padEnd(20)} ${orgId.padEnd(24)} ${keyDisplay}`);
       }
       console.log('');
       console.log('Use: codika use <name>');
