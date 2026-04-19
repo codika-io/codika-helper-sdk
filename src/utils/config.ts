@@ -67,6 +67,11 @@ export const ENDPOINTS = {
   upsertProjectNote: '/upsertprojectnote',
   getProjectNotes: '/getprojectnotes',
   getCredentialSchema: '/getcredentialschemapublic',
+  // CLI OTP auth (public — no API key required)
+  cliRequestSignupOtp: '/clirequestsignupotp',
+  cliCompleteSignup: '/clicompletesignup',
+  cliRequestLoginOtp: '/clirequestloginotp',
+  cliCompleteLogin: '/clicompletelogin',
 } as const;
 
 // ── Config file path ─────────────────────────────────────

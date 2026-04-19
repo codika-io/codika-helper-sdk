@@ -44,6 +44,7 @@ import { integrationCommand } from './commands/integration/index.js';
 import { organizationCommand } from './commands/organization/index.js';
 import { instanceCommand } from './commands/instance/index.js';
 import { notesCommand } from './commands/notes/index.js';
+import { authCommand } from './commands/auth/index.js';
 import { checkProfileExpiry } from '../utils/config.js';
 
 // Read version from package.json dynamically
@@ -87,6 +88,7 @@ program.addCommand(organizationCommand);
 program.addCommand(integrationCommand);
 program.addCommand(instanceCommand);
 program.addCommand(notesCommand);
+program.addCommand(authCommand);
 
 // Profile expiry warning — runs before every command
 program.hook('preAction', () => {
