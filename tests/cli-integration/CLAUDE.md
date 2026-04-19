@@ -75,4 +75,4 @@ These tests cover the `codika` CLI tool (npm package `codika`). They do NOT test
 - n8n workflow execution logic
 - The cova-gateway or agent framework
 
-The CLI source code is at `../../src/cli/commands/`. Skill definitions are at `../../../../agents/codika-marketplace/plugins/codika/skills/`. Documentation is at `../../../docs/operations/`.
+The CLI source code is at `../../src/cli/commands/`. Skill definitions are at `../../../../core/app/codika-plugin/skills/`. Documentation is at `../../../docs/operations/`.

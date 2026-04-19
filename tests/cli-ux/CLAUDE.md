@@ -22,7 +22,7 @@ You are simulating a new user or agent encountering the CLI for the first time w
 ## What you cannot use
 
 - The test playbooks in `../cli-integration/commands/`
-- The skill definitions in `agents/codika-marketplace/`
+- The skill definitions in `core/app/codika-plugin/`
 - The documentation in `platform/docs/operations/`
 - Prior knowledge of the exact flags or workflows (pretend you're new)
 
