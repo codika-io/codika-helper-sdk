@@ -43,7 +43,7 @@ is_local_mode() {
             LOCAL_MODULE="$project/node_modules/$PACKAGE_NAME"
             if [ -L "$LOCAL_MODULE" ]; then
                 LINK_TARGET=$(readlink "$LOCAL_MODULE" 2>/dev/null)
-                if [[ "$LINK_TARGET" == *"codika-helper-sdk"* ]] || [[ "$LINK_TARGET" == *"helper-sdk"* ]]; then
+                if [[ "$LINK_TARGET" == *"codika-cli"* ]] || [[ "$LINK_TARGET" == *"codika-helper-sdk"* ]] || [[ "$LINK_TARGET" == *"helper-sdk"* ]]; then
                     return 0
                 fi
             fi

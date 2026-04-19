@@ -3,7 +3,7 @@
  *
  * Hybrid encryption (RSA-OAEP + AES-GCM) for integration tokens and secrets.
  * This is a Node.js port of the browser-based encryption from
- * codika-app-platform/src/lib/services/integrations/utils/integrationEncryption.ts
+ * codika-app/src/lib/services/integrations/utils/integrationEncryption.ts
  *
  * Compatibility:
  * - Uses WebCrypto API (crypto.subtle) available in Node 18+
