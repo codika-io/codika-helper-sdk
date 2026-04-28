@@ -54,7 +54,7 @@ If running the full suite, follow this order (lower batches are safer):
 | 1 | verify, config, auth, status | None |
 | 2 | list-projects, list-instances, list-executions, get-project, get-instance, get-execution, get-use-case, get-skills | None |
 | 3 | notes, instance-activate, integration, update-key | Low |
-| 4 | init, project-create, deploy-use-case, deploy-documents, deploy-data-ingestion, trigger, redeploy | Medium |
+| 4 | init, project-create, deploy-use-case, deploy-documents, deploy-data-ingestion, trigger, rerun-deployment | Medium |
 | 5 | organization-create, organization-create-key, publish, auth (login tests) | High |
 
 ## When a test fails

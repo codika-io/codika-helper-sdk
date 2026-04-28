@@ -1,6 +1,6 @@
-# `codika redeploy`
+# `codika rerun deployment`
 
-Redeploys a deployment instance with optional parameter overrides. Does NOT create a new template version -- only updates runtime parameters and re-runs placeholder replacement. Resolves the process instance ID from `--process-instance-id`, or auto-resolves from `project.json` (`devProcessInstanceId` for dev, `prodProcessInstanceId` for prod). Parameters can be provided via `--param KEY=VALUE` (repeatable), `--params` JSON string, or `--params-file` path, with layered merge priority.
+Reruns an existing deployment with refreshed credentials and optional parameter overrides. Does NOT create a new template version -- only re-runs the existing deployment with the same template, optionally swapping runtime parameters and re-running placeholder replacement. Resolves the process instance ID from `--process-instance-id`, or auto-resolves from `project.json` (`devProcessInstanceId` for dev, `prodProcessInstanceId` for prod). Parameters can be provided via `--param KEY=VALUE` (repeatable), `--params` JSON string, or `--params-file` path, with layered merge priority.
 
 **Scope required**: `deploy:use-case`
 **Method**: POST (body: `{ processInstanceId, deploymentParameters?, forceRedeploy? }`)
@@ -11,25 +11,25 @@ Redeploys a deployment instance with optional parameter overrides. Does NOT crea
 
 ---
 
-## [P] Happy path -- redeploy with explicit instance ID (JSON)
+## [P] Happy path -- rerun with explicit instance ID (JSON)
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`, `data.deploymentStatus` = `"deployed"`, `data.deploymentInstanceId` is a non-empty string, `data.n8nWorkflowIds` is an array with at least one entry. Exit code 0.
 
-**Why**: Core happy path -- verifies the redeploy flow with explicit instance targeting. Uses `--force` because the instance is in deployed state.
+**Why**: Core happy path -- verifies the rerun flow with explicit instance targeting. Uses `--force` because the instance is in deployed state.
 
 ---
 
 ## [P] Human-readable output
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full
 ```
 
-**Expect**: Output shows `Redeploying instance...`, then `Instance ID:   019d444d-1bd0-70f5-b6ff-21d1b5ed5b71`, `Environment:   dev`, then `✓ Redeployed successfully!` with `Status:`, `Instance ID:`, and `Workflows:       N deployed`. No JSON structure in output.
+**Expect**: Output shows `Rerunning deployment...`, then `Instance ID:   019d444d-1bd0-70f5-b6ff-21d1b5ed5b71`, `Environment:   dev`, then `✓ Deployment rerun successfully!` with `Status:`, `Instance ID:`, and `Workflows:       N deployed`. No JSON structure in output.
 
 **Why**: Verifies the formatted human-readable output path (the `!options.json` branch).
 
@@ -38,19 +38,19 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --for
 ## [P] `--param` single override
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param COMPANY_NAME=TestCorp --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param COMPANY_NAME=TestCorp --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`. Human-readable output (without `--json`) shows `Parameters:    1 override(s)`.
 
-**Why**: The `--param KEY=VALUE` flag is the primary way to override deployment parameters (`INSTPARM` placeholders) during redeploy. Only the specified parameter changes; all others are preserved by the backend.
+**Why**: The `--param KEY=VALUE` flag is the primary way to override deployment parameters (`INSTPARM` placeholders) during a rerun. Only the specified parameter changes; all others are preserved by the backend.
 
 ---
 
 ## [P] Multiple `--param` flags
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param KEY1=value1 --param KEY2=value2 --force --profile cli-test-owner-full
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param KEY1=value1 --param KEY2=value2 --force --profile cli-test-owner-full
 ```
 
 **Expect**: `success: true`. Human-readable output shows `Parameters:    2 override(s)`.
@@ -62,7 +62,7 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --par
 ## [P] `--param` with value containing equals sign
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param "WEBHOOK_URL=https://example.com?token=abc123" --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param "WEBHOOK_URL=https://example.com?token=abc123" --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`. The parser uses `indexOf('=')` for the first `=` only, so the value `https://example.com?token=abc123` is preserved intact.
@@ -74,7 +74,7 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --par
 ## [P] `--params` JSON string
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params '{"COMPANY_NAME":"TestCorp","WEBHOOK_URL":"https://example.com"}' --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params '{"COMPANY_NAME":"TestCorp","WEBHOOK_URL":"https://example.com"}' --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`, both parameters are included in the deployment request.
@@ -86,7 +86,7 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --par
 ## [P] `--params-file` flag
 
 ```bash
-echo '{"COMPANY_NAME":"FromFile"}' > /tmp/test-redeploy-params.json && codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/test-redeploy-params.json --force --profile cli-test-owner-full --json && rm /tmp/test-redeploy-params.json
+echo '{"COMPANY_NAME":"FromFile"}' > /tmp/test-rerun-params.json && codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/test-rerun-params.json --force --profile cli-test-owner-full --json && rm /tmp/test-rerun-params.json
 ```
 
 **Expect**: `success: true`, parameter from file is used in the deployment.
@@ -98,7 +98,7 @@ echo '{"COMPANY_NAME":"FromFile"}' > /tmp/test-redeploy-params.json && codika re
 ## [P] Parameter merge priority -- `--param` wins over `--params` and `--params-file`
 
 ```bash
-echo '{"KEY":"from-file"}' > /tmp/test-merge-params.json && codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/test-merge-params.json --params '{"KEY":"from-json"}' --param KEY=from-flag --force --profile cli-test-owner-full --json && rm /tmp/test-merge-params.json
+echo '{"KEY":"from-file"}' > /tmp/test-merge-params.json && codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/test-merge-params.json --params '{"KEY":"from-json"}' --param KEY=from-flag --force --profile cli-test-owner-full --json && rm /tmp/test-merge-params.json
 ```
 
 **Expect**: `success: true`. The parameter `KEY` sent to the API has value `from-flag`. Human-readable output shows `Parameters:    1 override(s)`.
@@ -110,7 +110,7 @@ echo '{"KEY":"from-file"}' > /tmp/test-merge-params.json && codika redeploy --pr
 ## [P] No parameters -- preserves existing
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`. The request body has no `deploymentParameters` field (it is `undefined` when no params are provided). The backend preserves all existing parameters unchanged.
@@ -122,19 +122,19 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --for
 ## [P] `--force` flag
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full
 ```
 
 **Expect**: `success: true`. Human-readable output shows `Force:         yes` in the pre-request summary. The request body includes `forceRedeploy: true`.
 
-**Why**: The `--force` flag triggers a full redeploy even on non-failed instances. Without `--force`, redeploying a `deployed` instance may be rejected by the backend.
+**Why**: The `--force` flag triggers a full rerun even on non-failed instances. Without `--force`, rerunning a `deployed` instance may be rejected by the backend.
 
 ---
 
-## [P] `--force` flag absent -- redeploy deployed instance
+## [P] `--force` flag absent -- rerun deployed instance
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile cli-test-owner-full --json
 ```
 
 **Expect**: Either `success: true` (if the backend allows it) or `success: false` with an error about the instance not being in a failed state. The request body does NOT contain `forceRedeploy`. The human-readable output does NOT show the `Force:` line.
@@ -146,7 +146,7 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --pro
 ## [P] `--environment dev` (default)
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full
 ```
 
 **Expect**: Human-readable output shows `Environment:   dev`. This is the default value.
@@ -158,7 +158,7 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --for
 ## [P] `--environment prod` with explicit instance ID
 
 ```bash
-codika redeploy --process-instance-id 019d444e-290a-721b-9ce3-f3d454eb6d0e --environment prod --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444e-290a-721b-9ce3-f3d454eb6d0e --environment prod --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`, `data.deploymentStatus` = `"deployed"`. Human-readable output shows `Environment:   prod`.
@@ -172,7 +172,7 @@ codika redeploy --process-instance-id 019d444e-290a-721b-9ce3-f3d454eb6d0e --env
 Requires a directory with a `project.json` containing `devProcessInstanceId`. Use the test use-case path that has a project.json with the dev instance ID.
 
 ```bash
-codika redeploy --path /path/to/use-case-with-project-json --force --profile cli-test-owner-full --json
+codika rerun deployment --path /path/to/use-case-with-project-json --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`. The instance ID is resolved from `project.json`.`devProcessInstanceId` because `--environment` defaults to `dev`.
@@ -186,7 +186,7 @@ codika redeploy --path /path/to/use-case-with-project-json --force --profile cli
 Requires a directory with a `project.json` containing `prodProcessInstanceId`.
 
 ```bash
-codika redeploy --path /path/to/use-case-with-project-json --environment prod --force --profile cli-test-owner-full --json
+codika rerun deployment --path /path/to/use-case-with-project-json --environment prod --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`. The instance ID is resolved from `project.json`.`prodProcessInstanceId`.
@@ -200,7 +200,7 @@ codika redeploy --path /path/to/use-case-with-project-json --environment prod --
 Requires a custom project file (e.g., `project-client.json`) in a known use-case directory.
 
 ```bash
-codika redeploy --path /path/to/use-case --project-file project-client.json --force --profile cli-test-owner-full --json
+codika rerun deployment --path /path/to/use-case --project-file project-client.json --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`. The instance ID is resolved from the custom project file instead of the default `project.json`.
@@ -212,7 +212,7 @@ codika redeploy --path /path/to/use-case --project-file project-client.json --fo
 ## [P] `--profile` flag
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: true`. The API key is resolved from the `cli-test-owner-full` profile.
@@ -224,7 +224,7 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --for
 ## [P] `--api-key` flag overrides profile
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --api-key "$(codika config show --profile cli-test-owner-full --json 2>/dev/null | jq -r '.apiKey')" --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --api-key "$(codika config show --profile cli-test-owner-full --json 2>/dev/null | jq -r '.apiKey')" --json
 ```
 
 **Expect**: `success: true`. The explicit `--api-key` flag takes precedence over any profile or environment variable.
@@ -238,12 +238,12 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --for
 Run from a directory with no `project.json` and without `--process-instance-id`:
 
 ```bash
-codika redeploy --path /tmp --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
+codika rerun deployment --path /tmp --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
 ```
 
 **Expect**: Exit code `2`. Stderr contains `No process instance ID found` followed by two resolution options (pass `--process-instance-id`, or ensure `project.json` exists). The `exitWithError()` function writes to stderr and calls `process.exit(2)`.
 
-**Why**: When `readProjectJson()` returns `null` (no project.json in /tmp), the code hits the first `exitWithError()` at line 87. This tests the "all sources fail" path.
+**Why**: When `readProjectJson()` returns `null` (no project.json in /tmp), the code hits the first `exitWithError()`. This tests the "all sources fail" path.
 
 ---
 
@@ -252,46 +252,46 @@ codika redeploy --path /tmp --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
 Requires a project.json with a `projectId` but no `devProcessInstanceId`:
 
 ```bash
-mkdir -p /tmp/test-redeploy-noid && echo '{"projectId":"test"}' > /tmp/test-redeploy-noid/project.json && codika redeploy --path /tmp/test-redeploy-noid --profile cli-test-owner-full 2>&1; echo "EXIT:$?"; rm -rf /tmp/test-redeploy-noid
+mkdir -p /tmp/test-rerun-noid && echo '{"projectId":"test"}' > /tmp/test-rerun-noid/project.json && codika rerun deployment --path /tmp/test-rerun-noid --profile cli-test-owner-full 2>&1; echo "EXIT:$?"; rm -rf /tmp/test-rerun-noid
 ```
 
 **Expect**: Exit code `2`. Stderr contains `No devProcessInstanceId found in project.json` and suggests running `codika deploy use-case` first.
 
-**Why**: When project.json exists but lacks `devProcessInstanceId`, the code hits the `exitWithError()` at line 105. This is the dev-environment-specific resolution failure.
+**Why**: When project.json exists but lacks `devProcessInstanceId`, the code hits the dev-environment-specific `exitWithError()`. This is the dev-environment-specific resolution failure.
 
 ---
 
 ## [N] Missing `prodProcessInstanceId` in project.json
 
 ```bash
-mkdir -p /tmp/test-redeploy-noprod && echo '{"projectId":"test","devProcessInstanceId":"abc"}' > /tmp/test-redeploy-noprod/project.json && codika redeploy --path /tmp/test-redeploy-noprod --environment prod --profile cli-test-owner-full 2>&1; echo "EXIT:$?"; rm -rf /tmp/test-redeploy-noprod
+mkdir -p /tmp/test-rerun-noprod && echo '{"projectId":"test","devProcessInstanceId":"abc"}' > /tmp/test-rerun-noprod/project.json && codika rerun deployment --path /tmp/test-rerun-noprod --environment prod --profile cli-test-owner-full 2>&1; echo "EXIT:$?"; rm -rf /tmp/test-rerun-noprod
 ```
 
 **Expect**: Exit code `2`. Stderr contains `No prodProcessInstanceId found in project.json` and suggests running `codika publish` first.
 
-**Why**: When `--environment prod` is specified but project.json lacks `prodProcessInstanceId`, the code hits the `exitWithError()` at line 98. Verifies the prod-specific resolution failure path.
+**Why**: When `--environment prod` is specified but project.json lacks `prodProcessInstanceId`, the code hits the prod-specific `exitWithError()`. Verifies the prod-specific resolution failure path.
 
 ---
 
 ## [N] Invalid `--param` format -- missing equals sign
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param "no-equals-sign" --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --param "no-equals-sign" --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
 ```
 
 **Expect**: Exit code `2`. Stderr contains `Invalid --param format: "no-equals-sign". Expected KEY=VALUE`.
 
-**Why**: The code checks `p.indexOf('=') === -1` and calls `exitWithError()` at line 131. Client-side validation prevents malformed parameters from reaching the API.
+**Why**: The code checks `p.indexOf('=') === -1` and calls `exitWithError()`. Client-side validation prevents malformed parameters from reaching the API.
 
 ---
 
 ## [N] Invalid `--params` JSON string
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params 'not-valid-json' --force --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params 'not-valid-json' --force --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `1`. Error message about JSON parse failure. The `JSON.parse()` at line 124 throws, which is caught by the top-level try/catch in the `.action()` handler and printed as an error.
+**Expect**: Exit code `1`. Error message about JSON parse failure. The `JSON.parse()` for `--params` throws, which is caught by the top-level try/catch in the `.action()` handler and printed as an error.
 
 **Why**: Malformed JSON in `--params` triggers a `SyntaxError` from `JSON.parse()`. The top-level catch formats it and exits with code 1 (unhandled error, not a CLI validation error).
 
@@ -300,10 +300,10 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --par
 ## [N] Invalid `--params-file` -- file not found
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/nonexistent-file.json --force --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/nonexistent-file.json --force --profile cli-test-owner-full 2>&1; echo "EXIT:$?"
 ```
 
-**Expect**: Exit code `1`. Error message about file not found (ENOENT). The `readFileSync()` at line 118 throws, caught by the top-level try/catch.
+**Expect**: Exit code `1`. Error message about file not found (ENOENT). The `readFileSync()` throws, caught by the top-level try/catch.
 
 **Why**: A nonexistent file path causes `readFileSync` to throw an ENOENT error. This is caught by the `.action()` handler, not by `exitWithError()`.
 
@@ -312,10 +312,10 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --par
 ## [N] Invalid `--params-file` -- invalid JSON content
 
 ```bash
-echo 'not json' > /tmp/test-bad-params.json && codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/test-bad-params.json --force --profile cli-test-owner-full 2>&1; echo "EXIT:$?"; rm /tmp/test-bad-params.json
+echo 'not json' > /tmp/test-bad-params.json && codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --params-file /tmp/test-bad-params.json --force --profile cli-test-owner-full 2>&1; echo "EXIT:$?"; rm /tmp/test-bad-params.json
 ```
 
-**Expect**: Exit code `1`. Error message about JSON parse failure. The `JSON.parse()` at line 119 throws.
+**Expect**: Exit code `1`. Error message about JSON parse failure. The `JSON.parse()` on the file content throws.
 
 **Why**: The file exists but contains invalid JSON. Same error handling path as invalid `--params` JSON.
 
@@ -324,7 +324,7 @@ echo 'not json' > /tmp/test-bad-params.json && codika redeploy --process-instanc
 ## [N] Nonexistent instance ID
 
 ```bash
-codika redeploy --process-instance-id nonexistent-instance-id --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id nonexistent-instance-id --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: `success: false`, error about instance not found. Exit code 1.
@@ -336,7 +336,7 @@ codika redeploy --process-instance-id nonexistent-instance-id --force --profile 
 ## [N] Missing API key -- no profile, no env, no flag
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile nonexistent-profile-name 2>&1; echo "EXIT:$?"
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --profile nonexistent-profile-name 2>&1; echo "EXIT:$?"
 ```
 
 **Expect**: Exit code `1`, error about profile not found.
@@ -348,7 +348,7 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --pro
 ## [N] `--json` error output on API failure
 
 ```bash
-codika redeploy --process-instance-id nonexistent-instance-id --force --profile cli-test-owner-full --json
+codika rerun deployment --process-instance-id nonexistent-instance-id --force --profile cli-test-owner-full --json
 ```
 
 **Expect**: JSON output with `success: false` and `error.message` containing a description of the failure. Exit code 1.
@@ -360,36 +360,36 @@ codika redeploy --process-instance-id nonexistent-instance-id --force --profile 
 ## [N] Non-JSON error output on API failure
 
 ```bash
-codika redeploy --process-instance-id nonexistent-instance-id --force --profile cli-test-owner-full
+codika rerun deployment --process-instance-id nonexistent-instance-id --force --profile cli-test-owner-full
 ```
 
-**Expect**: Stderr shows `✗ Redeploy failed: <code> — <message>`. Exit code 1.
+**Expect**: Stderr shows `✗ Rerun failed: <code> — <message>`. Exit code 1.
 
 **Why**: When `--json` is not set and `isRedeployError()` matches, the code writes `console.error()` with the error code and message. Verifies the human-readable error path.
 
 ---
 
-## [S] Scope enforcement -- limited key allows redeploy
+## [S] Scope enforcement -- limited key allows rerun
 
 The `cli-test-limited` profile has `deploy:use-case` + `instances:read`, which includes the required `deploy:use-case` scope.
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-limited --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-limited --json
 ```
 
-**Expect**: `success: true`, `data.deploymentStatus` = `"deployed"`, because the `deploy:use-case` scope covers redeploy.
+**Expect**: `success: true`, `data.deploymentStatus` = `"deployed"`, because the `deploy:use-case` scope covers rerun.
 
-**Why**: Redeploy uses the same `deploy:use-case` scope as deploy. The limited key has this scope, so the request should succeed. This proves the scope check passes with minimal permissions.
+**Why**: Rerun uses the same `deploy:use-case` scope as deploy. The limited key has this scope, so the request should succeed. This proves the scope check passes with minimal permissions.
 
 ---
 
 ## [S] Scope enforcement -- key without deploy scope
 
-If a key exists with only `instances:read` (no `deploy:use-case`), redeploy should be rejected. This test requires a profile with only `instances:read` scope. If no such profile exists, skip this test.
+If a key exists with only `instances:read` (no `deploy:use-case`), rerun should be rejected. This test requires a profile with only `instances:read` scope. If no such profile exists, skip this test.
 
 ```bash
 # Requires a profile with only instances:read scope (no deploy:use-case)
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-read-only --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-read-only --json
 ```
 
 **Expect**: `success: false`, error message contains `deploy:use-case`. Exit code 1.
@@ -400,22 +400,22 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --for
 
 ## [S] Cross-org isolation
 
-The cross-org key (`HF5DaJQamZxIeMj0zfWY` org) must not be able to redeploy instances belonging to the test org (`l0gM8nHm2o2lpupMpm5x`).
+The cross-org key (`HF5DaJQamZxIeMj0zfWY` org) must not be able to rerun deployments belonging to the test org (`l0gM8nHm2o2lpupMpm5x`).
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --api-key "cko_-9v8eRbjS_VapnPy7_vYkrUc0hJS_qPsXHcN44OC-Iiw3ChsfKgrUwCS9OC-vdFs" --json
 ```
 
 **Expect**: `success: false`, error about instance not found or organization mismatch. Exit code 1. The cross-org key cannot see or modify instances in another organization.
 
-**Why**: Confirms organization-level data isolation. A valid API key from org B cannot redeploy instances belonging to org A, even though both exist in the same Firestore database.
+**Why**: Confirms organization-level data isolation. A valid API key from org B cannot rerun deployments belonging to org A, even though both exist in the same Firestore database.
 
 ---
 
 ## [S] Invalid API key
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --api-key "cko_invalid_key_here" --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --api-key "cko_invalid_key_here" --json
 ```
 
 **Expect**: `success: false`, error about unauthorized or invalid API key. Exit code 1.
@@ -424,17 +424,17 @@ codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --for
 
 ---
 
-## [S] Member key -- redeploy owner's instance
+## [S] Member key -- rerun owner's deployment
 
-The member key belongs to a different user in the same org. Test whether it can redeploy an instance created by the owner.
+The member key belongs to a different user in the same org. Test whether it can rerun a deployment created by the owner.
 
 ```bash
-codika redeploy --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-member --json
+codika rerun deployment --process-instance-id 019d444d-1bd0-70f5-b6ff-21d1b5ed5b71 --force --profile cli-test-member --json
 ```
 
-**Expect**: Either `success: true` (if members with `deploy:use-case` can redeploy any org instance) or `success: false` (if ownership is enforced). Document the actual behavior.
+**Expect**: Either `success: true` (if members with `deploy:use-case` can rerun any org deployment) or `success: false` (if ownership is enforced). Document the actual behavior.
 
-**Why**: Tests the access control boundary for cross-user redeploy within the same organization. The member has `deploy:use-case` scope but the instance belongs to the owner.
+**Why**: Tests the access control boundary for cross-user rerun within the same organization. The member has `deploy:use-case` scope but the deployment belongs to the owner.
 
 ---
 

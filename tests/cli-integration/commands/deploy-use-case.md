@@ -387,7 +387,7 @@ cat /path/to/valid-use-case/project.json | jq '.deployments'
 
 **Expect**: The `deployments` object contains an entry keyed by the API version (e.g., `"1.3"`), with `templateId` and `createdAt` fields.
 
-**Why**: The CLI writes `devProcessInstanceId` and appends to the `deployments` map on every successful deploy. This is used by `codika publish` and `codika redeploy` to reference previous deployments.
+**Why**: The CLI writes `devProcessInstanceId` and appends to the `deployments` map on every successful deploy. This is used by `codika publish` and `codika rerun deployment` to reference previous deployments.
 
 ---
 

@@ -25,7 +25,7 @@ tests/cli-integration/
     deploy-documents.md       deploy documents
     deploy-data-ingestion.md  deploy process-data-ingestion
     publish.md                publish
-    redeploy.md               redeploy
+    rerun-deployment.md       rerun deployment
     trigger.md                trigger
     project-create.md         project create
     organization-create.md    organization create
@@ -150,7 +150,7 @@ Tests are organized in 6 batches by risk level (see `OVERVIEW.md` for full detai
 | 1 | Local-only commands (verify, config, auth, status) | None | ~116 | 15 min |
 | 2 | Read-only API commands (list, get) | None | ~166 | 30 min |
 | 3 | Reversible writes (notes, integrations, activate, update-key) | Low | ~123 | 25 min |
-| 4 | Deployments (init, project, deploy, trigger, redeploy) | Medium | ~197 | 40 min |
+| 4 | Deployments (init, project, deploy, trigger, rerun deployment) | Medium | ~197 | 40 min |
 | 5 | Org creation & publishing | High | ~89 | 20 min |
 
 You can run a single playbook, a single batch, or the full suite. Batches are independent except:
@@ -251,7 +251,7 @@ When a new CLI command is added:
 | `deploy documents` | [commands/deploy-documents.md](commands/deploy-documents.md) | 24 | Updated 2026-04-04 |
 | `deploy data-ingestion` | [commands/deploy-data-ingestion.md](commands/deploy-data-ingestion.md) | 25 | Updated 2026-04-04 |
 | `publish` | [commands/publish.md](commands/publish.md) | 29 | Updated 2026-04-04 |
-| `redeploy` | [commands/redeploy.md](commands/redeploy.md) | 34 | Updated 2026-04-04 |
+| `rerun deployment` | [commands/rerun-deployment.md](commands/rerun-deployment.md) | 34 | Updated 2026-04-04 |
 | `trigger` | [commands/trigger.md](commands/trigger.md) | 26 | Updated 2026-04-04 |
 | `project create` | [commands/project-create.md](commands/project-create.md) | 19 | Updated 2026-04-04 |
 | `organization create` | [commands/organization-create.md](commands/organization-create.md) | 27 | Updated 2026-04-04 |

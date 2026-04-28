@@ -199,7 +199,7 @@ cat /path/to/use-case/project.json | jq '.prodProcessInstanceId'
 
 **Expect**: After a successful publish (without `--skip-prod-instance`), `project.json` contains a `prodProcessInstanceId` field matching `data.processInstanceId` from the response.
 
-**Why**: Verifies the `updateProjectJson` side effect. Downstream commands (e.g. `codika redeploy`) rely on this field being present in project.json.
+**Why**: Verifies the `updateProjectJson` side effect. Downstream commands (e.g. `codika rerun deployment`) rely on this field being present in project.json.
 
 ---
 

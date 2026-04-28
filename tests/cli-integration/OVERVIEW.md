@@ -48,7 +48,7 @@ These are the operations that actually create or modify resources on the platfor
 | Operation | Count | Risk | Notes |
 |-----------|-------|------|-------|
 | `deploy use-case` | ~17 | Medium | Deploys to n8n, bumps versions. Uses existing test project. |
-| `redeploy` | ~16 | Medium | Redeploys existing instances with param changes. `--force` required. |
+| `rerun deployment` | ~16 | Medium | Reruns existing deployments with param changes. `--force` required. |
 | `instance activate/deactivate` | ~22 | Low | Toggles instance state. Tests restore original state. |
 | `integration set` | ~8 | Low | Creates test integrations. Cleaned up by delete tests. |
 | `integration delete` | ~6 | Low | Removes integrations created by set tests. |
@@ -156,7 +156,7 @@ Tests are grouped into 6 batches by dependency order and risk level. Run them in
 | `deploy-documents.md` | 24 | ~5 document uploads | **No** — docs persist |
 | `deploy-data-ingestion.md` | 25 | ~6 DI deployments | **No** — DI versions accumulate |
 | `trigger.md` | 26 | ~6 workflow executions | Executions are read-only after creation |
-| `redeploy.md` | 34 | ~16 redeploys | **No** — param changes persist |
+| `rerun-deployment.md` | 34 | ~16 reruns | **No** — param changes persist |
 
 **Total: ~197 tests. State changes: ~65. Duration: ~40 min.**
 

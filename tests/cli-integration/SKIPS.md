@@ -62,8 +62,8 @@ Or better: add a shared helper at the top of the playbook.
 
 | Playbook | Test | What's missing | Fix |
 |----------|------|---------------|-----|
-| redeploy.md | #16 | `--project-file` fixture | Create `project-staging.json` (same as above) |
-| redeploy.md | #31 | Key without `deploy:use-case` scope | Create `cli-test-read-only` key with only `projects:read` scope |
+| rerun-deployment.md | #16 | `--project-file` fixture | Create `project-staging.json` (same as above) |
+| rerun-deployment.md | #31 | Key without `deploy:use-case` scope | Create `cli-test-read-only` key with only `projects:read` scope |
 | trigger.md | #11 | `--project-file` fixture | Create `project-staging.json` |
 | trigger.md | #12 | Payload display truncation (human-readable) | Run the test manually and update expectation |
 | list-executions.md | #9 | No failed execution exists in test instance | Trigger a workflow with bad payload to create a failed execution |

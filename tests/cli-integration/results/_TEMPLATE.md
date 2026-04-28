@@ -34,7 +34,7 @@
 | deploy-documents.md | 24 | | | |
 | deploy-data-ingestion.md | 25 | | | |
 | trigger.md | 26 | | | |
-| redeploy.md | 34 | | | |
+| rerun-deployment.md | 34 | | | |
 | organization-create.md | 27 | | | |
 | organization-create-key.md | 25 | | | |
 | publish.md | 29 | | | |

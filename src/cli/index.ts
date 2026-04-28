@@ -19,7 +19,7 @@
  *   verify workflow <path>                      Validate a single workflow JSON file
  *   verify use-case <path>                      Validate an entire use-case folder
  *   publish <templateId>                        Publish a deployment to production
- *   redeploy                                    Redeploy a deployment instance with parameter overrides
+ *   rerun deployment                            Rerun an existing deployment with parameter overrides
  *   list executions <processInstanceId>         List recent executions
  */
 
@@ -38,7 +38,7 @@ import { initCommand } from './commands/init.js';
 import { statusCommand } from './commands/status.js';
 import { completionCommand } from './commands/completion.js';
 import { publishCommand } from './commands/publish.js';
-import { redeployCommand } from './commands/redeploy.js';
+import { rerunCommand } from './commands/rerun/index.js';
 import { listCommand } from './commands/list/index.js';
 import { integrationCommand } from './commands/integration/index.js';
 import { organizationCommand } from './commands/organization/index.js';
@@ -82,7 +82,7 @@ program.addCommand(logoutCommand);
 program.addCommand(statusCommand);
 program.addCommand(completionCommand);
 program.addCommand(publishCommand);
-program.addCommand(redeployCommand);
+program.addCommand(rerunCommand);
 program.addCommand(listCommand);
 program.addCommand(organizationCommand);
 program.addCommand(integrationCommand);

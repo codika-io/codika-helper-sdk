@@ -150,7 +150,7 @@ Watch for:
 | **Debug failed execution** | list executions → get execution → read error | Error detail depth, `--deep` flag discovery, sub-workflow tracing |
 | **Setup new org** | org create → create key → create project → init → deploy | Key type requirements (`ckp_`), scope selection, profile management |
 | **Add integration** | integration set with secrets | Secret format (`KEY=VALUE`), context type, OAuth vs CLI distinction |
-| **Fetch and redeploy** | get use-case → modify → redeploy with params | Parameter override syntax, `--force` requirement, version preservation |
+| **Fetch and rerun** | get use-case → modify → rerun deployment with params | Parameter override syntax, `--force` requirement, version preservation |
 | **Multi-environment** | deploy to dev → publish to prod → toggle | Environment flag, auto-toggle behavior, instance state management |
 | **Access control setup** | create keys with different scopes → verify isolation | Scope naming, which scopes are needed for what, member vs owner |
 | **Recover from errors** | intentionally broken state → fix it | Error message quality, suggested next steps, diagnostic commands |

@@ -1,10 +1,12 @@
 /**
- * Redeploy Command
+ * Rerun Deployment Command
  *
- * Redeploys a deployment instance with optional parameter overrides.
+ * Re-runs an existing deployment with refreshed credentials and optional
+ * parameter overrides. Does NOT upload local code changes — for code changes
+ * use `codika deploy use-case` instead.
  *
  * Usage:
- *   codika redeploy [options]
+ *   codika rerun deployment [options]
  */
 
 import { Command, Option } from 'commander';
@@ -15,15 +17,15 @@ import {
   isRedeploySuccess,
   isRedeployError,
   type RedeployOptions,
-} from '../../utils/redeploy-client.js';
+} from '../../../utils/redeploy-client.js';
 import {
   resolveApiKey,
   resolveEndpointUrl,
   API_KEY_MISSING_MESSAGE,
-} from '../../utils/config.js';
-import { readProjectJson } from '../../utils/project-json.js';
+} from '../../../utils/config.js';
+import { readProjectJson } from '../../../utils/project-json.js';
 
-interface RedeployCommandOptions {
+interface RerunDeploymentCommandOptions {
   processInstanceId?: string;
   path?: string;
   projectFile?: string;
@@ -38,8 +40,8 @@ interface RedeployCommandOptions {
   profile?: string;
 }
 
-export const redeployCommand = new Command('redeploy')
-  .description('Redeploy a deployment instance with parameter overrides')
+export const deploymentCommand = new Command('deployment')
+  .description('Rerun a deployment with refreshed credentials and optional parameter overrides')
   .option('--process-instance-id <id>', 'Target process instance ID')
   .option('--path <path>', 'Path to use case folder (default: cwd)')
   .option('--project-file <path>', 'Custom project file (default: project.json)')
@@ -52,14 +54,14 @@ export const redeployCommand = new Command('redeploy')
   )
   .option('--params <json>', 'JSON string with all parameters')
   .option('--params-file <path>', 'Path to JSON file with parameters')
-  .option('--force', 'Force redeploy')
+  .option('--force', 'Force rerun even if deployment is not in failed state')
   .option('--api-url <url>', 'Override API URL')
   .option('--api-key <key>', 'Override API key')
   .option('--json', 'Output as JSON')
   .option('--profile <name>', 'Use a specific profile')
-  .action(async (options: RedeployCommandOptions) => {
+  .action(async (options: RerunDeploymentCommandOptions) => {
     try {
-      await runRedeploy(options);
+      await runRerunDeployment(options);
     } catch (error) {
       if (options.json) {
         console.log(JSON.stringify({
@@ -75,7 +77,7 @@ export const redeployCommand = new Command('redeploy')
     }
   });
 
-async function runRedeploy(options: RedeployCommandOptions): Promise<void> {
+async function runRerunDeployment(options: RerunDeploymentCommandOptions): Promise<void> {
   // ── Resolve process instance ID ────────────────────────
   let processInstanceId = options.processInstanceId;
 
@@ -147,7 +149,7 @@ async function runRedeploy(options: RedeployCommandOptions): Promise<void> {
   const apiUrl = resolveEndpointUrl('redeployDeploymentInstance', options.apiUrl, options.profile);
 
   if (!options.json) {
-    console.log(`\nRedeploying instance...`);
+    console.log(`\nRerunning deployment...`);
     console.log(`  Instance ID:   ${processInstanceId}`);
     console.log(`  Environment:   ${options.environment || 'dev'}`);
     if (finalParams) console.log(`  Parameters:    ${Object.keys(finalParams).length} override(s)`);
@@ -172,9 +174,9 @@ async function runRedeploy(options: RedeployCommandOptions): Promise<void> {
       console.log(JSON.stringify(result, null, 2));
     } else {
       if (result.data.deploymentStatus === 'deployed') {
-        console.log(`\x1b[32m✓ Redeployed successfully!\x1b[0m`);
+        console.log(`\x1b[32m✓ Deployment rerun successfully!\x1b[0m`);
       } else {
-        console.log(`\x1b[31m✗ Redeployment failed\x1b[0m`);
+        console.log(`\x1b[31m✗ Deployment rerun failed\x1b[0m`);
       }
       console.log('');
       console.log(`  Status:          ${result.data.deploymentStatus}`);
@@ -190,7 +192,7 @@ async function runRedeploy(options: RedeployCommandOptions): Promise<void> {
     if (options.json) {
       console.log(JSON.stringify(result, null, 2));
     } else {
-      console.error(`\x1b[31m✗ Redeploy failed:\x1b[0m ${result.error.code} — ${result.error.message}`);
+      console.error(`\x1b[31m✗ Rerun failed:\x1b[0m ${result.error.code} — ${result.error.message}`);
     }
     process.exit(1);
   }

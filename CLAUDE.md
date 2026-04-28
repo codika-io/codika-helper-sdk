@@ -36,7 +36,9 @@ src/
         list.ts           # List integrations and connection status
         delete.ts         # Delete an integration (two-phase confirmation)
       init.ts             # Scaffold a new use case folder
-      redeploy.ts         # Redeploy a deployment instance with parameter overrides
+      rerun/
+        index.ts          # Parent rerun command
+        deployment.ts     # Rerun an existing deployment with refreshed credentials and parameter overrides
       whoami.ts           # Show current authenticated identity
       use.ts              # Switch active profile or list profiles
       logout.ts           # Remove a profile
@@ -162,8 +164,8 @@ codika get project <projectId> [--api-key <key>] [--json]
 # Get instance with expanded workflow details
 codika get instance [processInstanceId] [--workflows] [--environment <env>] [--api-key <key>] [--json]
 
-# Redeploy a deployment instance with parameter overrides
-codika redeploy [--process-instance-id <id>] [--path <path>] [--project-file <path>] [--environment <dev|prod>] [--param <KEY=VALUE>]... [--params <json>] [--params-file <path>] [--force] [--api-url <url>] [--api-key <key>] [--json]
+# Rerun an existing deployment with refreshed credentials and parameter overrides
+codika rerun deployment [--process-instance-id <id>] [--path <path>] [--project-file <path>] [--environment <dev|prod>] [--param <KEY=VALUE>]... [--params <json>] [--params-file <path>] [--force] [--api-url <url>] [--api-key <key>] [--json]
 
 # Validate a single workflow
 codika verify workflow <path> [--json] [--fix]
