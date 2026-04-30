@@ -31,3 +31,6 @@ coverage/
 
 # Linked projects
 .linked-projects
+
+# ── Entire ───────────────────────────────────────────────────
+.entire/
