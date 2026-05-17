@@ -221,6 +221,51 @@ This approach ensures:
 
 When testing CLI commands via the Bash tool (Claude Code), commands that exit with a non-zero code will appear to print their output twice. This is a Bash tool display artifact — it shows stdout once in the main block and again in the error block. The actual command output is correct (single print). Verify by redirecting to a file: `codika whoami > /tmp/out.txt 2>&1; cat /tmp/out.txt`.
 
+## Releases (automated via GitHub Actions)
+
+Publishing `codika` to npm is fully automated. **Never run `npm publish` manually** — tag the version and let CI do it.
+
+`codika` is a dual package: it ships both the library exports (`.` and `./validation`) and the `codika` CLI binary. A single `npm publish` ships both — no separate handling needed.
+
+### Flow
+
+```bash
+# 1. Make sure main is clean and green locally
+npm test && npm run build
+
+# 2. Bump the version (commits the change + creates the git tag in one shot)
+npm version patch    # 3.5.0 → 3.5.1   (bug fix)
+npm version minor    # 3.5.0 → 3.6.0   (new feature, backward-compatible)
+npm version major    # 3.5.0 → 4.0.0   (breaking)
+
+# 3. Push the commit and the tag — the tag is what triggers the publish
+git push origin master --follow-tags
+```
+
+### What each workflow does
+
+- **`.github/workflows/ci.yml`** — runs on every push to `master` and every PR. Installs deps, runs `npm test`, runs `npm run build`, executes the built CLI binary with `--help` as a smoke test. Matrix'd across Node 20 and 22.
+- **`.github/workflows/publish.yml`** — runs on tag pushes matching `v*.*.*`. Before publishing it (a) verifies the tag matches `package.json#version`, (b) re-runs tests, (c) re-runs the build, then publishes with `--access public --provenance` so the package carries a signed attestation from GitHub Actions.
+
+### Prerequisites
+
+- `NPM_TOKEN` secret configured on the `codika-io/codika-helper-sdk` GitHub repo — must be an **automation token** (classic type), NOT a granular access token, so it bypasses npm's 2FA OTP prompt at publish time. The token's npm account must have publish rights on the `codika` package.
+- Regenerate it via https://www.npmjs.com/settings/~/tokens/new → "Classic Token" → "Automation".
+
+### Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| `EOTP: This operation requires a one-time password` | `NPM_TOKEN` is a granular/publish token; replace with an automation token. |
+| `Tag vX.Y.Z does not match package.json version` | You tagged without running `npm version`. Delete the tag (`git tag -d vX.Y.Z && git push --delete origin vX.Y.Z`), run `npm version`, re-push. |
+| Publish succeeds but `npm view codika version` is stale | CDN propagation; usually resolves in 30s. |
+
+### What NOT to do
+
+- **Don't** bump the version by hand-editing `package.json` and then tagging — `npm version` does both atomically and protects against mismatch.
+- **Don't** push a tag that points at a commit that isn't on `master`. The workflow doesn't enforce this; if you do it accidentally, delete the tag before the workflow completes.
+- **Don't** run `npm publish` locally to "fix" a failed CI publish — fix the CI or rotate the token instead, so the npm registry's source of truth stays GitHub Actions.
+
 ## Key Files
 
 - `src/cli/commands/verify/use-case.ts` - Use-case validation command with JSON output

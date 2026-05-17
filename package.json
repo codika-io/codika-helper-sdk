@@ -42,6 +42,9 @@
   ],
   "author": "Codika",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/codika-io/codika-helper-sdk.git"
